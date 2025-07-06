@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="#f0f0f0"
+    android:id="@+id/mainLayout">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:title="Add Job"
+        android:titleTextColor="@color/black"
+        app:navigationIcon="@drawable/ic_back_arrow" />
+
+    <!-- ScrollView to handle content overflow -->
+    <ScrollView
+        android:id="@+id/profileScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonLayout"
+        android:layout_alignParentTop="true"
+        android:paddingBottom="20dp"
+        android:padding="16dp"
+        android:layout_marginTop="?attr/actionBarSize"
+
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Logo Image -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Update Profile"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:textSize="26sp"
+                android:layout_marginBottom="10dp"/>
+            <!-- ProgressBar (hidden by default) -->
+
+            <!-- First Name EditText -->
+            <EditText
+                android:id="@+id/firstNameEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                android:textColorHint="@color/gray_light_3"
+                android:background="@drawable/edit_text_background"
+                android:hint="First Name"
+                android:inputType="textPersonName"
+                android:textColor="@color/dark_black" />
+
+
+            <!-- Mobile EditText -->
+            <EditText
+                android:id="@+id/mobileEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="Mobile"
+                android:maxLength="10"
+                android:inputType="phone"
+                android:textColorHint="@color/gray_light_3"
+                android:textColor="@color/dark_black" />
+            <ProgressBar
+                android:id="@+id/profileProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <!-- Email EditText -->
+            <EditText
+                android:id="@+id/emailEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:textColorHint="@color/gray_light_3"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="Email"
+                android:inputType="textEmailAddress"
+                android:textColor="@color/dark_black" />
+            <EditText
+                android:id="@+id/cityEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:textColorHint="@color/gray_light_3"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="City"
+                android:inputType="textPersonName"
+                android:textColor="@color/dark_black" />
+            <EditText
+                android:id="@+id/stateEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="State"
+                android:textColorHint="@color/gray_light_3"
+                android:inputType="textPersonName"
+                android:textColor="@color/dark_black" />
+            <EditText
+                android:id="@+id/pincodeEditText"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="Pincode"
+                android:inputType="number"
+                android:maxLength="6"
+                android:textColor="@color/dark_black" />
+            <!-- Status TextView (hidden by default) -->
+            <TextView
+                android:id="@+id/statusTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@android:color/holo_green_dark"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Button Layout containing Update Profile and Logout buttons -->
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp">
+
+        <!-- Update Profile Button -->
+        <TextView
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:id="@+id/updateProfileButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/button_background"
+            android:text="Update Profile"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <!-- Logout Button -->
+        <TextView
+            android:id="@+id/logoutButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Logout"
+            android:textColor="@color/gray_light_2"
+            android:gravity="center"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

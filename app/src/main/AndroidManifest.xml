@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:name=".utils.RojgaarwalaApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Rojgaarwaala"
+        tools:targetApi="31"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".presentation.ui.activity.SplashActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme.NoSplash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".presentation.ui.activity.MainActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.ProductDetailsActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.LoginActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.RegisterActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.ProfileActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.AddJobActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.VideoPlayerActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+
+
+    </application>
+
+</manifest>
