@@ -21,15 +21,16 @@ class LoginActivity : AppCompatActivity() {
     @Inject
     lateinit var sharedPrefs: SharedPrefs
     private lateinit var homePageViewModel: HomePageViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
-        observeLoginData()
-        binding.loginButton.setOnClickListener {
-            validateLogin()
+        observeOtpRequest()
+        binding.submitButton.setOnClickListener {
+            requestOtp()
         }
         binding.signUpButton.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
@@ -45,73 +46,46 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestOtp() {
+        val email = binding.mobileEditText.text.toString().trim()
+        if (email.isEmpty()) {
+            binding.mobileEditText.error = "Email is required"
+            return
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.mobileEditText.error = "Enter a valid email address"
+            return
+        }
+        binding.progressBar.visibility = View.VISIBLE
+        val requestBody = HashMap<String, String>()
+        requestBody["email"] = email
+        requestBody["password"] = "password"
+        homePageViewModel.onLoginData(requestBody)
+    }
 
-    private fun observeLoginData() {
+    private fun observeOtpRequest() {
         homePageViewModel.loginRegisterLiveData.observe(this) { apiResponse ->
             when(apiResponse){
                 is ApiResult.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
                 }
                 is ApiResult.Success -> {
+                    binding.progressBar.visibility = View.GONE
                     if (apiResponse.data?.dataObj != null) {
-                        binding.progressBar.visibility= View.GONE
-
-                        sharedPrefs.setPrefsData(
-                            Pair(
-                                SharedPrefsConstant.USER_AUTH_TOKEN,
-                                apiResponse.data?.dataObj?.token ?: ""
-                            )
-                        )
-                        Toast.makeText(this,"Successfully logged in!", Toast.LENGTH_SHORT).show()
-                        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, true))
-                        val intent = Intent(this, MainActivity::class.java)
+                        // Navigate to OTP screen, pass mobile number
+                        val intent = Intent(this, OtpActivity::class.java)
+                        intent.putExtra("mobile", binding.mobileEditText.text.toString().trim())
                         startActivity(intent)
                         finish()
-                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                    }else{
-                        Toast.makeText(this,""+apiResponse.data?.message, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, apiResponse.data?.message ?: "Failed to send OTP", Toast.LENGTH_SHORT).show()
                     }
                 }
                 is ApiResult.Error -> {
-                    binding.progressBar.visibility= View.GONE
-                    Toast.makeText(this,"Invalid Login Details", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this, "Failed to send OTP", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-    }
-
-
-    private fun validateLogin() {
-        val email = binding.emailEditText.text.toString().trim()
-        val password = binding.passwordEditText.text.toString().trim()
-
-        if (TextUtils.isEmpty(email)) {
-            binding.emailEditText.error = "Email is required"
-            return
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailEditText.error = "Enter a valid email"
-            return
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            binding.passwordEditText.error = "Password is required"
-            return
-        }
-
-        if (password.length < 6) {
-            binding.passwordEditText.error = "Password must be at least 6 characters"
-            return
-        }
-
-        // If validation passes
-        onSuccess(email,password)
-    }
-    private fun onSuccess(email: String, password: String) {
-        binding.progressBar.visibility= View.VISIBLE
-        val requestBody = HashMap<String, String>()
-        requestBody["email"] = email
-        requestBody["password"] = password
-        homePageViewModel.onLoginData(requestBody)
     }
 }

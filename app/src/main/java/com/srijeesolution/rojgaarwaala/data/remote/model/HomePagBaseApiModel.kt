@@ -18,25 +18,58 @@ data class HomePageData(
     val bannerList: ArrayList<BannerList>? = ArrayList(),
     @SerializedName("categoryList")
     val categoryList: ArrayList<Category>? = ArrayList(),
+    @SerializedName("topVideos")
+    val topVideos: ArrayList<TopVideo>? = ArrayList(),
+    @SerializedName("categoryVideos")
+    val categoryVideos: ArrayList<CategoryVideo>? = ArrayList(),
     @SerializedName("userDetails")
     val userDetails: UserData? = null,
 )
+
 data class BannerList(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("url")
+    val imageUrl: String? = null,
+)
+
+data class TopVideo(
     @SerializedName("id")
     val id: Int? = null,
     @SerializedName("title")
     val title: String? = null,
-    @SerializedName("url")
-    val imageUrl: String? = null,
     @SerializedName("description")
     val description: String? = null,
-    @SerializedName("size")
-    val size: String? = null,
-    @SerializedName("price")
-    val price: Double? = null,
-    @SerializedName("videos")
-    val videos: ArrayList<BannerList>? = ArrayList(),
+    @SerializedName("video_url")
+    val videoUrl: String? = null,
+    @SerializedName("thumbnail")
+    val thumbnail: String? = null,
+    @SerializedName("is_top_video")
+    val isTopVideo: Int? = null,
+    @SerializedName("user")
+    val user: UserData? = null,
 )
+
+data class Category(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("icon_file")
+    val iconFile: String? = null,
+)
+
+data class CategoryVideo(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("icon_file")
+    val iconFile: String? = null,
+    @SerializedName("videos")
+    val videos: ArrayList<TopVideo>? = ArrayList(),
+)
+
 data class UserData(
     @SerializedName("name")
     val name: String? = null,
@@ -50,18 +83,6 @@ data class UserData(
     val state: String? = null,
     @SerializedName("pincode")
     val pincode: String? = null,
-)
-data class Video(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val video_url: String
-)
-
-data class Category(
-    val id: Int,
-    val title: String,
-    val videos: List<Video>
 )
 
 

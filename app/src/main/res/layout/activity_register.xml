@@ -129,6 +129,7 @@
                 android:background="@drawable/edit_text_background"
                 android:hint="Confirm Password"
                 android:inputType="textPassword"
+                android:textColorHint="@color/gray_light_3"
                 android:textColor="@color/dark_black"/>
 
             <TextView
