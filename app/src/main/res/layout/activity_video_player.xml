@@ -39,6 +39,14 @@
                     android:layout_height="match_parent"
                     android:visibility="visible" />
 
+                <!-- Thumbnail Overlay -->
+                <ImageView
+                    android:id="@+id/videoThumbnailOverlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
                 <!-- Play/Pause Button -->
                 <ImageView
                     android:id="@+id/playPauseButton"

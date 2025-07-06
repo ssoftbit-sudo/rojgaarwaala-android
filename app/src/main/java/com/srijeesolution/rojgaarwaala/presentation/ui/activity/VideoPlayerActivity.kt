@@ -89,13 +89,19 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun bindVideoDetails(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData) {
+        // Show thumbnail overlay while loading
+        val thumbnailUrl = data.thumbnail
+        if (!thumbnailUrl.isNullOrEmpty()) {
+            binding.videoThumbnailOverlay.visibility = View.VISIBLE
+            Glide.with(this)
+                .load(thumbnailUrl)
+                .centerCrop()
+                .into(binding.videoThumbnailOverlay)
+        } else {
+            binding.videoThumbnailOverlay.visibility = View.GONE
+        }
         // Play video
         if (data.videoUrl != null) {
-           /* if (isYouTubeUrl(data.videoUrl)) {
-                playYouTubeVideo(data.videoUrl)
-            } else {
-                playCustomVideo(data.videoUrl)
-            }*/
             playCustomVideo(data.videoUrl)
         }
         // Like/Dislike/Share/Views
@@ -119,20 +125,6 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun isYouTubeUrl(url: String): Boolean {
         return url.contains("youtube.com") || url.contains("youtu.be")
     }
-/*
-    private fun playYouTubeVideo(url: String) {
-        val videoId = extractYouTubeVideoId(url) ?: return
-        with(binding.youtubePlayerView) {
-            visibility = View.VISIBLE
-            lifecycle.addObserver(this)
-            addYouTubePlayerListener(object : com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener() {
-                override fun onReady(player: com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer) {
-                    player.loadVideo(videoId, 0f)
-                }
-            })
-        }
-        binding.customVideoView.visibility = View.GONE
-    }*/
 
     private fun playCustomVideo(url: String) {
         with(binding.customVideoView) {
@@ -141,7 +133,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             setOnPreparedListener { it.start() }
             setOnCompletionListener { pause() }
         }
-       // binding.youtubePlayerView.visibility = View.GONE
     }
 
     private fun extractYouTubeVideoId(url: String): String? {
@@ -153,6 +144,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         val videoView = binding.customVideoView
         val playPauseButton = binding.playPauseButton
         val fullscreenButton = binding.fullscreenButton
+        val thumbnailOverlay = binding.videoThumbnailOverlay
         var isPlaying = false
 
         playPauseButton.setOnClickListener {
@@ -162,6 +154,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                 playPauseButton.visibility = View.VISIBLE
                 isPlaying = false
             } else {
+                // Hide thumbnail overlay when user clicks play
+                thumbnailOverlay.visibility = View.GONE
                 videoView.start()
                 playPauseButton.setImageResource(R.drawable.ic_pause_circle)
                 playPauseButton.visibility = View.GONE
@@ -170,6 +164,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         videoView.setOnPreparedListener {
+            // Hide thumbnail and start video
+            thumbnailOverlay.visibility = View.GONE
             playPauseButton.setImageResource(R.drawable.ic_play_circle)
             playPauseButton.visibility = View.VISIBLE
             isPlaying = false
@@ -193,6 +189,5 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        //binding.youtubePlayerView.release()
     }
 }
