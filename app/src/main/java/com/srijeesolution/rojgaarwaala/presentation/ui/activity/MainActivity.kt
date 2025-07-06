@@ -87,4 +87,8 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
+
+    fun selectTabFromFragment(index: Int) {
+        selectTab(index)
+    }
 }

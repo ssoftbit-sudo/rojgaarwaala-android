@@ -1,23 +1,132 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
-import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.srijeesolution.rojgaarwaala.R
+import androidx.lifecycle.ViewModelProvider
+import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import android.view.inputmethod.InputMethodManager
 
+@AndroidEntryPoint
 class AddJobFragment : Fragment() {
+    private var _binding: FragmentAddJobBinding? = null
+    private val binding get() = _binding!!
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
+    private lateinit var homePageViewModel: HomePageViewModel
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_add_job, container, false)
-        
-        // Navigate to AddJobActivity when this fragment is created
-        val intent = Intent(requireContext(), AddJobActivity::class.java)
-        startActivity(intent)
-        
-        return view
+        _binding = FragmentAddJobBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
+
+        observeJobSubmitData()
+        binding.submitBtn.setOnClickListener {
+            hideKeyboard()
+            binding.submitBtn.isEnabled = false
+            binding.submitBtn.text = "Submitting..."
+            validateLogin()
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+        view?.let { v ->
+            imm.hideSoftInputFromWindow(v.windowToken, 0)
+        }
+    }
+
+    private fun observeJobSubmitData() {
+        homePageViewModel.jobSubmitLiveData.observe(viewLifecycleOwner) { apiResponse ->
+            when(apiResponse){
+                is ApiResult.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+                is ApiResult.Success -> {
+                    binding.progressBar.visibility= View.GONE
+                    binding.submitBtn.isEnabled = true
+                    binding.submitBtn.text = "Submit Job"
+                    if (apiResponse.data?.dataObj != null) {
+                        Toast.makeText(requireContext(),"Job added successfully!", Toast.LENGTH_SHORT).show()
+                        (activity as? MainActivity)?.selectTabFromFragment(0)
+                    }else{
+                        Toast.makeText(requireContext(),""+apiResponse.data?.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                is ApiResult.Error -> {
+                    binding.progressBar.visibility= View.GONE
+                    binding.submitBtn.isEnabled = true
+                    binding.submitBtn.text = "Submit Job"
+                    Toast.makeText(requireContext(),"Failed Job Submit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun validateLogin() {
+        val jobTitle = binding.jobTitle.text.toString().trim()
+        val jobDescription = binding.jobDescription.text.toString().trim()
+        val jobCategory = binding.jobCategory.text.toString().trim()
+        val jobResponsibility = binding.jobResponsibility.text.toString().trim()
+
+        if (jobTitle.isEmpty()) {
+            binding.jobTitle.error = "Title is required"
+            return
+        }
+
+        if (jobDescription.isEmpty()) {
+            binding.jobDescription.error = "Description is required"
+            return
+        }
+
+        if (jobCategory.isEmpty()) {
+            binding.jobCategory.error = "Category is required"
+            return
+        }
+
+        if (jobResponsibility.isEmpty()) {
+            binding.jobResponsibility.error = "Responsibility is required"
+            return
+        }
+
+        // ✅ If all fields are valid
+        onSuccess(jobTitle, jobDescription, jobCategory, jobResponsibility)
+    }
+
+    private fun onSuccess(
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String) {
+        binding.progressBar.visibility = View.VISIBLE
+
+        val requestBody = HashMap<String, String>().apply {
+            this["job_title"] = jobTitle
+            this["job_description"] = jobDescription
+            this["job_category"] = jobCategory
+            this["job_responsibility"] = jobResponsibility
+        }
+
+        homePageViewModel.onSubmitJob(requestBody)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 } 
