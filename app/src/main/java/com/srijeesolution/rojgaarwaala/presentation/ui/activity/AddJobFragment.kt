@@ -15,6 +15,8 @@ import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.app.AlertDialog
 
 @AndroidEntryPoint
 class AddJobFragment : Fragment() {
@@ -36,6 +38,7 @@ class AddJobFragment : Fragment() {
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
         observeJobSubmitData()
+        setupCategoryDropdown()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
             binding.submitBtn.isEnabled = false
@@ -73,6 +76,48 @@ class AddJobFragment : Fragment() {
                     binding.submitBtn.isEnabled = true
                     binding.submitBtn.text = "Submit Job"
                     Toast.makeText(requireContext(),"Failed Job Submit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun setupCategoryDropdown() {
+        binding.jobCategory.isFocusable = false
+        binding.jobCategory.isClickable = true
+        binding.jobCategory.setOnClickListener {
+            // Show loading
+            binding.progressBar.visibility = View.VISIBLE
+            // Fetch categories
+            homePageViewModel.getCategoriesData()
+            observeCategoriesDropdown()
+        }
+    }
+
+    private fun observeCategoriesDropdown() {
+        homePageViewModel.categoriesLiveData.observe(viewLifecycleOwner) { apiResponse ->
+            when (apiResponse) {
+                is ApiResult.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+                is ApiResult.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    val data = apiResponse.data?.dataObj
+                    val categories = data?.categories ?: emptyList<com.srijeesolution.rojgaarwaala.data.remote.model.Category>()
+                    val titles = categories.mapNotNull { it.title }
+                    if (titles.isNotEmpty()) {
+                        val builder = AlertDialog.Builder(requireContext())
+                        builder.setTitle("Select Category")
+                        builder.setItems(titles.toTypedArray()) { dialog, which ->
+                            binding.jobCategory.setText(titles[which])
+                        }
+                        builder.show()
+                    } else {
+                        Toast.makeText(requireContext(), "No categories found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                is ApiResult.Error -> {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(requireContext(), "Failed to load categories", Toast.LENGTH_SHORT).show()
                 }
             }
         }
