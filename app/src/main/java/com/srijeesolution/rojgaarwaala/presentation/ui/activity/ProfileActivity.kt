@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -57,6 +58,13 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        currentFocus?.let { view ->
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
     /**
      * Fetches the user's existing profile data from the server or local storage.
      */
@@ -105,6 +113,9 @@ class ProfileActivity : AppCompatActivity() {
                 }
                 is ApiResult.Success -> {
                     showLoading(false)
+                    binding.updateProfileButton.isEnabled = true
+                    binding.updateProfileButton.text = "Update Profile"
+                    
                     if (apiResponse.data?.dataObj != null) {
                         if (isProfileUpdateCalled){
                             isProfileUpdateCalled = false
@@ -126,6 +137,8 @@ class ProfileActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     showLoading(false)
+                    binding.updateProfileButton.isEnabled = true
+                    binding.updateProfileButton.text = "Update Profile"
                     Toast.makeText(this, "Update Failed: ${apiResponse.message}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -187,8 +200,13 @@ class ProfileActivity : AppCompatActivity() {
      * Initiates the profile update API call.
      */
     private fun updateUserProfile(firstname: String,mobile: String, email: String, city: String, state: String, pincode: String) {
+        // Hide keyboard and show button loader
+        hideKeyboard()
         isProfileUpdateCalled = true
+        binding.updateProfileButton.isEnabled = false
+        binding.updateProfileButton.text = "Updating..."
         showLoading(true)
+        
         val requestBody = HashMap<String, String>()
         requestBody["name"] = firstname
         requestBody["mobile"] = mobile

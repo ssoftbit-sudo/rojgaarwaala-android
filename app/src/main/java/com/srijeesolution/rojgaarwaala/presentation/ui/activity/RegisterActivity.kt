@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -40,6 +41,12 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        currentFocus?.let { view ->
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
 
     private fun observeLoginData() {
         homePageViewModel.loginRegisterLiveData.observe(this) { apiResponse ->
@@ -47,9 +54,11 @@ class RegisterActivity : AppCompatActivity() {
                 is ApiResult.Loading -> {
                 }
                 is ApiResult.Success -> {
+                    binding.progressBar.visibility= View.GONE
+                    binding.signUpButton.isEnabled = true
+                    binding.signUpButton.text = "Sign Up"
+                    
                     if (apiResponse.data?.dataObj != null) {
-                        binding.progressBar.visibility= View.GONE
-
                         sharedPrefs.setPrefsData(
                             Pair(
                                 SharedPrefsConstant.USER_AUTH_TOKEN,
@@ -68,6 +77,8 @@ class RegisterActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     binding.progressBar.visibility= View.GONE
+                    binding.signUpButton.isEnabled = true
+                    binding.signUpButton.text = "Sign Up"
                     Toast.makeText(this,"Invalid Login Details", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -150,7 +161,6 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-
         // ✅ If all fields are valid
         onSuccess(name, mobile, city, state, pincode, email, password)
 
@@ -165,6 +175,10 @@ class RegisterActivity : AppCompatActivity() {
         email: String,
         password: String
     ) {
+        // Hide keyboard and show button loader
+        hideKeyboard()
+        binding.signUpButton.isEnabled = false
+        binding.signUpButton.text = "Creating Account..."
         binding.progressBar.visibility = View.VISIBLE
 
         val requestBody = HashMap<String, String>().apply {

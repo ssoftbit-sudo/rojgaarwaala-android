@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -38,6 +39,13 @@ class OtpActivity : AppCompatActivity() {
         }
     }
 
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        currentFocus?.let { view ->
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
     private fun verifyOtp() {
         val otp = binding.otpEditText.text.toString().trim()
         if (TextUtils.isEmpty(otp)) {
@@ -48,7 +56,13 @@ class OtpActivity : AppCompatActivity() {
             binding.otpEditText.error = "Enter a valid OTP"
             return
         }
+        
+        // Hide keyboard and show button loader
+        hideKeyboard()
+        binding.submitOtpButton.isEnabled = false
+        binding.submitOtpButton.text = "Verifying..."
         binding.progressBar.visibility = View.VISIBLE
+        
         val requestBody = HashMap<String, String>()
         requestBody["mobile"] = mobile ?: ""
         requestBody["otp"] = otp
@@ -63,6 +77,9 @@ class OtpActivity : AppCompatActivity() {
                 }
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
+                    binding.submitOtpButton.isEnabled = true
+                    binding.submitOtpButton.text = "Verify OTP"
+                    
                     if (apiResponse.data?.status == true) {
                         // Save user data and token if available
                         apiResponse.data.dataObj?.let { dataObj ->
@@ -81,6 +98,8 @@ class OtpActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     binding.progressBar.visibility = View.GONE
+                    binding.submitOtpButton.isEnabled = true
+                    binding.submitOtpButton.text = "Verify OTP"
                     Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show()
                 }
             }
