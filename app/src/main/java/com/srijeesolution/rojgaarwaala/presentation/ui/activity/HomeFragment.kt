@@ -2,6 +2,8 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +43,12 @@ class HomeFragment : Fragment() {
     private var bannerRunnable: Runnable? = null
     private var bannerList: List<BannerList> = emptyList()
     private var currentBannerPage = 0
+    
+    // Search related variables
+    private var allTopVideos: List<TopVideo> = emptyList()
+    private var allCategoryList: List<Category> = emptyList()
+    private var allCategoryVideos: List<CategoryVideo> = emptyList()
+    private var isSearchMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -59,8 +67,144 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
         
+        // Set up search functionality
+        setupSearch()
+        
         observeHomePageData()
         callApi()
+    }
+
+    private fun setupSearch() {
+        binding.searchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                if (query.isEmpty()) {
+                    // Show all content when search is empty
+                    isSearchMode = false
+                    binding.clearSearchButton.visibility = View.GONE
+                    showAllContent()
+                } else {
+                    // Filter content based on search query
+                    isSearchMode = true
+                    binding.clearSearchButton.visibility = View.VISIBLE
+                    filterContent(query)
+                }
+            }
+        })
+        
+        // Clear search button click listener
+        binding.clearSearchButton.setOnClickListener {
+            binding.searchBar.setText("")
+            binding.searchBar.clearFocus()
+        }
+    }
+
+    private fun filterContent(query: String) {
+        val lowerQuery = query.lowercase()
+        
+        // Filter categories
+        val filteredCategories = allCategoryList.filter { category ->
+            category.title?.lowercase()?.contains(lowerQuery) == true
+        }
+        
+        // Filter top videos
+        val filteredTopVideos = allTopVideos.filter { video ->
+            video.title?.lowercase()?.contains(lowerQuery) == true ||
+            video.description?.lowercase()?.contains(lowerQuery) == true ||
+            video.user?.name?.lowercase()?.contains(lowerQuery) == true
+        }
+        
+        // Filter category videos
+        val filteredCategoryVideos = allCategoryVideos.mapNotNull { categoryVideo ->
+            val filteredVideos = categoryVideo.videos?.filter { video ->
+                video.title?.lowercase()?.contains(lowerQuery) == true ||
+                video.description?.lowercase()?.contains(lowerQuery) == true ||
+                video.user?.name?.lowercase()?.contains(lowerQuery) == true ||
+                categoryVideo.title?.lowercase()?.contains(lowerQuery) == true
+            } ?: emptyList()
+            
+            if (filteredVideos.isNotEmpty()) {
+                categoryVideo.copy(videos = ArrayList(filteredVideos))
+            } else null
+        }
+        
+        // Update UI with filtered results
+        updateUIWithFilteredContent(filteredCategories, filteredTopVideos, filteredCategoryVideos)
+    }
+
+    private fun showAllContent() {
+        updateUIWithFilteredContent(allCategoryList, allTopVideos, allCategoryVideos)
+    }
+
+    private fun updateUIWithFilteredContent(
+        categories: List<Category>,
+        topVideos: List<TopVideo>,
+        categoryVideos: List<CategoryVideo>
+    ) {
+        // Check if we have any results
+        val hasResults = categories.isNotEmpty() || topVideos.isNotEmpty() || categoryVideos.isNotEmpty()
+        
+        if (isSearchMode && !hasResults) {
+            // Show no results message
+            binding.noResultsLayout.visibility = View.VISIBLE
+            binding.searchResultsCount.visibility = View.GONE
+            binding.topVideosLabel.visibility = View.GONE
+            binding.topVideosRecyclerView.visibility = View.GONE
+            binding.categoryGridRecyclerView.visibility = View.GONE
+            binding.categorySectionsContainer.visibility = View.GONE
+            return
+        } else {
+            binding.noResultsLayout.visibility = View.GONE
+        }
+        
+        // Show search results count
+        if (isSearchMode) {
+            val totalResults = categories.size + topVideos.size + categoryVideos.sumOf { it.videos?.size ?: 0 }
+            binding.searchResultsCount.text = "$totalResults result${if (totalResults != 1) "s" else ""} found"
+            binding.searchResultsCount.visibility = View.VISIBLE
+        } else {
+            binding.searchResultsCount.visibility = View.GONE
+        }
+        
+        // Update category grid
+        binding.categoryGridRecyclerView.visibility = View.VISIBLE
+        binding.categoryGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
+        binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(categories) { cat ->
+            Toast.makeText(requireContext(), cat.title ?: "View All", Toast.LENGTH_SHORT).show()
+        }
+
+        // Update top videos
+        if (topVideos.isNotEmpty()) {
+            binding.topVideosLabel.visibility = View.VISIBLE
+            binding.topVideosRecyclerView.visibility = View.VISIBLE
+            val topVideosAdapter = TopVideosAdapter(topVideos)
+            binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            binding.topVideosRecyclerView.adapter = topVideosAdapter
+        } else {
+            binding.topVideosLabel.visibility = View.GONE
+            binding.topVideosRecyclerView.visibility = View.GONE
+        }
+
+        // Update category sections
+        binding.categorySectionsContainer.visibility = View.VISIBLE
+        binding.categorySectionsContainer.removeAllViews()
+        for (cat in categoryVideos) {
+            if (!cat.videos.isNullOrEmpty()) {
+                val sectionView = LayoutInflater.from(requireContext()).inflate(R.layout.item_category_section, binding.categorySectionsContainer, false)
+                val sectionTitle = sectionView.findViewById<TextView>(R.id.sectionTitle)
+                val sectionIcon = sectionView.findViewById<ImageView>(R.id.sectionIcon)
+                val sectionRecycler = sectionView.findViewById<RecyclerView>(R.id.sectionRecyclerView)
+                sectionTitle.text = cat.title
+                Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
+                sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                sectionRecycler.adapter = VideoAdapter(cat.videos ?: emptyList())
+                binding.categorySectionsContainer.addView(sectionView)
+            }
+        }
     }
 
     private fun callApi() {
@@ -97,39 +241,18 @@ class HomeFragment : Fragment() {
                     binding.topVideosRecyclerView.visibility = View.VISIBLE
                     binding.categoryGridRecyclerView.visibility = View.VISIBLE
                     binding.categorySectionsContainer.visibility = View.VISIBLE
+                    
                     val data = apiResponse.data?.dataObj
                     bannerList = data?.bannerList ?: emptyList()
                     setupBannerSlider()
-                    val topVideos = data?.topVideos ?: emptyList<TopVideo>()
-                    val categoryList = data?.categoryList ?: emptyList<Category>()
-                    val categoryVideos = data?.categoryVideos ?: emptyList<CategoryVideo>()
+                    
+                    // Store all data for search functionality
+                    allTopVideos = data?.topVideos ?: emptyList<TopVideo>()
+                    allCategoryList = data?.categoryList ?: emptyList<Category>()
+                    allCategoryVideos = data?.categoryVideos ?: emptyList<CategoryVideo>()
 
-                    // Category Grid (with View All)
-                    binding.categoryGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
-                    binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(categoryList) { cat ->
-                        Toast.makeText(requireContext(), cat.title ?: "View All", Toast.LENGTH_SHORT).show()
-                    }
-
-                    // Top Videos
-                    val topVideosAdapter = TopVideosAdapter(topVideos)
-                    binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                    binding.topVideosRecyclerView.adapter = topVideosAdapter
-
-                    // Dynamic Category Sections (only if videos are not empty)
-                    binding.categorySectionsContainer.removeAllViews()
-                    for (cat in categoryVideos) {
-                        if (!cat.videos.isNullOrEmpty()) {
-                            val sectionView = LayoutInflater.from(requireContext()).inflate(R.layout.item_category_section, binding.categorySectionsContainer, false)
-                            val sectionTitle = sectionView.findViewById<TextView>(R.id.sectionTitle)
-                            val sectionIcon = sectionView.findViewById<ImageView>(R.id.sectionIcon)
-                            val sectionRecycler = sectionView.findViewById<RecyclerView>(R.id.sectionRecyclerView)
-                            sectionTitle.text = cat.title
-                            Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
-                            sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                            sectionRecycler.adapter = VideoAdapter(cat.videos ?: emptyList())
-                            binding.categorySectionsContainer.addView(sectionView)
-                        }
-                    }
+                    // Show all content initially
+                    showAllContent()
                 }
                 is ApiResult.Error -> {
                     binding.loaderLayout.visibility = View.GONE
