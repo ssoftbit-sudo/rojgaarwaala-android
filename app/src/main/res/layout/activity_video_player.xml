@@ -1,16 +1,169 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:orientation="vertical">
 
-    <com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-        android:id="@+id/youtube_player_view"
+    <!-- Top Bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/black"
+        app:titleTextColor="@color/white"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:title="Video Detail" />
+
+    <!-- Scrollable Content -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:fillViewport="true">
 
-    <VideoView
-        android:id="@+id/custom_video_view"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Video Player (fixed height) -->
+            <FrameLayout
+                android:id="@+id/videoPlayerFrame"
+                android:layout_width="match_parent"
+                android:layout_height="260dp">
+
+                <VideoView
+                    android:id="@+id/custom_video_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="visible" />
+
+                <!-- Play/Pause Button -->
+                <ImageView
+                    android:id="@+id/playPauseButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_play_circle"
+                    android:layout_gravity="center"
+                    android:visibility="visible"
+                    android:tint="@color/white" />
+
+                <!-- Fullscreen Button -->
+                <ImageView
+                    android:id="@+id/fullscreenButton"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/img_full_screen"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="16dp"
+                    android:tint="@color/white"
+                    android:visibility="visible" />
+            </FrameLayout>
+
+            <!-- Like/Dislike/Share/Views Row -->
+            <LinearLayout
+                android:id="@+id/actionRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:layout_marginTop="10dp">
+
+                <ImageView
+                    android:id="@+id/likeButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/img_like"
+                    android:tint="@color/white"
+                    android:contentDescription="Like" />
+                <TextView
+                    android:id="@+id/likeCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="18dp" />
+
+                <ImageView
+                    android:id="@+id/dislikeButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/img_dislike"
+                    android:tint="@color/white"
+                    android:contentDescription="Dislike"
+                    android:layout_marginStart="0dp" />
+                <TextView
+                    android:id="@+id/dislikeCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="18dp" />
+
+                <ImageView
+                    android:id="@+id/shareButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_share"
+                    android:tint="@color/white"
+                    android:contentDescription="Share"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginEnd="18dp" />
+
+                <TextView
+                    android:id="@+id/viewsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 views"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:layout_marginStart="0dp" />
+            </LinearLayout>
+
+            <!-- Related Videos Title -->
+            <TextView
+                android:id="@+id/relatedVideosLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Related Videos"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp" />
+
+            <!-- Related Videos RecyclerView (Horizontal) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/relatedVideosRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ProgressBar for loading (overlay) -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone" />
-</FrameLayout>
+        android:layout_gravity="center"
+        android:clickable="false">
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+
+</LinearLayout>

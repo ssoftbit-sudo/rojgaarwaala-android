@@ -36,6 +36,7 @@ class VideoAdapter(private val videos: List<TopVideo>) :
             root.setOnClickListener {
                 val intent = Intent(root.context, VideoPlayerActivity::class.java)
                 intent.putExtra("video_url", video.videoUrl)
+                intent.putExtra("video_id", video.id)
                 root.context.startActivity(intent)
             }
         }

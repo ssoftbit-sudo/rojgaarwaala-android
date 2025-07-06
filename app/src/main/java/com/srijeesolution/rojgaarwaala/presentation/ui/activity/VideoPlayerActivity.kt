@@ -3,54 +3,145 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class VideoPlayerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityVideoPlayerBinding
+    private val viewModel: HomePageViewModel by viewModels()
+    private var videoId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val videoUrl = intent.getStringExtra("video_url") ?: return
+        // Setup top bar (Toolbar)
+        val toolbar: Toolbar = binding.topBar
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        if (isYouTubeUrl(videoUrl)) {
-            playYouTubeVideo(videoUrl)
-        } else {
-            playCustomVideo(videoUrl)
+        videoId = intent.getIntExtra("video_id", -1)
+        if (videoId == -1) {
+            Toast.makeText(this, "Invalid video ID", Toast.LENGTH_SHORT).show()
+            finish()
+            return
         }
+
+        setupRelatedVideosRecycler()
+        setupActionRow()
+        setupCustomVideoPlayerControls()
+        observeVideoDetails()
+        viewModel.getVideoDetails(videoId)
+    }
+
+    private fun setupActionRow() {
+        binding.likeButton.setOnClickListener {
+            Toast.makeText(this, "Liked!", Toast.LENGTH_SHORT).show()
+        }
+        binding.dislikeButton.setOnClickListener {
+            Toast.makeText(this, "Disliked!", Toast.LENGTH_SHORT).show()
+        }
+        binding.shareButton.setOnClickListener {
+            Toast.makeText(this, "Share clicked!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun observeVideoDetails() {
+        viewModel.videoDetailsLiveData.observe(this, Observer { result ->
+            when (result) {
+                is ApiResult.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+                is ApiResult.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    val data = result.data?.data
+                    if (data != null) {
+                        bindVideoDetails(data)
+                    } else {
+                        Toast.makeText(this, "No video data found", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+                is ApiResult.Error -> {
+                    binding.progressBar.visibility = View.GONE
+                    if (result.message != null) {
+                        Toast.makeText(this, "" + result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    finish()
+                }
+            }
+        })
+    }
+
+    private fun bindVideoDetails(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData) {
+        // Play video
+        if (data.videoUrl != null) {
+           /* if (isYouTubeUrl(data.videoUrl)) {
+                playYouTubeVideo(data.videoUrl)
+            } else {
+                playCustomVideo(data.videoUrl)
+            }*/
+            playCustomVideo(data.videoUrl)
+        }
+        // Like/Dislike/Share/Views
+        binding.likeCount.text = (data.likes ?: 0).toString()
+        binding.dislikeCount.text = (data.unlikes ?: 0).toString()
+        binding.viewsCount.text = "${data.views ?: 0} views"
+        // Related videos
+        val related = data.relatedVideos ?: emptyList()
+        (binding.relatedVideosRecyclerView.adapter as? VideoAdapter)?.let {
+            binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
+        } ?: run {
+            binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
+        }
+    }
+
+    private fun setupRelatedVideosRecycler() {
+        binding.relatedVideosRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.relatedVideosRecyclerView.adapter = VideoAdapter(emptyList())
     }
 
     private fun isYouTubeUrl(url: String): Boolean {
         return url.contains("youtube.com") || url.contains("youtu.be")
     }
-
+/*
     private fun playYouTubeVideo(url: String) {
         val videoId = extractYouTubeVideoId(url) ?: return
-
         with(binding.youtubePlayerView) {
             visibility = View.VISIBLE
             lifecycle.addObserver(this)
-            addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
-                override fun onReady(player: YouTubePlayer) {
+            addYouTubePlayerListener(object : com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener() {
+                override fun onReady(player: com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer) {
                     player.loadVideo(videoId, 0f)
                 }
             })
         }
-    }
+        binding.customVideoView.visibility = View.GONE
+    }*/
 
     private fun playCustomVideo(url: String) {
         with(binding.customVideoView) {
             visibility = View.VISIBLE
             setVideoURI(Uri.parse(url))
             setOnPreparedListener { it.start() }
-            setOnCompletionListener { finish() }
+            setOnCompletionListener { pause() }
         }
+       // binding.youtubePlayerView.visibility = View.GONE
     }
 
     private fun extractYouTubeVideoId(url: String): String? {
@@ -58,8 +149,50 @@ class VideoPlayerActivity : AppCompatActivity() {
         return regex.find(url)?.groupValues?.get(1)
     }
 
+    private fun setupCustomVideoPlayerControls() {
+        val videoView = binding.customVideoView
+        val playPauseButton = binding.playPauseButton
+        val fullscreenButton = binding.fullscreenButton
+        var isPlaying = false
+
+        playPauseButton.setOnClickListener {
+            if (videoView.isPlaying) {
+                videoView.pause()
+                playPauseButton.setImageResource(R.drawable.ic_play_circle)
+                playPauseButton.visibility = View.VISIBLE
+                isPlaying = false
+            } else {
+                videoView.start()
+                playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                playPauseButton.visibility = View.GONE
+                isPlaying = true
+            }
+        }
+
+        videoView.setOnPreparedListener {
+            playPauseButton.setImageResource(R.drawable.ic_play_circle)
+            playPauseButton.visibility = View.VISIBLE
+            isPlaying = false
+        }
+
+        videoView.setOnCompletionListener {
+            playPauseButton.setImageResource(R.drawable.ic_play_circle)
+            playPauseButton.visibility = View.VISIBLE
+            isPlaying = false
+        }
+
+        videoView.setOnTouchListener { _, _ ->
+            playPauseButton.visibility = if (isPlaying) View.VISIBLE else View.GONE
+            false
+        }
+
+        fullscreenButton.setOnClickListener {
+            Toast.makeText(this, "Fullscreen coming soon!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        binding.youtubePlayerView.release()
+        //binding.youtubePlayerView.release()
     }
 }

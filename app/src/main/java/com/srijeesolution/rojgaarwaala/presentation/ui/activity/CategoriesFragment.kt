@@ -50,7 +50,7 @@ class CategoriesFragment : Fragment() {
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
                     val data = apiResponse.data?.dataObj
-                    val categoryList = data?.categoryList ?: emptyList<Category>()
+                    val categoryList = data?.categories ?: emptyList<Category>()
                     binding.categoriesRecyclerView.adapter = CategoryGridAdapter(categoryList, onItemClick = { cat ->
                         Toast.makeText(requireContext(), cat.title ?: "Category", Toast.LENGTH_SHORT).show()
                     }, showViewAll = false)

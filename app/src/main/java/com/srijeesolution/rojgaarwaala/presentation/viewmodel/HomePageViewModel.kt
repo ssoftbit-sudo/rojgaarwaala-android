@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val jobSubmitLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _jobSubmitLiveData
     private var _categoriesLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val categoriesLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _categoriesLiveData
+    private var _videoDetailsLiveData : MutableLiveData<ApiResult<VideoDetailsResponse>> = MutableLiveData()
+    val videoDetailsLiveData : LiveData<ApiResult<VideoDetailsResponse>> = _videoDetailsLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -100,6 +103,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getCategoriesData().collectLatest{
                 _categoriesLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getVideoDetails(id: Int) {
+        viewModelScope.launch {
+            homePageRepository.getVideoDetails(id).collectLatest{
+                _videoDetailsLiveData.postValue(it)
             }
         }
     }

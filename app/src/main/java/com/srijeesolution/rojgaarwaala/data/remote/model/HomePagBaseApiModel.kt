@@ -18,6 +18,8 @@ data class HomePageData(
     val bannerList: ArrayList<BannerList>? = ArrayList(),
     @SerializedName("categoryList")
     val categoryList: ArrayList<Category>? = ArrayList(),
+    @SerializedName("categories")
+    val categories: ArrayList<Category>? = ArrayList(),
     @SerializedName("topVideos")
     val topVideos: ArrayList<TopVideo>? = ArrayList(),
     @SerializedName("categoryVideos")
@@ -83,6 +85,48 @@ data class UserData(
     val state: String? = null,
     @SerializedName("pincode")
     val pincode: String? = null,
+)
+
+data class VideoDetailsResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: VideoDetailsData? = null
+)
+
+data class VideoDetailsData(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("video_url")
+    val videoUrl: String? = null,
+    @SerializedName("thumbnail")
+    val thumbnail: String? = null,
+    @SerializedName("is_top_video")
+    val isTopVideo: Int? = null,
+    @SerializedName("likes")
+    val likes: Int? = null,
+    @SerializedName("unlikes")
+    val unlikes: Int? = null,
+    @SerializedName("views")
+    val views: Int? = null,
+    @SerializedName("status")
+    val status: String? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null,
+    @SerializedName("updated_at")
+    val updatedAt: String? = null,
+    @SerializedName("user")
+    val user: UserData? = null,
+    @SerializedName("category")
+    val category: Category? = null,
+    @SerializedName("related_videos")
+    val relatedVideos: List<TopVideo>? = null
 )
 
 

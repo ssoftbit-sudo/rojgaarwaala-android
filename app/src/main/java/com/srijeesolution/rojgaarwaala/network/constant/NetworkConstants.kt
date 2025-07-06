@@ -14,5 +14,7 @@ class NetworkConstants {
         const val SEND_OTP = "send-otp"
         const val VERIFY_OTP = "verify-otp"
         const val CATEGORIES = "categories"
+        const val CATEGORIES_LIST = "category-list"
+        const val VIDEO_DETAILS = "video/{id}"
     }
 }

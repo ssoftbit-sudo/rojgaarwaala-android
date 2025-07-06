@@ -1,12 +1,14 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Path
 
 interface RetrofitApiInterface {
 
@@ -40,7 +42,10 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.JOB_SUBMIT)
     suspend fun onSubmitJob(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
-    @GET(NetworkConstants.CATEGORIES)
+    @GET(NetworkConstants.CATEGORIES_LIST)
     suspend fun getCategoriesData(): Response<HomePagBaseApiModel>
+
+    @GET(NetworkConstants.VIDEO_DETAILS)
+    suspend fun getVideoDetails(@Path("id") id: Int): Response<VideoDetailsResponse>
 
 }

@@ -86,4 +86,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             })
         }.flowOn(Dispatchers.IO)
     }
+
+    override fun getVideoDetails(id: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getVideoDetails(id)
+        })
+    }.flowOn(Dispatchers.IO)
 }
