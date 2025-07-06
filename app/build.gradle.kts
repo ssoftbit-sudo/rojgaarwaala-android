@@ -70,5 +70,8 @@ dependencies {
     // implementation ("com.kaopiz:kprogresshud:1.0.2")
     implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
 
+    // Material3 NavigationBar
+    implementation("com.google.android.material:material:1.9.0")
+
 }
 kapt { correctErrorTypes = true }

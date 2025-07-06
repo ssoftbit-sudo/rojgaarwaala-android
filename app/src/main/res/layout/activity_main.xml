@@ -13,15 +13,13 @@
         android:layout_weight="1"
         android:background="@color/black" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
+    <!-- Divider line above bottom nav -->
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/black"
-        app:itemIconTint="@color/tab_unselected"
-        app:itemTextColor="@color/tab_unselected"
-        app:itemRippleColor="@color/tab_selected"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
+        android:layout_height="0.5dp"
+        android:alpha="0.4"
+        android:background="@color/gray_light_3" />
+
+    <include layout="@layout/custom_bottom_nav" />
 
 </LinearLayout>

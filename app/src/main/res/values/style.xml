@@ -60,4 +60,27 @@
         <item name="cornerSize">12dp</item>
     </style>
 
+    <!-- Bottom Navigation Style -->
+    <style name="BottomNavigationStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:textAllCaps">true</item>
+        <item name="itemTextAppearanceActive">@style/BottomNavigationTextAppearance</item>
+        <item name="itemTextAppearanceInactive">@style/BottomNavigationTextAppearance</item>
+        <item name="itemIconSize">32dp</item>
+        <item name="itemIconPadding">4dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:minHeight">56dp</item>
+    </style>
+
+    <style name="BottomNavigationTextAppearance" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
 </resources>

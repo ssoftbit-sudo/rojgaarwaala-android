@@ -23,5 +23,5 @@
     <color name="card_bg">#181818</color>
     <color name="icon_tint">#FFFFFF</color>
     <color name="tab_unselected">#888888</color>
-    <color name="tab_selected">#FFD600</color>
+    <color name="tab_selected">#FFFFFF</color>
 </resources>
