@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,10 +13,13 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.Category
 
 class CategoryGridAdapter(
     categories: List<Category>,
-    private val onItemClick: (Category) -> Unit
+    private val onItemClick: (Category) -> Unit,
+    showViewAll: Boolean = true
 ) : RecyclerView.Adapter<CategoryGridAdapter.CategoryGridViewHolder>() {
     private val gridItems = ArrayList<Category>(categories).apply {
-        add(Category(id = -1, title = "View All", iconFile = null))
+        if (showViewAll) {
+            add(Category(id = -1, title = "View All", iconFile = null))
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryGridViewHolder {
@@ -25,11 +29,16 @@ class CategoryGridAdapter(
 
     override fun onBindViewHolder(holder: CategoryGridViewHolder, position: Int) {
         val cat = gridItems[position]
-        holder.title.text = cat.title
+        if (!TextUtils.isEmpty(cat.title)) {
+            holder.title.text = cat.title
+            holder.title.visibility=View.VISIBLE
+        }else{
+            holder.title.visibility=View.GONE
+        }
         if (cat.iconFile != null) {
             Glide.with(holder.icon.context).load(cat.iconFile).placeholder(R.drawable.circle_image_placeholder).into(holder.icon)
         } else {
-            holder.icon.setImageResource(R.drawable.ic_chevron_right)
+            holder.icon.setImageResource(R.drawable.ic_category_placeholder)
         }
         holder.itemView.setOnClickListener { onItemClick(cat) }
     }

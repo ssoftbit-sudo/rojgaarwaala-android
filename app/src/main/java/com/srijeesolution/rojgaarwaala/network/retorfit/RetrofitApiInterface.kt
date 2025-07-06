@@ -40,4 +40,7 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.JOB_SUBMIT)
     suspend fun onSubmitJob(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
+    @GET(NetworkConstants.CATEGORIES)
+    suspend fun getCategoriesData(): Response<HomePagBaseApiModel>
+
 }

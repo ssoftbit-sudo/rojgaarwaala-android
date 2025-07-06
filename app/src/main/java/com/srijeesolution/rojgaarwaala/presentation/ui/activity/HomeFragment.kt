@@ -173,9 +173,16 @@ class HomeFragment : Fragment() {
         // Update category grid
         binding.categoryGridRecyclerView.visibility = View.VISIBLE
         binding.categoryGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
-        binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(categories) { cat ->
-            Toast.makeText(requireContext(), cat.title ?: "View All", Toast.LENGTH_SHORT).show()
-        }
+        binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(
+            categories,
+            onItemClick = { cat ->
+                if (cat.id == -1) {
+                    (activity as? MainActivity)?.selectTabFromFragment(2)
+                } else {
+                    Toast.makeText(requireContext(), cat.title ?: "Category", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
 
         // Update top videos
         if (topVideos.isNotEmpty()) {

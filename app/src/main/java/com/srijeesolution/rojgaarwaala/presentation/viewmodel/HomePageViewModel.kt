@@ -27,6 +27,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val profileUpdateLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _profileUpdateLiveData
     private var _jobSubmitLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val jobSubmitLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _jobSubmitLiveData
+    private var _categoriesLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val categoriesLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _categoriesLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -90,6 +92,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.onSubmitJob(email).collectLatest{
                 _jobSubmitLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getCategoriesData() {
+        viewModelScope.launch {
+            homePageRepository.getCategoriesData().collectLatest{
+                _categoriesLiveData.postValue(it)
             }
         }
     }

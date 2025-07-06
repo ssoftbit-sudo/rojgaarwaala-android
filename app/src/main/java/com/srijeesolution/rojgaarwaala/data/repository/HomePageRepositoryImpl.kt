@@ -78,4 +78,12 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             )
         }.flowOn(Dispatchers.IO)
     }
+
+    override fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).getCategoriesData()
+            })
+        }.flowOn(Dispatchers.IO)
+    }
 }

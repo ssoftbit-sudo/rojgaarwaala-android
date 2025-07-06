@@ -13,5 +13,6 @@ class NetworkConstants {
         const val JOB_SUBMIT = "job/add"
         const val SEND_OTP = "send-otp"
         const val VERIFY_OTP = "verify-otp"
+        const val CATEGORIES = "categories"
     }
 }

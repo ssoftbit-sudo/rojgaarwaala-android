@@ -14,4 +14,5 @@ interface HomePageRepository {
     fun getProfileData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateProfileLiveData(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
 }
