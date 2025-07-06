@@ -55,13 +55,6 @@ class ProfileActivity : AppCompatActivity() {
         binding.logoutButton.setOnClickListener {
             logoutUser()
         }
-        setSupportActionBar(binding.toolBar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)  // Show back arrow
-        supportActionBar?.title = "Add Job"                // Optional if title is set in XML
-
-        binding.toolBar.setNavigationOnClickListener {
-            finish()
-        }
     }
 
     /**

@@ -32,39 +32,44 @@ class OtpActivity : AppCompatActivity() {
 
         mobile = intent.getStringExtra("mobile")
 
-        observeOtpVerify()
+        observeVerifyOtp()
         binding.submitOtpButton.setOnClickListener {
             verifyOtp()
         }
     }
 
     private fun verifyOtp() {
-        val password = binding.otpEditText.text.toString().trim()
-        if (TextUtils.isEmpty(password)) {
-            binding.otpEditText.error = "Password is required"
+        val otp = binding.otpEditText.text.toString().trim()
+        if (TextUtils.isEmpty(otp)) {
+            binding.otpEditText.error = "OTP is required"
             return
         }
-        if (password.length < 6) {
-            binding.otpEditText.error = "Password must be at least 6 characters"
+        if (otp.length < 4) {
+            binding.otpEditText.error = "Enter a valid OTP"
             return
         }
         binding.progressBar.visibility = View.VISIBLE
         val requestBody = HashMap<String, String>()
-        requestBody["email"] = mobile ?: ""
-        requestBody["password"] = password
-        homePageViewModel.onLoginData(requestBody)
+        requestBody["mobile"] = mobile ?: ""
+        requestBody["otp"] = otp
+        homePageViewModel.verifyOtp(requestBody)
     }
 
-    private fun observeOtpVerify() {
-        homePageViewModel.loginRegisterLiveData.observe(this) { apiResponse ->
+    private fun observeVerifyOtp() {
+        homePageViewModel.verifyOtpLiveData.observe(this) { apiResponse ->
             when(apiResponse){
                 is ApiResult.Loading -> {
                     binding.progressBar.visibility = View.VISIBLE
                 }
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    if (apiResponse.data?.dataObj != null) {
-                        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_AUTH_TOKEN, apiResponse.data.dataObj.token ?: ""))
+                    if (apiResponse.data?.status == true) {
+                        // Save user data and token if available
+                        apiResponse.data.dataObj?.let { dataObj ->
+                            dataObj.token?.let { token ->
+                                sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_AUTH_TOKEN, token))
+                            }
+                        }
                         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, true))
                         Toast.makeText(this, "Successfully logged in!", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this, MainActivity::class.java)

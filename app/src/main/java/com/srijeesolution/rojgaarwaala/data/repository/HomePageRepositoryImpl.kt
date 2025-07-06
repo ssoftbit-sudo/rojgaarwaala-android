@@ -28,6 +28,20 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             )
         }.flowOn(Dispatchers.IO)
     }
+    override fun sendOtp(request: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall{
+                RetrofitApiService.create(BASE_URL).sendOtp(request)}
+            )
+        }.flowOn(Dispatchers.IO)
+    }
+    override fun verifyOtp(request: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall{
+                RetrofitApiService.create(BASE_URL).verifyOtp(request)}
+            )
+        }.flowOn(Dispatchers.IO)
+    }
     override fun onLogoutData(): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall{

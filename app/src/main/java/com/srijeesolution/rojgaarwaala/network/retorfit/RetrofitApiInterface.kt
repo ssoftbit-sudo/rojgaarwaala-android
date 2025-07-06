@@ -16,6 +16,12 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.ON_REGISTER)
     suspend fun onRegisterData(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
+    @POST(NetworkConstants.SEND_OTP)
+    suspend fun sendOtp(@Body request: HashMap<String, String>): Response<HomePagBaseApiModel>
+
+    @POST(NetworkConstants.VERIFY_OTP)
+    suspend fun verifyOtp(@Body request: HashMap<String, String>): Response<HomePagBaseApiModel>
+
     @GET(NetworkConstants.ON_LOGOUT)
     suspend fun onLogoutData(): Response<HomePagBaseApiModel>
 

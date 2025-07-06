@@ -17,12 +17,17 @@ import javax.inject.Inject
 class HomePageViewModel @Inject constructor(private val homePageRepository: HomePageRepository): ViewModel(){
     private var _loginRegisterLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val loginRegisterLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _loginRegisterLiveData
+    private var _sendOtpLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val sendOtpLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _sendOtpLiveData
+    private var _verifyOtpLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val verifyOtpLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _verifyOtpLiveData
     private var _homepageLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val homepageLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _homepageLiveData
     private var _profileUpdateLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val profileUpdateLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _profileUpdateLiveData
     private var _jobSubmitLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val jobSubmitLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _jobSubmitLiveData
+    
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
             homePageRepository.onLoginUser(email).collectLatest{
@@ -34,6 +39,20 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.onRegisterData(email).collectLatest{
                 _loginRegisterLiveData.postValue(it)
+            }
+        }
+    }
+    fun sendOtp(request: HashMap<String, String>) {
+        viewModelScope.launch {
+            homePageRepository.sendOtp(request).collectLatest{
+                _sendOtpLiveData.postValue(it)
+            }
+        }
+    }
+    fun verifyOtp(request: HashMap<String, String>) {
+        viewModelScope.launch {
+            homePageRepository.verifyOtp(request).collectLatest{
+                _verifyOtpLiveData.postValue(it)
             }
         }
     }

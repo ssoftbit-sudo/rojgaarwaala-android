@@ -11,5 +11,7 @@ class NetworkConstants {
         const val GET_PROFILE = "user"
         const val UPDATE_PROFILE = "profile/update"
         const val JOB_SUBMIT = "job/add"
+        const val SEND_OTP = "send-otp"
+        const val VERIFY_OTP = "verify-otp"
     }
 }

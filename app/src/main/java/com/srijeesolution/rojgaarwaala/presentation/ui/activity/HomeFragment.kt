@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -51,6 +52,13 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
+        
+        // Set up profile icon click listener
+        binding.profileIcon.setOnClickListener {
+            val intent = Intent(requireContext(), ProfileActivity::class.java)
+            startActivity(intent)
+        }
+        
         observeHomePageData()
         callApi()
     }

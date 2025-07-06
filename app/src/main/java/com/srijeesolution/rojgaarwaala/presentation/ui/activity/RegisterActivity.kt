@@ -30,7 +30,7 @@ class RegisterActivity : AppCompatActivity() {
 
         observeLoginData()
         binding.loginButton.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
+            val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()

@@ -28,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
-        observeOtpRequest()
+        observeSendOtp()
         binding.submitButton.setOnClickListener {
             requestOtp()
         }
@@ -47,31 +47,30 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun requestOtp() {
-        val email = binding.mobileEditText.text.toString().trim()
-        if (email.isEmpty()) {
-            binding.mobileEditText.error = "Email is required"
+        val mobile = binding.mobileEditText.text.toString().trim()
+        if (mobile.isEmpty()) {
+            binding.mobileEditText.error = "Mobile number is required"
             return
         }
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.mobileEditText.error = "Enter a valid email address"
+        if (mobile.length < 10) {
+            binding.mobileEditText.error = "Enter a valid mobile number"
             return
         }
         binding.progressBar.visibility = View.VISIBLE
         val requestBody = HashMap<String, String>()
-        requestBody["email"] = email
-        requestBody["password"] = "password"
-        homePageViewModel.onLoginData(requestBody)
+        requestBody["mobile"] = mobile
+        homePageViewModel.sendOtp(requestBody)
     }
 
-    private fun observeOtpRequest() {
-        homePageViewModel.loginRegisterLiveData.observe(this) { apiResponse ->
+    private fun observeSendOtp() {
+        homePageViewModel.sendOtpLiveData.observe(this) { apiResponse ->
             when(apiResponse){
                 is ApiResult.Loading -> {
                     binding.progressBar.visibility = View.VISIBLE
                 }
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    if (apiResponse.data?.dataObj != null) {
+                    if (apiResponse.data?.status == true) {
                         // Navigate to OTP screen, pass mobile number
                         val intent = Intent(this, OtpActivity::class.java)
                         intent.putExtra("mobile", binding.mobileEditText.text.toString().trim())

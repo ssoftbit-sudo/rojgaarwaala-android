@@ -4,9 +4,9 @@
     android:id="@+id/toolBar"
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
-    android:background="@color/color_green"
-    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-    android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+    android:background="@color/black"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+    android:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
     android:gravity="center"
     app:contentInsetStartWithNavigation="0dp"
     app:contentInsetLeft="0dp"
@@ -17,46 +17,49 @@
         android:layout_height="match_parent"
         android:gravity="center|start"
         android:orientation="horizontal"
-        android:weightSum="3">
+        android:weightSum="3"
+        android:paddingHorizontal="16dp">
 
         <ImageView
             android:id="@+id/ivDrawer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
+            android:layout_weight="0.8"
             android:gravity="center"
             android:scaleType="centerInside"
-            android:src="@drawable/rojgaarwala_logo"
-            android:padding="2dp"/>
+            android:src="@drawable/rojgaarwaala_logo_toolbar"
+            android:padding="4dp"
+            android:contentDescription="Rojgaarwaala Logo"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_weight="1.4"
             android:gravity="center"
             android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="1dp"
+                android:layout_marginBottom="2dp"
                 android:orientation="vertical"
                 android:gravity="center">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
+                    android:layout_gravity="center"
                     android:ellipsize="end"
-                    android:fontFamily="sans-serif"
+                    android:fontFamily="sans-serif-light"
                     android:gravity="center"
                     android:maxLines="1"
                     android:text="@string/app_name"
-                    android:textColor="@color/dark_black"
-                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:maxWidth="230dp"
-                    android:letterSpacing="0.1"/>
+                    android:maxWidth="200dp"
+                    android:letterSpacing="0.05"/>
+                    
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -64,13 +67,13 @@
                     android:fontFamily="sans-serif"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:text="\u2022 PLYWOOD \u2022 LAMINATE \u2022 HARDWARE"
-                    android:textColor="@color/dark_black"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:maxWidth="230dp"
-                    android:layout_marginTop="2dp"
-                    android:letterSpacing="0.1"/>
+                    android:text="Your Job Search Partner"
+                    android:textColor="@color/gray_light_3"
+                    android:textSize="11sp"
+                    android:textStyle="normal"
+                    android:maxWidth="200dp"
+                    android:layout_marginTop="1dp"
+                    android:letterSpacing="0.02"/>
 
             </LinearLayout>
 
@@ -78,14 +81,17 @@
 
         <ImageView
             android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="0.5"
+            android:layout_height="36dp"
+            android:layout_weight="0.8"
             android:gravity="center"
             android:scaleType="centerInside"
             android:src="@drawable/ic_profile"
             android:id="@+id/ivProfile"
-            app:tint="@color/dark_black"
-            android:visibility="visible"/>
+            app:tint="@color/white"
+            android:visibility="visible"
+            android:contentDescription="Profile"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="4dp"/>
     </LinearLayout>
 
 </androidx.appcompat.widget.Toolbar>

@@ -19,7 +19,7 @@
         <activity
             android:name=".presentation.ui.activity.SplashActivity"
             android:exported="true"
-            android:theme="@style/AppTheme.NoSplash">
+            android:theme="@style/Theme.Rojgaarwaala.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
