@@ -21,5 +21,7 @@ class NetworkConstants {
         const val VIDEO_LIKE = "video/like"
         const val VIDEO_UNLIKE = "video/unlike"
         const val VIDEO_INCREMENT_VIEW = "video/increment-view"
+        const val JOB_DELETE = "job/delete/{id}"
+        const val JOB_UPDATE = "job/update/{id}"
     }
 }

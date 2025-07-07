@@ -24,4 +24,6 @@ interface HomePageRepository {
     fun likeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun unlikeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun incrementVideoView(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
+    fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
+    fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
 }

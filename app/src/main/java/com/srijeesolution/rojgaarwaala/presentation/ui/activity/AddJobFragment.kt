@@ -27,6 +27,7 @@ class AddJobFragment : Fragment() {
     @Inject
     lateinit var sharedPrefs: SharedPrefs
     private lateinit var homePageViewModel: HomePageViewModel
+    private var updateJobId: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -39,12 +40,25 @@ class AddJobFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
+        // Check for update mode
+        arguments?.let { args ->
+            updateJobId = args.getInt("job_id", -1).takeIf { it != -1 }
+            binding.jobTitle.setText(args.getString("job_title", ""))
+            binding.jobDescription.setText(args.getString("job_description", ""))
+            binding.jobCategory.setText(args.getString("job_category", ""))
+            binding.jobResponsibility.setText(args.getString("job_responsibility", ""))
+            if (updateJobId != null) {
+                binding.submitBtn.text = "Update Job"
+            }
+        }
+
         observeJobSubmitData()
+        observeJobUpdateData()
         setupCategoryDropdown()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
             binding.submitBtn.isEnabled = false
-            binding.submitBtn.text = "Submitting..."
+            binding.submitBtn.text = if (updateJobId != null) "Updating..." else "Submitting..."
             validateLogin()
         }
         binding.viewAllJobsBtn.setOnClickListener {
@@ -84,6 +98,31 @@ class AddJobFragment : Fragment() {
                     binding.submitBtn.isEnabled = true
                     binding.submitBtn.text = "Submit Job"
                     Toast.makeText(requireContext(),"Failed Job Submit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun observeJobUpdateData() {
+        homePageViewModel.updateJobLiveData.observe(viewLifecycleOwner) { apiResponse ->
+            when(apiResponse){
+                is ApiResult.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+                is ApiResult.Success -> {
+                    binding.progressBar.visibility= View.GONE
+                    binding.submitBtn.isEnabled = true
+                    binding.submitBtn.text = "Update Job"
+                    Toast.makeText(requireContext(),"Job updated successfully!", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.rootLayout, ViewAllJobsFragment())
+                        .commit()
+                }
+                is ApiResult.Error -> {
+                    binding.progressBar.visibility= View.GONE
+                    binding.submitBtn.isEnabled = true
+                    binding.submitBtn.text = "Update Job"
+                    Toast.makeText(requireContext(),"Failed to update job", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -175,7 +214,11 @@ class AddJobFragment : Fragment() {
             this["job_responsibility"] = jobResponsibility
         }
 
-        homePageViewModel.onSubmitJob(requestBody)
+        if (updateJobId != null) {
+            homePageViewModel.updateJob(updateJobId!!, requestBody)
+        } else {
+            homePageViewModel.onSubmitJob(requestBody)
+        }
     }
 
     override fun onDestroyView() {

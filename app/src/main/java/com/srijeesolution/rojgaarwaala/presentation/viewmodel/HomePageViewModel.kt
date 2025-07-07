@@ -44,6 +44,10 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val unlikeVideoLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _unlikeVideoLiveData
     private var _incrementViewLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val incrementViewLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _incrementViewLiveData
+    private var _deleteJobLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val deleteJobLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _deleteJobLiveData
+    private var _updateJobLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val updateJobLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _updateJobLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -163,6 +167,22 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.incrementVideoView(videoId).collectLatest{
                 _incrementViewLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun deleteJob(id: Int) {
+        viewModelScope.launch {
+            homePageRepository.deleteJob(id).collectLatest{
+                _deleteJobLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun updateJob(id: Int, data: HashMap<String, String>) {
+        viewModelScope.launch {
+            homePageRepository.updateJob(id, data).collectLatest{
+                _updateJobLiveData.postValue(it)
             }
         }
     }

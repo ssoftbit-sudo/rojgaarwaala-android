@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -51,9 +52,13 @@ class CategoriesFragment : Fragment() {
                     binding.progressBar.visibility = View.GONE
                     val data = apiResponse.data?.dataObj
                     val categoryList = data?.categories ?: emptyList<Category>()
-                                         val adapter = CategoryGridAdapter(categoryList, onItemClick = { cat ->
-                         // Handle category click if needed
-                     }, showViewAll = false)
+                    val adapter = CategoryGridAdapter(categoryList, onItemClick = fun(cat) {
+                        val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
+                        intent.putExtra("category_id", cat.id)
+                        intent.putExtra("category_title", cat.title)
+                        intent.putExtra("category_icon", cat.iconFile)
+                        startActivity(intent)
+                    }, showViewAll = false)
                     binding.categoriesRecyclerView.adapter = adapter
                 }
                 is ApiResult.Error -> {

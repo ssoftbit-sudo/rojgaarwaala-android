@@ -43,12 +43,7 @@ class CategoryGridAdapter(
             holder.icon.setImageResource(R.drawable.ic_category_placeholder)
         }
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, CategoryVideosActivity::class.java)
-            intent.putExtra("category_id", cat.id)
-            intent.putExtra("category_title", cat.title)
-            intent.putExtra("category_icon", cat.iconFile)
-            context.startActivity(intent)
+            onItemClick(cat)
         }
     }
 

@@ -11,6 +11,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Path
+import retrofit2.http.DELETE
 
 interface RetrofitApiInterface {
 
@@ -64,5 +65,11 @@ interface RetrofitApiInterface {
 
     @POST(NetworkConstants.VIDEO_INCREMENT_VIEW)
     suspend fun incrementVideoView(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
+
+    @DELETE(NetworkConstants.JOB_DELETE)
+    suspend fun deleteJob(@Path("id") id: Int): Response<HomePagBaseApiModel>
+
+    @POST(NetworkConstants.JOB_UPDATE)
+    suspend fun updateJob(@Path("id") id: Int, @Body data: HashMap<String, String>): Response<HomePagBaseApiModel>
 
 }

@@ -177,12 +177,20 @@ class HomeFragment : Fragment() {
         binding.categoryGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
         binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(
             displayCategories,
-            onItemClick = { cat ->
+            onItemClick = fun(cat) {
                 if (cat.id == -1) {
-                    (activity as? MainActivity)?.selectTabFromFragment(2)
-                } else {
-                    Toast.makeText(requireContext(), cat.title ?: "Category", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, CategoriesFragment())
+                        .addToBackStack(null)
+                        .commit()
+                    return
                 }
+                // Open CategoryVideosActivity for real categories
+                val intent = android.content.Intent(requireContext(), CategoryVideosActivity::class.java)
+                intent.putExtra("category_id", cat.id)
+                intent.putExtra("category_title", cat.title)
+                intent.putExtra("category_icon", cat.iconFile)
+                startActivity(intent)
             },
             showViewAll = showViewAll
         )

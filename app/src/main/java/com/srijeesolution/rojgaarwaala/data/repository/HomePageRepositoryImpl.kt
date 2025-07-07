@@ -129,4 +129,16 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).incrementVideoView(request)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun deleteJob(id: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).deleteJob(id)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun updateJob(id: Int, data: HashMap<String, String>) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).updateJob(id, data)
+        })
+    }.flowOn(Dispatchers.IO)
 }
