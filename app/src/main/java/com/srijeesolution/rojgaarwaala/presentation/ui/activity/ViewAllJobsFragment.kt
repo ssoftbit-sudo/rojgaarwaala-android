@@ -23,7 +23,8 @@ class ViewAllJobsFragment : Fragment() {
     private var _binding: FragmentViewAllJobsBinding? = null
     private val binding get() = _binding!!
     private lateinit var homePageViewModel: HomePageViewModel
-    private val jobsAdapter = JobsGridAdapter()
+    private val inReviewJobsAdapter = JobsGridAdapter()
+    private val liveJobsAdapter = JobsGridAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -35,8 +36,10 @@ class ViewAllJobsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
-        binding.jobsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.jobsRecyclerView.adapter = jobsAdapter
+        binding.inReviewJobsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.inReviewJobsRecyclerView.adapter = inReviewJobsAdapter
+        binding.liveJobsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.liveJobsRecyclerView.adapter = liveJobsAdapter
         observeJobList()
         homePageViewModel.getJobList()
     }
@@ -49,8 +52,10 @@ class ViewAllJobsFragment : Fragment() {
                 }
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    val jobs = result.data?.data?.inReview ?: emptyList()
-                    jobsAdapter.submitList(jobs)
+                    val inReviewJobs = result.data?.data?.inReview ?: emptyList()
+                    val liveJobs = result.data?.data?.live ?: emptyList()
+                    inReviewJobsAdapter.submitList(inReviewJobs)
+                    liveJobsAdapter.submitList(liveJobs)
                 }
                 is ApiResult.Error -> {
                     binding.progressBar.visibility = View.GONE
