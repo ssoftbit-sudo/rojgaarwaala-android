@@ -166,4 +166,20 @@ data class JobItem(
     val status: String? = null
 )
 
+data class CategoryVideosResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: CategoryVideosData? = null
+)
+
+data class CategoryVideosData(
+    @SerializedName("category")
+    val category: Category? = null,
+    @SerializedName("videos")
+    val videos: List<TopVideo>? = null
+)
+
 

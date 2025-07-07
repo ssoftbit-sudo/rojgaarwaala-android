@@ -17,5 +17,6 @@ class NetworkConstants {
         const val CATEGORIES_LIST = "category-list"
         const val VIDEO_DETAILS = "video/{id}"
         const val JOB_LIST = "job/list"
+        const val CATEGORY_VIDEOS = "category/{id}/videos"
     }
 }

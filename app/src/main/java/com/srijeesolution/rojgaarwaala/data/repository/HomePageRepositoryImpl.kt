@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.data.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls.Companion.BASE_URL
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -96,6 +97,12 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
     override fun getJobList() = flow {
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).getJobList()
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getCategoryVideos(id: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getCategoryVideos(id)
         })
     }.flowOn(Dispatchers.IO)
 }

@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala.network.retorfit
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -51,5 +52,8 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.JOB_LIST)
     suspend fun getJobList(): Response<JobListResponse>
+
+    @GET(NetworkConstants.CATEGORY_VIDEOS)
+    suspend fun getCategoryVideos(@Path("id") id: Int): Response<CategoryVideosResponse>
 
 }

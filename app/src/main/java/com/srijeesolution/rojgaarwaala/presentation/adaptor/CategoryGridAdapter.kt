@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.content.Intent
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.Category
+import com.srijeesolution.rojgaarwaala.presentation.ui.activity.CategoryVideosActivity
 
 class CategoryGridAdapter(
     categories: List<Category>,
@@ -40,7 +42,14 @@ class CategoryGridAdapter(
         } else {
             holder.icon.setImageResource(R.drawable.ic_category_placeholder)
         }
-        holder.itemView.setOnClickListener { onItemClick(cat) }
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, CategoryVideosActivity::class.java)
+            intent.putExtra("category_id", cat.id)
+            intent.putExtra("category_title", cat.title)
+            intent.putExtra("category_icon", cat.iconFile)
+            context.startActivity(intent)
+        }
     }
 
     override fun getItemCount() = gridItems.size

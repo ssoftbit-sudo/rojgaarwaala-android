@@ -57,7 +57,7 @@
             android:name=".presentation.ui.activity.OtpActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
-
+        <activity android:name=".presentation.ui.activity.CategoryVideosActivity" />
 
     </application>
 
