@@ -171,17 +171,20 @@ class HomeFragment : Fragment() {
         }
         
         // Update category grid
+        val displayCategories = if (categories.size > 7) categories.take(7) else categories
+        val showViewAll = categories.size > 7
         binding.categoryGridRecyclerView.visibility = View.VISIBLE
         binding.categoryGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
         binding.categoryGridRecyclerView.adapter = CategoryGridAdapter(
-            categories,
+            displayCategories,
             onItemClick = { cat ->
                 if (cat.id == -1) {
                     (activity as? MainActivity)?.selectTabFromFragment(2)
                 } else {
                     Toast.makeText(requireContext(), cat.title ?: "Category", Toast.LENGTH_SHORT).show()
                 }
-            }
+            },
+            showViewAll = showViewAll
         )
 
         // Update top videos
