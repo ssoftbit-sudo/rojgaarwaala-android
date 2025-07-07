@@ -28,6 +28,7 @@ class AddJobFragment : Fragment() {
     lateinit var sharedPrefs: SharedPrefs
     private lateinit var homePageViewModel: HomePageViewModel
     private var updateJobId: Int? = null
+    private var categoryDialog: AlertDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -152,12 +153,15 @@ class AddJobFragment : Fragment() {
                     val categories = data?.categories ?: emptyList<com.srijeesolution.rojgaarwaala.data.remote.model.Category>()
                     val titles = categories.mapNotNull { it.title }
                     if (titles.isNotEmpty()) {
+                        if (categoryDialog?.isShowing == true) return@observe
                         val builder = AlertDialog.Builder(requireContext())
                         builder.setTitle("Select Category")
                         builder.setItems(titles.toTypedArray()) { dialog, which ->
                             binding.jobCategory.setText(titles[which])
                         }
-                        builder.show()
+                        categoryDialog = builder.create()
+                        categoryDialog?.setOnDismissListener { categoryDialog = null }
+                        categoryDialog?.show()
                     } else {
                         Toast.makeText(requireContext(), "No categories found", Toast.LENGTH_SHORT).show()
                     }
