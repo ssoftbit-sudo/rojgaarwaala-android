@@ -23,12 +23,12 @@ class ViewAllJobsFragment : Fragment() {
     private var _binding: FragmentViewAllJobsBinding? = null
     private val binding get() = _binding!!
     private lateinit var homePageViewModel: HomePageViewModel
+    private val liveJobsAdapter = JobsGridAdapter()
     private val inReviewJobsAdapter = JobsGridAdapter(
         onEdit = { job -> editJob(job) },
         onDelete = { job -> confirmDeleteJob(job) },
         showActions = true
     )
-    private val liveJobsAdapter = JobsGridAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
