@@ -38,6 +38,12 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val jobListLiveData : LiveData<ApiResult<JobListResponse>> = _jobListLiveData
     private var _categoryVideosLiveData : MutableLiveData<ApiResult<CategoryVideosResponse>> = MutableLiveData()
     val categoryVideosLiveData : LiveData<ApiResult<CategoryVideosResponse>> = _categoryVideosLiveData
+    private var _likeVideoLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val likeVideoLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _likeVideoLiveData
+    private var _unlikeVideoLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val unlikeVideoLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _unlikeVideoLiveData
+    private var _incrementViewLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val incrementViewLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _incrementViewLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -133,6 +139,30 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getCategoryVideos(id).collectLatest{
                 _categoryVideosLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun likeVideo(videoId: Int) {
+        viewModelScope.launch {
+            homePageRepository.likeVideo(videoId).collectLatest{
+                _likeVideoLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun unlikeVideo(videoId: Int) {
+        viewModelScope.launch {
+            homePageRepository.unlikeVideo(videoId).collectLatest{
+                _unlikeVideoLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun incrementVideoView(videoId: Int) {
+        viewModelScope.launch {
+            homePageRepository.incrementVideoView(videoId).collectLatest{
+                _incrementViewLiveData.postValue(it)
             }
         }
     }

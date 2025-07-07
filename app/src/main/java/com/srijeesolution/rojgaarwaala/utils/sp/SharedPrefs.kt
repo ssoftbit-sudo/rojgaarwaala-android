@@ -42,6 +42,26 @@ class SharedPrefs @Inject constructor(context: Context) {
        return preferences.contains(key)
     }
 
+    fun setVideoLiked(videoId: Int, isLiked: Boolean) {
+        val editor = preferences.edit()
+        editor.putBoolean("video_liked_$videoId", isLiked)
+        editor.apply()
+    }
+
+    fun isVideoLiked(videoId: Int): Boolean {
+        return preferences.getBoolean("video_liked_$videoId", false)
+    }
+
+    fun setVideoDisliked(videoId: Int, isDisliked: Boolean) {
+        val editor = preferences.edit()
+        editor.putBoolean("video_disliked_$videoId", isDisliked)
+        editor.apply()
+    }
+
+    fun isVideoDisliked(videoId: Int): Boolean {
+        return preferences.getBoolean("video_disliked_$videoId", false)
+    }
+
     companion object {
         private const val APP_NAME = "com.kaarigar"
     }

@@ -15,7 +15,9 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class VideoPlayerActivity : AppCompatActivity() {
@@ -23,6 +25,14 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityVideoPlayerBinding
     private val viewModel: HomePageViewModel by viewModels()
     private var videoId: Int = -1
+    private var likeCount = 0
+    private var dislikeCount = 0
+    private var hasIncrementedView = false
+    private var currentVideoTitle: String? = null
+    private var currentVideoUrl: String? = null
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,14 +60,64 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun setupActionRow() {
+        // Set initial like/dislike states from SharedPreferences
+        updateLikeDislikeUI()
+        updateLikeDislikeCounts()
+
         binding.likeButton.setOnClickListener {
-            Toast.makeText(this, "Liked!", Toast.LENGTH_SHORT).show()
+            if (!sharedPrefs.isVideoLiked(videoId)) {
+                viewModel.likeVideo(videoId)
+                sharedPrefs.setVideoLiked(videoId, true)
+                if (sharedPrefs.isVideoDisliked(videoId)) {
+                    sharedPrefs.setVideoDisliked(videoId, false)
+                    dislikeCount = (dislikeCount - 1).coerceAtLeast(0)
+                }
+                likeCount += 1
+                updateLikeDislikeUI()
+                updateLikeDislikeCounts()
+            }
         }
         binding.dislikeButton.setOnClickListener {
-            Toast.makeText(this, "Disliked!", Toast.LENGTH_SHORT).show()
+            if (!sharedPrefs.isVideoDisliked(videoId)) {
+                viewModel.unlikeVideo(videoId)
+                sharedPrefs.setVideoDisliked(videoId, true)
+                if (sharedPrefs.isVideoLiked(videoId)) {
+                    sharedPrefs.setVideoLiked(videoId, false)
+                    likeCount = (likeCount - 1).coerceAtLeast(0)
+                }
+                dislikeCount += 1
+                updateLikeDislikeUI()
+                updateLikeDislikeCounts()
+            }
         }
         binding.shareButton.setOnClickListener {
-            Toast.makeText(this, "Share clicked!", Toast.LENGTH_SHORT).show()
+            shareVideo()
+        }
+    }
+
+    private fun updateLikeDislikeCounts() {
+        binding.likeCount.text = likeCount.toString()
+        binding.dislikeCount.text = dislikeCount.toString()
+    }
+
+    private fun updateLikeDislikeUI() {
+        val isLiked = sharedPrefs.isVideoLiked(videoId)
+        val isDisliked = sharedPrefs.isVideoDisliked(videoId)
+        // Update like button
+        if (isLiked) {
+            binding.likeButton.setImageResource(R.drawable.ic_thumb_up_filled)
+            binding.likeButton.alpha = 1.0f
+        } else {
+            binding.likeButton.setImageResource(R.drawable.ic_thumb_up_outline)
+            binding.likeButton.alpha = 0.7f
+        }
+        // Update dislike button
+        if (isDisliked) {
+            binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_filled)
+            binding.dislikeButton.alpha = 1.0f
+        } else {
+            binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_outline)
+            binding.dislikeButton.alpha = 0.7f
         }
     }
 
@@ -105,8 +165,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             playCustomVideo(data.videoUrl)
         }
         // Like/Dislike/Share/Views
-        binding.likeCount.text = (data.likes ?: 0).toString()
-        binding.dislikeCount.text = (data.unlikes ?: 0).toString()
+        likeCount = data.likes ?: 0
+        dislikeCount = data.unlikes ?: 0
+        updateLikeDislikeCounts()
         binding.viewsCount.text = "${data.views ?: 0} views"
         // Related videos
         val related = data.relatedVideos ?: emptyList()
@@ -115,6 +176,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         } ?: run {
             binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
         }
+        currentVideoTitle = data.title
+        currentVideoUrl = data.videoUrl
     }
 
     private fun setupRelatedVideosRecycler() {
@@ -160,6 +223,12 @@ class VideoPlayerActivity : AppCompatActivity() {
                 playPauseButton.setImageResource(R.drawable.ic_pause_circle)
                 playPauseButton.visibility = View.GONE
                 isPlaying = true
+                // Increment view count only once per session
+                if (!hasIncrementedView) {
+                    viewModel.incrementVideoView(videoId)
+                    binding.viewsCount.text = "${(binding.viewsCount.text.toString().split(" ")[0].toIntOrNull() ?: 0) + 1} views"
+                    hasIncrementedView = true
+                }
             }
         }
 
@@ -185,6 +254,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         fullscreenButton.setOnClickListener {
             Toast.makeText(this, "Fullscreen coming soon!", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun shareVideo() {
+        val title = currentVideoTitle ?: "Check out this video!"
+        val url = currentVideoUrl ?: ""
+        val appDetails = "\n\nWatch this video on Rojgaarwaala! Download the app: https://rojgaarwaala.com"
+        val shareText = "$title\n$url$appDetails"
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+        startActivity(android.content.Intent.createChooser(intent, "Share video via"))
     }
 
     override fun onDestroy() {

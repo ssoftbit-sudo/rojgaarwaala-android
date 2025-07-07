@@ -105,4 +105,28 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).getCategoryVideos(id)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun likeVideo(videoId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["video_id"] = videoId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).likeVideo(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun unlikeVideo(videoId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["video_id"] = videoId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).unlikeVideo(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun incrementVideoView(videoId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["video_id"] = videoId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).incrementVideoView(request)
+        })
+    }.flowOn(Dispatchers.IO)
 }
