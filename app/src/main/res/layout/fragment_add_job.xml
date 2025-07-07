@@ -208,6 +208,19 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="16dp" />
 
+                    <!-- View All Jobs Button -->
+                    <Button
+                        android:id="@+id/viewAllJobsBtn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="View All Jobs"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:background="@drawable/modern_button_background"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="24dp" />
+
                 </LinearLayout>
 
             </ScrollView>

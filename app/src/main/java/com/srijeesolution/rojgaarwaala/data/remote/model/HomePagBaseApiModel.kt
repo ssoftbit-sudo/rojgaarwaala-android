@@ -129,4 +129,41 @@ data class VideoDetailsData(
     val relatedVideos: List<TopVideo>? = null
 )
 
+data class JobListResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: JobListData? = null
+)
+
+data class JobListData(
+    @SerializedName("in_review")
+    val inReview: List<JobItem>? = null,
+    @SerializedName("live")
+    val live: List<JobItem>? = null
+)
+
+data class JobItem(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null,
+    @SerializedName("updated_at")
+    val updatedAt: String? = null,
+    @SerializedName("job_title")
+    val jobTitle: String? = null,
+    @SerializedName("job_description")
+    val jobDescription: String? = null,
+    @SerializedName("job_category")
+    val jobCategory: String? = null,
+    @SerializedName("job_responsibility")
+    val jobResponsibility: String? = null,
+    @SerializedName("user_id")
+    val userId: Int? = null,
+    @SerializedName("status")
+    val status: String? = null
+)
+
 

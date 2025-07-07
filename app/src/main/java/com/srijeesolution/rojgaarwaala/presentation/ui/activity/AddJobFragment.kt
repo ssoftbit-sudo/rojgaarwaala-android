@@ -18,6 +18,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.app.AlertDialog
 
+import com.srijeesolution.rojgaarwaala.R
+
 @AndroidEntryPoint
 class AddJobFragment : Fragment() {
     private var _binding: FragmentAddJobBinding? = null
@@ -44,6 +46,12 @@ class AddJobFragment : Fragment() {
             binding.submitBtn.isEnabled = false
             binding.submitBtn.text = "Submitting..."
             validateLogin()
+        }
+        binding.viewAllJobsBtn.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.rootLayout, ViewAllJobsFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
 

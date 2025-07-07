@@ -92,4 +92,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).getVideoDetails(id)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun getJobList() = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getJobList()
+        })
+    }.flowOn(Dispatchers.IO)
 }

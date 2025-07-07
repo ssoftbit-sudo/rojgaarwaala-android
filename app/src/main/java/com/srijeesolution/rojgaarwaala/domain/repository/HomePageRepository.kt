@@ -2,6 +2,7 @@ package com.srijeesolution.rojgaarwaala.domain.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
 
@@ -17,4 +18,5 @@ interface HomePageRepository {
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
+    fun getJobList(): Flow<ApiResult<JobListResponse>>
 }
