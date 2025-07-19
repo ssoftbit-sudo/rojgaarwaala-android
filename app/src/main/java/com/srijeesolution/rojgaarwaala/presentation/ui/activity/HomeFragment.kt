@@ -25,7 +25,10 @@ import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.CategoryGridAdapter
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -50,6 +53,9 @@ class HomeFragment : Fragment() {
     private var allCategoryVideos: List<CategoryVideo> = emptyList()
     private var isSearchMode = false
 
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -63,8 +69,15 @@ class HomeFragment : Fragment() {
         
         // Set up profile icon click listener
         binding.profileIcon.setOnClickListener {
-            val intent = Intent(requireContext(), ProfileActivity::class.java)
-            startActivity(intent)
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+                val intent = Intent(requireContext(), ProfileActivity::class.java)
+                startActivity(intent)
+            } else {
+                // User is not logged in, navigate to login screen
+                val intent = Intent(requireContext(), LoginActivity::class.java)
+                startActivity(intent)
+                Toast.makeText(requireContext(), "Please login to access profile", Toast.LENGTH_SHORT).show()
+            }
         }
         
         // Set up search functionality

@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,10 @@ import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.content.pm.ActivityInfo
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
 
 @AndroidEntryPoint
 class VideoPlayerActivity : AppCompatActivity() {
@@ -30,6 +35,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var hasIncrementedView = false
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
+    private var isFullscreen = false
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -192,6 +198,15 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun playCustomVideo(url: String) {
         with(binding.customVideoView) {
             visibility = View.VISIBLE
+            
+            // Ensure video is centered in normal view
+            val layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            layoutParams.gravity = android.view.Gravity.CENTER
+            this.layoutParams = layoutParams
+            
             setVideoURI(Uri.parse(url))
             setOnPreparedListener { it.start() }
             setOnCompletionListener { pause() }
@@ -252,7 +267,88 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         fullscreenButton.setOnClickListener {
-            Toast.makeText(this, "Fullscreen coming soon!", Toast.LENGTH_SHORT).show()
+            toggleFullscreen()
+        }
+    }
+
+    private fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        if (isFullscreen) {
+            enterFullscreen()
+        } else {
+            exitFullscreen()
+        }
+    }
+
+    private fun enterFullscreen() {
+        // Hide UI elements
+        binding.topBar.visibility = View.GONE
+        binding.actionRow.visibility = View.GONE
+        binding.viewsCount.visibility = View.GONE
+        binding.relatedVideosLabel.visibility = View.GONE
+        binding.relatedVideosRecyclerView.visibility = View.GONE
+        
+        // Make video player frame take full screen
+        val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+        frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+        frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+        binding.videoPlayerFrame.layoutParams = frameParams
+        
+        // Make video player take full screen
+        val layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        layoutParams.gravity = android.view.Gravity.CENTER
+        binding.customVideoView.layoutParams = layoutParams
+        
+        // Hide system UI
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        
+        // Change fullscreen button icon
+        binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen_exit)
+    }
+
+    private fun exitFullscreen() {
+        // Show UI elements
+        binding.topBar.visibility = View.VISIBLE
+        binding.actionRow.visibility = View.VISIBLE
+        binding.viewsCount.visibility = View.VISIBLE
+        binding.relatedVideosLabel.visibility = View.VISIBLE
+        binding.relatedVideosRecyclerView.visibility = View.VISIBLE
+        
+        // Restore video player frame to original size
+        val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+        frameParams.height = 260.dpToPx()
+        frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+        binding.videoPlayerFrame.layoutParams = frameParams
+        
+        // Restore video player size with proper centering
+        val layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        layoutParams.gravity = android.view.Gravity.CENTER
+        binding.customVideoView.layoutParams = layoutParams
+        
+        // Show system UI
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        
+        // Change fullscreen button icon
+        binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen)
+    }
+    
+    private fun Int.dpToPx(): Int {
+        return (this * resources.displayMetrics.density).toInt()
+    }
+
+    override fun onBackPressed() {
+        if (isFullscreen) {
+            exitFullscreen()
+        } else {
+            super.onBackPressed()
         }
     }
 

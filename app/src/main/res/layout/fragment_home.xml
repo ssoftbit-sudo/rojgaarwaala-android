@@ -149,7 +149,6 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginStart="12dp"
-                android:layout_marginTop="20dp"
                 android:layout_marginBottom="4dp" />
 
             <!-- Top Videos Horizontal List -->
@@ -170,7 +169,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingTop="8dp"
-                android:layout_marginTop="20dp"
                 android:paddingBottom="16dp" />
 
             <!-- No Results Found Message -->

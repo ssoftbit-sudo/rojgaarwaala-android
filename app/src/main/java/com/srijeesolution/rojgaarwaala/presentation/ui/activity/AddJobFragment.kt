@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.view.inputmethod.InputMethodManager
@@ -40,6 +42,15 @@ class AddJobFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
+
+        // Check if user is logged in
+        if (!sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            // User is not logged in, navigate to login screen
+            val intent = Intent(requireContext(), LoginActivity::class.java)
+            startActivity(intent)
+            Toast.makeText(requireContext(), "Please login to add jobs", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         // Check for update mode
         arguments?.let { args ->
