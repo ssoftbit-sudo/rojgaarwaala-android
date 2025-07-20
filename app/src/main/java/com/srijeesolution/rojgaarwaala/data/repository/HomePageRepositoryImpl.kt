@@ -1,7 +1,6 @@
 package com.srijeesolution.rojgaarwaala.data.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
-import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls.Companion.BASE_URL
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -11,7 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import javax.inject.Inject
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApiResponse() {
 
@@ -80,6 +82,30 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         }.flowOn(Dispatchers.IO)
     }
 
+    override fun onSubmitJobWithFiles(
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: MultipartBody.Part?,
+        imageFile: MultipartBody.Part?,
+        logoFile: MultipartBody.Part?
+    ): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).onSubmitJobWithFiles(
+                    jobTitle =  jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    pdf = pdfFile,
+                    image = imageFile,
+                    logo = logoFile
+                )
+            })
+        }.flowOn(Dispatchers.IO)
+    }
+
     override fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
@@ -141,4 +167,30 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).updateJob(id, data)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun updateJobWithFiles(
+        id: Int,
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: MultipartBody.Part?,
+        imageFile: MultipartBody.Part?,
+        logoFile: MultipartBody.Part?
+    ): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).updateJobWithFiles(
+                    id = id,
+                    jobTitle = jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    pdf = pdfFile,
+                    image = imageFile,
+                    logo = logoFile
+                )
+            })
+        }.flowOn(Dispatchers.IO)
+    }
 }

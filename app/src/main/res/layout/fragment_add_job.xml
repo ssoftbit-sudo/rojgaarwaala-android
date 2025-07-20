@@ -53,6 +53,7 @@
                         android:layout_marginBottom="32dp">
 
                         <TextView
+                            android:id="@+id/pageTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Add New Job"
@@ -169,7 +170,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginBottom="32dp">
+                        android:layout_marginBottom="20dp">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -192,6 +193,210 @@
                             android:textSize="16sp"
                             android:paddingStart="20dp"
                             android:paddingEnd="20dp" />
+
+                    </LinearLayout>
+
+                    <!-- File Upload Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="32dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Upload Files (Optional)"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- PDF Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_pdf"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="PDF Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="PDF Document"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadPdfBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 10MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/pdfFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
+
+                        <!-- Image Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_image"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="Image Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Job Image"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadImageBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 2MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/imageFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
+
+                        <!-- Logo Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_logo"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="Logo Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Company Logo"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadLogoBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 2MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/logoFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
 
                     </LinearLayout>
 

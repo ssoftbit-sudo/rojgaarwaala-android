@@ -112,7 +112,9 @@ class ViewAllJobsFragment : Fragment() {
             putString("job_description", job.jobDescription)
             putString("job_category", job.jobCategory)
             putString("job_responsibility", job.jobResponsibility)
-            // Add other fields as needed
+            putString("job_pdf", job.pdf)
+            putString("job_image", job.image)
+            putString("job_logo", job.logo)
         }
         val addJobFragment = AddJobFragment()
         addJobFragment.arguments = bundle

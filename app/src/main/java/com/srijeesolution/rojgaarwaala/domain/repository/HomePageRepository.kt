@@ -6,6 +6,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MultipartBody
 
 interface HomePageRepository {
     fun onLoginUser(email: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
@@ -17,6 +18,15 @@ interface HomePageRepository {
     fun getProfileData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateProfileLiveData(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun onSubmitJobWithFiles(
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: MultipartBody.Part?,
+        imageFile: MultipartBody.Part?,
+        logoFile: MultipartBody.Part?
+    ): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
@@ -26,4 +36,14 @@ interface HomePageRepository {
     fun incrementVideoView(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun updateJobWithFiles(
+        id: Int,
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: MultipartBody.Part?,
+        imageFile: MultipartBody.Part?,
+        logoFile: MultipartBody.Part?
+    ): Flow<ApiResult<HomePagBaseApiModel>>
 }

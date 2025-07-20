@@ -12,6 +12,10 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Path
 import retrofit2.http.DELETE
+import retrofit2.http.Multipart
+import retrofit2.http.Part
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface RetrofitApiInterface {
 
@@ -45,6 +49,18 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.JOB_SUBMIT)
     suspend fun onSubmitJob(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
+    @Multipart
+    @POST(NetworkConstants.JOB_SUBMIT)
+    suspend fun onSubmitJobWithFiles(
+        @Part("job_title") jobTitle: RequestBody,
+        @Part("job_description") jobDescription: RequestBody,
+        @Part("job_category") jobCategory: RequestBody,
+        @Part("job_responsibility") jobResponsibility: RequestBody,
+        @Part pdf: MultipartBody.Part? = null,
+        @Part image: MultipartBody.Part? = null,
+        @Part logo: MultipartBody.Part? = null
+    ): Response<HomePagBaseApiModel>
+
     @GET(NetworkConstants.CATEGORIES_LIST)
     suspend fun getCategoriesData(): Response<HomePagBaseApiModel>
 
@@ -71,5 +87,18 @@ interface RetrofitApiInterface {
 
     @POST(NetworkConstants.JOB_UPDATE)
     suspend fun updateJob(@Path("id") id: Int, @Body data: HashMap<String, String>): Response<HomePagBaseApiModel>
+
+    @Multipart
+    @POST(NetworkConstants.JOB_UPDATE)
+    suspend fun updateJobWithFiles(
+        @Path("id") id: Int,
+        @Part("job_title") jobTitle: RequestBody,
+        @Part("job_description") jobDescription: RequestBody,
+        @Part("job_category") jobCategory: RequestBody,
+        @Part("job_responsibility") jobResponsibility: RequestBody,
+        @Part pdf: MultipartBody.Part? = null,
+        @Part image: MultipartBody.Part? = null,
+        @Part logo: MultipartBody.Part? = null
+    ): Response<HomePagBaseApiModel>
 
 }

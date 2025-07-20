@@ -160,6 +160,12 @@ data class JobItem(
     val jobCategory: String? = null,
     @SerializedName("job_responsibility")
     val jobResponsibility: String? = null,
+    @SerializedName("pdf")
+    val pdf: String? = null,
+    @SerializedName("image")
+    val image: String? = null,
+    @SerializedName("logo")
+    val logo: String? = null,
     @SerializedName("user_id")
     val userId: Int? = null,
     @SerializedName("status")

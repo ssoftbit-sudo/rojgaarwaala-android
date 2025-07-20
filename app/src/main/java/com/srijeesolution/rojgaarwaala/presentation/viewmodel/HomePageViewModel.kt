@@ -115,6 +115,25 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
+    fun onSubmitJobWithFiles(
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: okhttp3.MultipartBody.Part?,
+        imageFile: okhttp3.MultipartBody.Part?,
+        logoFile: okhttp3.MultipartBody.Part?
+    ) {
+        viewModelScope.launch {
+            homePageRepository.onSubmitJobWithFiles(
+                jobTitle, jobDescription, jobCategory, jobResponsibility,
+                pdfFile, imageFile, logoFile
+            ).collectLatest{
+                _jobSubmitLiveData.postValue(it)
+            }
+        }
+    }
+
     fun getCategoriesData() {
         viewModelScope.launch {
             homePageRepository.getCategoriesData().collectLatest{
@@ -182,6 +201,26 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     fun updateJob(id: Int, data: HashMap<String, String>) {
         viewModelScope.launch {
             homePageRepository.updateJob(id, data).collectLatest{
+                _updateJobLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun updateJobWithFiles(
+        id: Int,
+        jobTitle: String,
+        jobDescription: String,
+        jobCategory: String,
+        jobResponsibility: String,
+        pdfFile: okhttp3.MultipartBody.Part?,
+        imageFile: okhttp3.MultipartBody.Part?,
+        logoFile: okhttp3.MultipartBody.Part?
+    ) {
+        viewModelScope.launch {
+            homePageRepository.updateJobWithFiles(
+                id, jobTitle, jobDescription, jobCategory, jobResponsibility,
+                pdfFile, imageFile, logoFile
+            ).collectLatest{
                 _updateJobLiveData.postValue(it)
             }
         }
