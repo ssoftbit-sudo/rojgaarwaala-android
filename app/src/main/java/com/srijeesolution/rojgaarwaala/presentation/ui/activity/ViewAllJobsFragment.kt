@@ -52,8 +52,11 @@ class ViewAllJobsFragment : Fragment() {
         homePageViewModel.jobListLiveData.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is ApiResult.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.progressBar.bringToFront()
+                    // Show loading overlay and hide main content completely
+                    binding.loadingOverlay.visibility = View.VISIBLE
+                    binding.mainContent.visibility = View.GONE
+                    
+                    // Also hide individual elements to ensure they don't show
                     binding.inReviewJobsHeader.visibility = View.GONE
                     binding.liveJobsHeader.visibility = View.GONE
                     binding.inReviewJobsRecyclerView.visibility = View.GONE
@@ -62,36 +65,43 @@ class ViewAllJobsFragment : Fragment() {
                     binding.noLiveJobsText.visibility = View.GONE
                 }
                 is ApiResult.Success -> {
-                    binding.progressBar.visibility = View.GONE
+                    // Hide loading overlay and show main content
+                    binding.loadingOverlay.visibility = View.GONE
+                    binding.mainContent.visibility = View.VISIBLE
+                    
                     val inReviewJobs = result.data?.data?.inReview ?: emptyList()
                     val liveJobs = result.data?.data?.live ?: emptyList()
 
-                    // In Review Section
+                    // In Review Section - only show header if there are jobs
                     if (inReviewJobs.isNotEmpty()) {
                         binding.inReviewJobsHeader.visibility = View.VISIBLE
                         binding.inReviewJobsRecyclerView.visibility = View.VISIBLE
                         binding.noInReviewJobsText.visibility = View.GONE
                         inReviewJobsAdapter.submitList(inReviewJobs)
                     } else {
-                        binding.inReviewJobsHeader.visibility = View.VISIBLE
+                        binding.inReviewJobsHeader.visibility = View.GONE
                         binding.inReviewJobsRecyclerView.visibility = View.GONE
-                        binding.noInReviewJobsText.visibility = View.VISIBLE
+                        binding.noInReviewJobsText.visibility = View.GONE
                     }
 
-                    // Live Section
+                    // Live Section - only show header if there are jobs
                     if (liveJobs.isNotEmpty()) {
                         binding.liveJobsHeader.visibility = View.VISIBLE
                         binding.liveJobsRecyclerView.visibility = View.VISIBLE
                         binding.noLiveJobsText.visibility = View.GONE
                         liveJobsAdapter.submitList(liveJobs)
                     } else {
-                        binding.liveJobsHeader.visibility = View.VISIBLE
+                        binding.liveJobsHeader.visibility = View.GONE
                         binding.liveJobsRecyclerView.visibility = View.GONE
-                        binding.noLiveJobsText.visibility = View.VISIBLE
+                        binding.noLiveJobsText.visibility = View.GONE
                     }
                 }
                 is ApiResult.Error -> {
-                    binding.progressBar.visibility = View.GONE
+                    // Hide loading overlay and show main content with error state
+                    binding.loadingOverlay.visibility = View.GONE
+                    binding.mainContent.visibility = View.VISIBLE
+                    
+                    // Hide headers and show error messages
                     binding.inReviewJobsHeader.visibility = View.GONE
                     binding.liveJobsHeader.visibility = View.GONE
                     binding.inReviewJobsRecyclerView.visibility = View.GONE

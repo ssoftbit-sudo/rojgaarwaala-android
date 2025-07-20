@@ -1,104 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/black">
 
-    <TextView
-        android:id="@+id/allJobsTitle"
+    <!-- Main Content -->
+    <ScrollView
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="All Jobs"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:paddingTop="32dp"
-        android:paddingBottom="16dp" />
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/inReviewJobsHeader"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/allJobsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="All Jobs"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingTop="32dp"
+                android:paddingBottom="16dp" />
+
+            <TextView
+                android:id="@+id/inReviewJobsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="In Review Jobs"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:background="@color/black"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/inReviewJobsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="80dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                android:nestedScrollingEnabled="false" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:id="@+id/liveJobsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Live Jobs"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:background="@color/black"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/liveJobsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="80dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/noInReviewJobsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No in review jobs found"
+                android:textColor="@color/gray_light_3"
+                android:textSize="15sp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/noLiveJobsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No live jobs found"
+                android:textColor="@color/gray_light_3"
+                android:textSize="15sp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:paddingBottom="8dp" />
+
+            <!-- Bottom padding for better scrolling experience -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="32dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Loading Overlay -->
+    <LinearLayout
+        android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="In Review Jobs"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
         android:background="@color/black"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="4dp" />
+        android:visibility="gone">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/inReviewJobsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="80dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:theme="@style/ThemeOverlay.App.ProgressBarWhite" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        android:layout_marginVertical="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading jobs..."
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp" />
 
-    <TextView
-        android:id="@+id/liveJobsHeader"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Live Jobs"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:background="@color/black"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="4dp" />
+    </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/liveJobsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="80dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/noInReviewJobsText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No in review jobs found"
-        android:textColor="@color/gray_light_3"
-        android:textSize="15sp"
-        android:gravity="center"
-        android:visibility="gone"
-        android:paddingBottom="8dp" />
-
-    <TextView
-        android:id="@+id/noLiveJobsText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No live jobs found"
-        android:textColor="@color/gray_light_3"
-        android:textSize="15sp"
-        android:gravity="center"
-        android:visibility="gone"
-        android:paddingBottom="8dp" />
-
-</LinearLayout> 
+</FrameLayout> 
