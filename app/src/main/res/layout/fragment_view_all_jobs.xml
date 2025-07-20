@@ -84,27 +84,18 @@
                 android:scrollbars="vertical"
                 android:nestedScrollingEnabled="false" />
 
+            <!-- General no jobs message -->
             <TextView
-                android:id="@+id/noInReviewJobsText"
+                android:id="@+id/noJobsMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="No in review jobs found"
+                android:text="No jobs available"
                 android:textColor="@color/gray_light_3"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:gravity="center"
                 android:visibility="gone"
-                android:paddingBottom="8dp" />
-
-            <TextView
-                android:id="@+id/noLiveJobsText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="No live jobs found"
-                android:textColor="@color/gray_light_3"
-                android:textSize="15sp"
-                android:gravity="center"
-                android:visibility="gone"
-                android:paddingBottom="8dp" />
+                android:paddingTop="32dp"
+                android:paddingBottom="32dp" />
 
             <!-- Bottom padding for better scrolling experience -->
             <View
