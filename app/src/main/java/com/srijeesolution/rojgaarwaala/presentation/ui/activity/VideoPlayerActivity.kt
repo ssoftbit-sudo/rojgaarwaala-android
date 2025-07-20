@@ -177,10 +177,19 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.viewsCount.text = "${data.views ?: 0} views"
         // Related videos
         val related = data.relatedVideos ?: emptyList()
-        (binding.relatedVideosRecyclerView.adapter as? VideoAdapter)?.let {
-            binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
-        } ?: run {
-            binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
+        if (related.isNotEmpty()) {
+            // Show related videos section when data is available
+            binding.relatedVideosLabel.visibility = View.VISIBLE
+            binding.relatedVideosRecyclerView.visibility = View.VISIBLE
+            (binding.relatedVideosRecyclerView.adapter as? VideoAdapter)?.let {
+                binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
+            } ?: run {
+                binding.relatedVideosRecyclerView.adapter = VideoAdapter(related)
+            }
+        } else {
+            // Hide related videos section when no data
+            binding.relatedVideosLabel.visibility = View.GONE
+            binding.relatedVideosRecyclerView.visibility = View.GONE
         }
         currentVideoTitle = data.title
         currentVideoUrl = data.videoUrl
@@ -316,8 +325,13 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.topBar.visibility = View.VISIBLE
         binding.actionRow.visibility = View.VISIBLE
         binding.viewsCount.visibility = View.VISIBLE
-        binding.relatedVideosLabel.visibility = View.VISIBLE
-        binding.relatedVideosRecyclerView.visibility = View.VISIBLE
+        
+        // Only show related videos if they were visible before fullscreen
+        val relatedVideos = viewModel.videoDetailsLiveData.value?.data?.data?.relatedVideos ?: emptyList()
+        if (relatedVideos.isNotEmpty()) {
+            binding.relatedVideosLabel.visibility = View.VISIBLE
+            binding.relatedVideosRecyclerView.visibility = View.VISIBLE
+        }
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
