@@ -30,6 +30,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var sharedPrefs: SharedPrefs
 
+    // Track current tab
+    private var currentTabIndex = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -63,7 +66,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        when (currentTabIndex) {
+            0 -> {
+                // On Home tab, close the app
+                super.onBackPressed()
+            }
+            1, 2 -> {
+                // On Add Job or Categories tab, go back to Home
+                selectTab(0)
+            }
+            else -> {
+                super.onBackPressed()
+            }
+        }
+    }
+
     private fun selectTab(index: Int) {
+        currentTabIndex = index
         val selectedColor = ContextCompat.getColor(this, R.color.tab_selected)
         val unselectedColor = ContextCompat.getColor(this, R.color.tab_unselected)
 
