@@ -192,7 +192,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             binding.relatedVideosRecyclerView.visibility = View.GONE
         }
         currentVideoTitle = data.title
-        currentVideoUrl = data.videoUrl
+        currentVideoUrl = data.stream_url?:data.videoUrl
     }
 
     private fun setupRelatedVideosRecycler() {

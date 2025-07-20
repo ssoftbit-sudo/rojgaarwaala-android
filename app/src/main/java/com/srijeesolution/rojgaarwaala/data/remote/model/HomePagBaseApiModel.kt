@@ -105,6 +105,8 @@ data class VideoDetailsData(
     val description: String? = null,
     @SerializedName("video_url")
     val videoUrl: String? = null,
+    @SerializedName("stream_url")
+    val stream_url: String? = null,
     @SerializedName("thumbnail")
     val thumbnail: String? = null,
     @SerializedName("is_top_video")
