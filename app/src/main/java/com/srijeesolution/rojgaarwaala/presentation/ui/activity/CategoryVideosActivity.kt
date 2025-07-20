@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityCategoryVideosBinding
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.GridVideosListAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -58,7 +59,7 @@ class CategoryVideosActivity : ComponentActivity() {
                     } else {
                         binding.noVideosText.visibility = View.GONE
                         binding.videosRecyclerView.visibility = View.VISIBLE
-                        binding.videosRecyclerView.adapter = TopVideosAdapter(videos)
+                        binding.videosRecyclerView.adapter = GridVideosListAdapter(videos)
                     }
                 }
                 is ApiResult.Error -> {

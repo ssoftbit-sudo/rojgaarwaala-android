@@ -47,7 +47,7 @@ data class TopVideo(
     @SerializedName("thumbnail")
     val thumbnail: String? = null,
     @SerializedName("is_top_video")
-    val isTopVideo: Int? = null,
+    val isTopVideo: Boolean? = null,
     @SerializedName("user")
     val user: UserData? = null,
 )
@@ -108,7 +108,7 @@ data class VideoDetailsData(
     @SerializedName("thumbnail")
     val thumbnail: String? = null,
     @SerializedName("is_top_video")
-    val isTopVideo: Int? = null,
+    val isTopVideo: Boolean? = null,
     @SerializedName("likes")
     val likes: Int? = null,
     @SerializedName("unlikes")
