@@ -35,7 +35,10 @@ class CategoryVideosActivity : ComponentActivity() {
 
         binding.videosRecyclerView.layoutManager = GridLayoutManager(this, 2)
 
-        if (categoryId != -1) {
+        if (categoryId == -1 && categoryTitle == "Top Videos") {
+            // Handle top videos case
+            viewModel.getHomePageData("") // Get all home page data to extract top videos
+        } else if (categoryId != -1) {
             viewModel.getCategoryVideos(categoryId)
         } else {
             Toast.makeText(this, "Invalid category", Toast.LENGTH_SHORT).show()
@@ -45,29 +48,59 @@ class CategoryVideosActivity : ComponentActivity() {
     }
 
     private fun observeData() {
-        viewModel.categoryVideosLiveData.observe(this) { result ->
-            when (result) {
-                is ApiResult.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                }
-                is ApiResult.Success -> {
-                    binding.progressBar.visibility = View.GONE
-                    val videos = result.data?.data?.videos ?: emptyList()
-                    if (videos.isEmpty()) {
-                        binding.noVideosText.visibility = View.VISIBLE
-                        binding.videosRecyclerView.visibility = View.GONE
-                    } else {
-                        binding.noVideosText.visibility = View.GONE
-                        binding.videosRecyclerView.visibility = View.VISIBLE
-                        binding.videosRecyclerView.adapter = GridVideosListAdapter(videos)
+        val categoryId = intent.getIntExtra("category_id", -1)
+        val categoryTitle = intent.getStringExtra("category_title") ?: ""
+        
+        if (categoryId == -1 && categoryTitle == "Top Videos") {
+            // Observe home page data for top videos
+            viewModel.homepageLiveData.observe(this) { result ->
+                when (result) {
+                    is ApiResult.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+                    is ApiResult.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        val topVideos = result.data?.dataObj?.topVideos ?: emptyList()
+                        if (topVideos.isEmpty()) {
+                            binding.noVideosText.visibility = View.VISIBLE
+                            binding.videosRecyclerView.visibility = View.GONE
+                        } else {
+                            binding.noVideosText.visibility = View.GONE
+                            binding.videosRecyclerView.visibility = View.VISIBLE
+                            binding.videosRecyclerView.adapter = GridVideosListAdapter(topVideos)
+                        }
+                    }
+                    is ApiResult.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, result.message?.toString() ?: "Unknown error", Toast.LENGTH_SHORT).show()
                     }
                 }
-                is ApiResult.Error -> {
-                    binding.progressBar.visibility = View.GONE
-                    Toast.makeText(this, result.message?.toString() ?: "Unknown error", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            // Observe category videos data
+            viewModel.categoryVideosLiveData.observe(this) { result ->
+                when (result) {
+                    is ApiResult.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+                    is ApiResult.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        val videos = result.data?.data?.videos ?: emptyList()
+                        if (videos.isEmpty()) {
+                            binding.noVideosText.visibility = View.VISIBLE
+                            binding.videosRecyclerView.visibility = View.GONE
+                        } else {
+                            binding.noVideosText.visibility = View.GONE
+                            binding.videosRecyclerView.visibility = View.VISIBLE
+                            binding.videosRecyclerView.adapter = GridVideosListAdapter(videos)
+                        }
+                    }
+                    is ApiResult.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, result.message?.toString() ?: "Unknown error", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
-
     }
 } 

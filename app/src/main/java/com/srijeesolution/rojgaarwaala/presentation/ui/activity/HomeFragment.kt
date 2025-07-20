@@ -83,6 +83,9 @@ class HomeFragment : Fragment() {
         // Set up search functionality
         setupSearch()
         
+        // Set up View All click listeners
+        setupViewAllClickListeners()
+        
         observeHomePageData()
         callApi()
     }
@@ -113,6 +116,18 @@ class HomeFragment : Fragment() {
         binding.clearSearchButton.setOnClickListener {
             binding.searchBar.setText("")
             binding.searchBar.clearFocus()
+        }
+    }
+
+    private fun setupViewAllClickListeners() {
+        // Top Videos View All click listener
+        binding.topVideosViewAll.setOnClickListener {
+            // Open CategoryVideosActivity for top videos (using a special category ID or title)
+            val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
+            intent.putExtra("category_id", -1) // Special ID for top videos
+            intent.putExtra("category_title", "Top Videos")
+            intent.putExtra("category_icon", "null")
+            startActivity(intent)
         }
     }
 
@@ -212,29 +227,50 @@ class HomeFragment : Fragment() {
         if (topVideos.isNotEmpty()) {
             binding.topVideosLabel.visibility = View.VISIBLE
             binding.topVideosRecyclerView.visibility = View.VISIBLE
+            binding.topVideosViewAll.visibility = View.VISIBLE
             val topVideosAdapter = TopVideosAdapter(topVideos)
             binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             binding.topVideosRecyclerView.adapter = topVideosAdapter
         } else {
             binding.topVideosLabel.visibility = View.GONE
             binding.topVideosRecyclerView.visibility = View.GONE
+            binding.topVideosViewAll.visibility = View.GONE
         }
 
         // Update category sections
-        binding.categorySectionsContainer.visibility = View.VISIBLE
-        binding.categorySectionsContainer.removeAllViews()
-        for (cat in categoryVideos) {
-            if (!cat.videos.isNullOrEmpty()) {
-                val sectionView = LayoutInflater.from(requireContext()).inflate(R.layout.item_category_section, binding.categorySectionsContainer, false)
-                val sectionTitle = sectionView.findViewById<TextView>(R.id.sectionTitle)
-                val sectionIcon = sectionView.findViewById<ImageView>(R.id.sectionIcon)
-                val sectionRecycler = sectionView.findViewById<RecyclerView>(R.id.sectionRecyclerView)
-                sectionTitle.text = cat.title
-                Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
-                sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                sectionRecycler.adapter = VideoAdapter(cat.videos ?: emptyList())
-                binding.categorySectionsContainer.addView(sectionView)
+        if (categoryVideos.isNotEmpty()) {
+            binding.categorySectionsContainer.visibility = View.VISIBLE
+            binding.categorySectionsContainer.removeAllViews()
+            for (cat in categoryVideos) {
+                if (!cat.videos.isNullOrEmpty()) {
+                    val sectionView = LayoutInflater.from(requireContext()).inflate(R.layout.item_category_section, binding.categorySectionsContainer, false)
+                    val sectionTitle = sectionView.findViewById<TextView>(R.id.sectionTitle)
+                    val sectionIcon = sectionView.findViewById<ImageView>(R.id.sectionIcon)
+                    val sectionViewAll = sectionView.findViewById<TextView>(R.id.sectionViewAll)
+                    val sectionRecycler = sectionView.findViewById<RecyclerView>(R.id.sectionRecyclerView)
+                    
+                    sectionTitle.text = cat.title
+                    Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
+                    
+                    // Show View All button only when videos are available
+                    sectionViewAll.visibility = View.VISIBLE
+                    
+                    // Set up View All click listener for this category section
+                    sectionViewAll.setOnClickListener {
+                        val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
+                        intent.putExtra("category_id", cat.id)
+                        intent.putExtra("category_title", cat.title)
+                        intent.putExtra("category_icon", cat.iconFile)
+                        startActivity(intent)
+                    }
+                    
+                    sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                    sectionRecycler.adapter = VideoAdapter(cat.videos ?: emptyList())
+                    binding.categorySectionsContainer.addView(sectionView)
+                }
             }
+        } else {
+            binding.categorySectionsContainer.visibility = View.GONE
         }
     }
 
@@ -243,6 +279,7 @@ class HomeFragment : Fragment() {
         binding.homeProgressBar.visibility = View.VISIBLE
         binding.topVideosLabel.visibility = View.INVISIBLE
         binding.topVideosRecyclerView.visibility = View.INVISIBLE
+        binding.topVideosViewAll.visibility = View.INVISIBLE
         binding.categoryGridRecyclerView.visibility = View.INVISIBLE
         binding.categorySectionsContainer.visibility = View.INVISIBLE
         homePageViewModel.getHomePageData("")
