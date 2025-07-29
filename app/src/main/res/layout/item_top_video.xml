@@ -39,7 +39,8 @@
                 android:gravity="top"
                 android:layout_gravity="top"
                 android:maxLines="2"
-                android:ellipsize="end" />
+                android:ellipsize="end"
+                android:visibility="gone"/>
         </LinearLayout>
     </FrameLayout>
 

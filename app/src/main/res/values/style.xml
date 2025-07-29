@@ -2,8 +2,7 @@
 <resources>
     <!-- Android 12+ Splash Screen Theme -->
     <style name="Theme.Rojgaarwaala.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/black</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/rojgaarwaala_logo_modern</item>
+        <item name="windowSplashScreenBackground">@drawable/rojgaarwaala_logo_new_v</item>
         <item name="windowSplashScreenAnimationDuration">1000</item>
         <item name="postSplashScreenTheme">@style/Theme.Rojgaarwaala</item>
     </style>
