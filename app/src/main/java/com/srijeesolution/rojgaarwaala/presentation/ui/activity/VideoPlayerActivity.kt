@@ -23,6 +23,9 @@ import android.content.pm.ActivityInfo
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.os.Handler
+import android.os.Looper
+import android.widget.SeekBar
 
 @AndroidEntryPoint
 class VideoPlayerActivity : AppCompatActivity() {
@@ -36,6 +39,20 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
     private var isFullscreen = false
+    private var videoDuration = 0
+    private var isSeeking = false
+    private var isPlaying = false
+    private val progressHandler = Handler(Looper.getMainLooper())
+    private val progressRunnable = object : Runnable {
+        override fun run() {
+            updateVideoProgress()
+            progressHandler.postDelayed(this, 1000) // Update every second
+        }
+    }
+    private val autoHideHandler = Handler(Looper.getMainLooper())
+    private val autoHideRunnable = Runnable {
+        binding.playPauseButton.visibility = View.GONE
+    }
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -205,20 +222,60 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun playCustomVideo(url: String) {
-        with(binding.customVideoView) {
-            visibility = View.VISIBLE
+        val videoView = binding.customVideoView
+        val playPauseButton = binding.playPauseButton
+        val thumbnailOverlay = binding.videoThumbnailOverlay
+        val seekBar = binding.videoSeekBar
+        val currentTimeText = binding.currentTimeText
+        val totalTimeText = binding.totalTimeText
+        
+        videoView.visibility = View.VISIBLE
+        
+        // Ensure video is centered in normal view
+        val layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        layoutParams.gravity = android.view.Gravity.CENTER
+        videoView.layoutParams = layoutParams
+        
+        videoView.setVideoURI(Uri.parse(url))
+        
+        // Set up prepared listener with progress tracking
+        videoView.setOnPreparedListener { mediaPlayer ->
+            // Hide thumbnail and start video
+            thumbnailOverlay.visibility = View.GONE
+            playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+            playPauseButton.visibility = View.VISIBLE
+            isPlaying = true
             
-            // Ensure video is centered in normal view
-            val layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            layoutParams.gravity = android.view.Gravity.CENTER
-            this.layoutParams = layoutParams
+            // Get video duration and update total time for both normal and fullscreen
+            videoDuration = mediaPlayer.duration
+            totalTimeText.text = formatTime(videoDuration)
+            currentTimeText.text = "0:00"
+            binding.fullscreenTotalTimeText.text = formatTime(videoDuration)
+            binding.fullscreenCurrentTimeText.text = "0:00"
+            seekBar.progress = 0
+            binding.fullscreenVideoSeekBar.progress = 0
             
-            setVideoURI(Uri.parse(url))
-            setOnPreparedListener { it.start() }
-            setOnCompletionListener { pause() }
+            // Start the video
+            mediaPlayer.start()
+            
+            // Start progress tracking
+            progressHandler.post(progressRunnable)
+            
+            // Auto-hide play button after 3 seconds
+            startAutoHideTimer()
+        }
+        
+        videoView.setOnCompletionListener {
+            playPauseButton.setImageResource(R.drawable.ic_play_circle)
+            playPauseButton.visibility = View.VISIBLE
+            isPlaying = false
+            progressHandler.removeCallbacks(progressRunnable)
+            autoHideHandler.removeCallbacks(autoHideRunnable)
+            seekBar.progress = 0
+            currentTimeText.text = "0:00"
         }
     }
 
@@ -232,7 +289,86 @@ class VideoPlayerActivity : AppCompatActivity() {
         val playPauseButton = binding.playPauseButton
         val fullscreenButton = binding.fullscreenButton
         val thumbnailOverlay = binding.videoThumbnailOverlay
-        var isPlaying = false
+        val seekBar = binding.videoSeekBar
+        val currentTimeText = binding.currentTimeText
+        val totalTimeText = binding.totalTimeText
+        val fullscreenSeekBar = binding.fullscreenVideoSeekBar
+        val fullscreenCurrentTimeText = binding.fullscreenCurrentTimeText
+        val fullscreenTotalTimeText = binding.fullscreenTotalTimeText
+
+        // Setup SeekBar with improved performance (normal mode)
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser && videoDuration > 0) {
+                    val newPosition = (progress * videoDuration) / 100
+                    currentTimeText.text = formatTime(newPosition)
+                    fullscreenCurrentTimeText.text = formatTime(newPosition)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                isSeeking = true
+                progressHandler.removeCallbacks(progressRunnable)
+                autoHideHandler.removeCallbacks(autoHideRunnable)
+                
+                // Show play button during seeking
+                if (isPlaying) {
+                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (videoDuration > 0) {
+                    val newPosition = (seekBar?.progress ?: 0) * videoDuration / 100
+                    videoView.seekTo(newPosition)
+                    
+                    // Resume progress tracking immediately after seek
+                    if (isPlaying) {
+                        progressHandler.post(progressRunnable)
+                        startAutoHideTimer()
+                    }
+                }
+                isSeeking = false
+            }
+        })
+
+        // Setup Fullscreen SeekBar with synchronized functionality
+        fullscreenSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser && videoDuration > 0) {
+                    val newPosition = (progress * videoDuration) / 100
+                    fullscreenCurrentTimeText.text = formatTime(newPosition)
+                    currentTimeText.text = formatTime(newPosition)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                isSeeking = true
+                progressHandler.removeCallbacks(progressRunnable)
+                autoHideHandler.removeCallbacks(autoHideRunnable)
+                
+                // Show play button during seeking
+                if (isPlaying) {
+                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (videoDuration > 0) {
+                    val newPosition = (seekBar?.progress ?: 0) * videoDuration / 100
+                    videoView.seekTo(newPosition)
+                    
+                    // Resume progress tracking immediately after seek
+                    if (isPlaying) {
+                        progressHandler.post(progressRunnable)
+                        startAutoHideTimer()
+                    }
+                }
+                isSeeking = false
+            }
+        })
 
         playPauseButton.setOnClickListener {
             if (videoView.isPlaying) {
@@ -240,13 +376,20 @@ class VideoPlayerActivity : AppCompatActivity() {
                 playPauseButton.setImageResource(R.drawable.ic_play_circle)
                 playPauseButton.visibility = View.VISIBLE
                 isPlaying = false
+                progressHandler.removeCallbacks(progressRunnable)
+                autoHideHandler.removeCallbacks(autoHideRunnable)
             } else {
                 // Hide thumbnail overlay when user clicks play
                 thumbnailOverlay.visibility = View.GONE
                 videoView.start()
                 playPauseButton.setImageResource(R.drawable.ic_pause_circle)
-                playPauseButton.visibility = View.GONE
+                playPauseButton.visibility = View.VISIBLE
                 isPlaying = true
+                progressHandler.post(progressRunnable)
+                
+                // Auto-hide play button after 3 seconds
+                startAutoHideTimer()
+                
                 // Increment view count only once per session
                 if (!hasIncrementedView) {
                     viewModel.incrementVideoView(videoId)
@@ -256,28 +399,53 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         }
 
-        videoView.setOnPreparedListener {
-            // Hide thumbnail and start video
-            thumbnailOverlay.visibility = View.GONE
-            playPauseButton.setImageResource(R.drawable.ic_play_circle)
-            playPauseButton.visibility = View.VISIBLE
-            isPlaying = false
-        }
-
-        videoView.setOnCompletionListener {
-            playPauseButton.setImageResource(R.drawable.ic_play_circle)
-            playPauseButton.visibility = View.VISIBLE
-            isPlaying = false
-        }
-
+        // Smart touch handling for video area
         videoView.setOnTouchListener { _, _ ->
-            playPauseButton.visibility = if (isPlaying) View.VISIBLE else View.GONE
+            if (isPlaying) {
+                // Show pause button when video is playing
+                playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                playPauseButton.visibility = View.VISIBLE
+                startAutoHideTimer()
+            } else {
+                // Show play button when video is paused
+                playPauseButton.setImageResource(R.drawable.ic_play_circle)
+                playPauseButton.visibility = View.VISIBLE
+                startAutoHideTimer()
+            }
             false
         }
 
         fullscreenButton.setOnClickListener {
             toggleFullscreen()
         }
+    }
+
+    private fun updateVideoProgress() {
+        if (!isSeeking) {
+            val videoView = binding.customVideoView
+            val seekBar = binding.videoSeekBar
+            val currentTimeText = binding.currentTimeText
+            val fullscreenSeekBar = binding.fullscreenVideoSeekBar
+            val fullscreenCurrentTimeText = binding.fullscreenCurrentTimeText
+            
+            if (videoView.isPlaying && videoDuration > 0) {
+                val currentPosition = videoView.currentPosition
+                val progress = (currentPosition * 100) / videoDuration
+                
+                // Update both normal and fullscreen progress controls
+                seekBar.progress = progress
+                currentTimeText.text = formatTime(currentPosition)
+                fullscreenSeekBar.progress = progress
+                fullscreenCurrentTimeText.text = formatTime(currentPosition)
+            }
+        }
+    }
+
+    private fun formatTime(milliseconds: Int): String {
+        val seconds = (milliseconds / 1000).toLong()
+        val minutes = seconds / 60
+        val remainingSeconds = seconds % 60
+        return String.format("%d:%02d", minutes, remainingSeconds)
     }
 
     private fun toggleFullscreen() {
@@ -296,6 +464,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.viewsCount.visibility = View.GONE
         binding.relatedVideosLabel.visibility = View.GONE
         binding.relatedVideosRecyclerView.visibility = View.GONE
+        
+        // Hide normal video progress controls and show fullscreen ones
+        binding.videoSeekBar.visibility = View.GONE
+        binding.currentTimeText.visibility = View.GONE
+        binding.totalTimeText.visibility = View.GONE
+        binding.fullscreenProgressControls.visibility = View.VISIBLE
         
         // Make video player frame take full screen
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
@@ -332,6 +506,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             binding.relatedVideosLabel.visibility = View.VISIBLE
             binding.relatedVideosRecyclerView.visibility = View.VISIBLE
         }
+        
+        // Show normal video progress controls and hide fullscreen ones
+        binding.videoSeekBar.visibility = View.VISIBLE
+        binding.currentTimeText.visibility = View.VISIBLE
+        binding.totalTimeText.visibility = View.VISIBLE
+        binding.fullscreenProgressControls.visibility = View.GONE
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
@@ -379,5 +559,12 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        progressHandler.removeCallbacks(progressRunnable)
+        autoHideHandler.removeCallbacks(autoHideRunnable)
+    }
+
+    private fun startAutoHideTimer() {
+        autoHideHandler.removeCallbacks(autoHideRunnable)
+        autoHideHandler.postDelayed(autoHideRunnable, 3000) // Auto-hide after 3 seconds
     }
 }
