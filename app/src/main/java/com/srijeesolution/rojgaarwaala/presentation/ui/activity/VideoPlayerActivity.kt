@@ -27,6 +27,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.SeekBar
 import android.content.Intent
+import android.util.Log
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
 @AndroidEntryPoint
@@ -71,6 +72,24 @@ class VideoPlayerActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         videoId = intent.getIntExtra("video_id", -1)
+        // Also check for string video_id (from notifications)
+        if (videoId == -1) {
+            val videoIdString = intent.getStringExtra("video_id")
+            android.util.Log.d("VideoPlayerActivity", "Video ID from intent: $videoIdString")
+            if (!videoIdString.isNullOrEmpty()) {
+                try {
+                    videoId = videoIdString.toInt()
+                    android.util.Log.d("VideoPlayerActivity", "Converted video ID: $videoId")
+                } catch (e: NumberFormatException) {
+                    android.util.Log.e("VideoPlayerActivity", "Failed to convert video ID: $videoIdString", e)
+                    Toast.makeText(this, "Invalid video ID format", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return
+                }
+            }
+        }
+        
+        android.util.Log.d("VideoPlayerActivity", "Final video ID: $videoId")
         if (videoId == -1) {
             Toast.makeText(this, "Invalid video ID", Toast.LENGTH_SHORT).show()
             finish()
@@ -626,7 +645,22 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (isFullscreen) {
             exitFullscreen()
         } else {
-            super.onBackPressed()
+            // Check if user came from notification
+            val fromNotification = intent.getBooleanExtra("from_notification", false) ||
+                                  intent.getStringExtra("notification_type") != null ||
+                                  intent.getStringExtra("type") != null
+            
+            if (fromNotification) {
+                // User came from notification - go to MainActivity and clear stack
+                // Create a clean intent without notification flags
+                val cleanIntent = Intent(this, MainActivity::class.java)
+                cleanIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(cleanIntent)
+                finish()
+            } else {
+                // Normal back navigation
+                super.onBackPressed()
+            }
         }
     }
 

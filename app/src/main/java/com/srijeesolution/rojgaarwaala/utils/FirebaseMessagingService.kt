@@ -40,23 +40,53 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         
+        Log.d(TAG, "=== FIREBASE MESSAGE RECEIVED ===")
         Log.d(TAG, "From: ${remoteMessage.from}")
+        Log.d(TAG, "Full remote message: $remoteMessage")
+        Log.d(TAG, "Message ID: ${remoteMessage.messageId}")
+        Log.d(TAG, "Message Type: ${remoteMessage.messageType}")
+        Log.d(TAG, "Collapse Key: ${remoteMessage.collapseKey}")
+        Log.d(TAG, "Priority: ${remoteMessage.priority}")
+        Log.d(TAG, "Original Priority: ${remoteMessage.originalPriority}")
+        Log.d(TAG, "Sent Time: ${remoteMessage.sentTime}")
+        Log.d(TAG, "TTL: ${remoteMessage.ttl}")
+        
+        // Log all data keys
+        Log.d(TAG, "Data keys: ${remoteMessage.data.keys}")
         
         // Log the notification data
-        remoteMessage.data.isNotEmpty().let {
+        if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+            val type = remoteMessage.data["type"]
+            val id = remoteMessage.data["id"]
+            val title = remoteMessage.notification?.title
+            val body = remoteMessage.notification?.body
+            val image = remoteMessage.notification?.imageUrl
+            Log.d(TAG, "Extracted - Type: $type, ID: $id, Title: $title, Body: $body")
+        } else {
+            Log.d(TAG, "No data payload found")
         }
 
         // Log the notification body
         remoteMessage.notification?.let {
             Log.d(TAG, "Message Notification Body: ${it.body}")
             Log.d(TAG, "Message Notification Title: ${it.title}")
+            Log.d(TAG, "Message Notification Image: ${it.imageUrl}")
+            Log.d(TAG, "Message Notification Icon: ${it.icon}")
+            Log.d(TAG, "Message Notification Color: ${it.color}")
+            Log.d(TAG, "Message Notification Tag: ${it.tag}")
+            Log.d(TAG, "Message Notification Click Action: ${it.clickAction}")
         }
 
-        // Create and show notification
-        remoteMessage.notification?.let { notification ->
-            sendNotification(notification.title, notification.body)
-        }
+        // Always create and show notification (even for background)
+        val type = remoteMessage.data["type"]
+        val id = remoteMessage.data["id"]
+        val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Rojgaarwaala"
+        val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "New notification"
+        
+        Log.d(TAG, "Final Notification Type: $type, ID: $id")
+        Log.d(TAG, "Creating notification with title: $title, body: $body")
+        sendNotification(title, body, type, id)
     }
 
     private fun sendRegistrationToServer(token: String) {
@@ -64,15 +94,39 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "sendRegistrationTokenToServer($token)")
     }
 
-    private fun sendNotification(title: String?, messageBody: String?) {
-        val intent = Intent(this, MainActivity::class.java).apply {
+    private fun sendNotification(title: String?, messageBody: String?, type: String?, id: String?) {
+        Log.d(TAG, "=== SENDING NOTIFICATION ===")
+        Log.d(TAG, "Title: $title")
+        Log.d(TAG, "Body: $messageBody")
+        Log.d(TAG, "Type: $type")
+        Log.d(TAG, "ID: $id")
+        
+        // Create deep link URL for background notifications
+        val deepLinkUrl = "rojgaarwaala://notification?type=$type&id=$id"
+        Log.d(TAG, "Deep link URL: $deepLinkUrl")
+        
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = android.net.Uri.parse(deepLinkUrl)
+            setPackage(packageName)
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            
+            // Also add notification data as extras for when app is open
+            putExtra("notification_type", type)
+            putExtra("notification_id", id)
+            putExtra("type", type)
+            putExtra("id", id)
+            
+            Log.d(TAG, "Intent created with data: $data")
+            Log.d(TAG, "Intent extras - Type: $type, ID: $id")
+            Log.d(TAG, "Intent package: $packageName")
         }
         
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
+        
+        Log.d(TAG, "PendingIntent created: $pendingIntent")
 
         val channelId = CHANNEL_ID
         val defaultSoundUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
@@ -98,8 +152,14 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                 description = CHANNEL_DESCRIPTION
             }
             notificationManager.createNotificationChannel(channel)
+            Log.d(TAG, "Notification channel created: $channelId")
         }
 
-        notificationManager.notify(0, notificationBuilder.build())
+        // Use a unique notification ID to ensure proper handling
+        val notificationId = System.currentTimeMillis().toInt()
+        notificationManager.notify(notificationId, notificationBuilder.build())
+        
+        Log.d(TAG, "Notification sent with ID: $notificationId")
+        Log.d(TAG, "=== NOTIFICATION SENT SUCCESSFULLY ===")
     }
 } 

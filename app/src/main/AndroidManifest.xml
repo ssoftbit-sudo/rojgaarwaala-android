@@ -44,8 +44,17 @@
         </activity>
         <activity
             android:name=".presentation.ui.activity.MainActivity"
+            android:exported="true"
             android:theme="@style/AppTheme.NoSplash"
-            android:windowSoftInputMode="adjustPan|stateHidden"/>
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="rojgaarwaala" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".presentation.ui.activity.ProductDetailsActivity"
             android:theme="@style/AppTheme.NoSplash"
@@ -69,12 +78,18 @@
         <activity
             android:name=".presentation.ui.activity.VideoPlayerActivity"
             android:theme="@style/AppTheme.NoSplash"
-            android:windowSoftInputMode="adjustPan|stateHidden"/>
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:launchMode="singleTask"/>
         <activity
             android:name=".presentation.ui.activity.OtpActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
-        <activity android:name=".presentation.ui.activity.CategoryVideosActivity" />
+        <activity android:name=".presentation.ui.activity.CategoryVideosActivity"
+            android:launchMode="singleTask"/>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="default_channel" />
 
     </application>
 
