@@ -15,6 +15,7 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
     var retryCount = 0
     var maxRetryCount = 3
     private val TAG = HeaderInterceptor::class.java.simpleName
+    
     override fun intercept(chain: Interceptor.Chain): Response {
         try {
             val response: Response
@@ -22,10 +23,8 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
             var requestBuilder: Request.Builder? = null
             requestBuilder = original.newBuilder()
                 .header("Accept", "application/json")
-                .header(
-                    "Authorization",
-                    "Bearer " + sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, "")
-                )
+                .header("Authorization", "Bearer " + sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, ""))
+                .header("fcm_token", sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "")?:"")
                 .method(original.method, original.body)
             response = chain.proceed(requestBuilder.build())
             return response

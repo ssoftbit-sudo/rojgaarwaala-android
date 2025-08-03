@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("dagger.hilt.android.plugin")
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -73,5 +74,9 @@ dependencies {
     // Material3 NavigationBar
     implementation("com.google.android.material:material:1.9.0")
 
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }
 kapt { correctErrorTypes = true }

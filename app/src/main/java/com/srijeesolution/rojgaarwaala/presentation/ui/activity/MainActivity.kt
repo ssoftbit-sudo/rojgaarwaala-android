@@ -2,6 +2,7 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -12,6 +13,7 @@ import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -36,6 +38,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Request notification permission and get Firebase token
+        NotificationUtils.requestNotificationPermission(this)
+        NotificationUtils.getFirebaseToken { token ->
+            Log.d("MainActivity", "Firebase Token: $token")
+            // Save FCM token to SharedPreferences
+            if (token.isNotEmpty()) {
+                sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.FCM_TOKEN, token))
+                Log.d("MainActivity", "FCM Token saved to SharedPreferences: $token")
+            }
+        }
 
         tabHome = findViewById(R.id.tabHome)
         tabAddJob = findViewById(R.id.tabAddJob)

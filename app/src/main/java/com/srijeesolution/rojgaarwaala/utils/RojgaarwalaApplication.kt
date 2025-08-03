@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import dagger.hilt.android.HiltAndroidApp
+import com.google.firebase.FirebaseApp
 
 @HiltAndroidApp
 class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
@@ -11,6 +12,9 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
     override fun onCreate() {
         super<Application>.onCreate()
         instance = this
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this)
 
         // Initialize the default uncaught exception handler
         mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler()

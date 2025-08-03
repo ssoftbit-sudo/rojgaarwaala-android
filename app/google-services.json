@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "297578207209",
+    "project_id": "rojgaarwaala-7e51e",
+    "storage_bucket": "rojgaarwaala-7e51e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297578207209:android:fad272c3b81f0e2923dd78",
+        "android_client_info": {
+          "package_name": "com.srijeesolution.rojgaarwaala"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbvNUGclm3dPptXCaw-15TImYEAZORsA8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
