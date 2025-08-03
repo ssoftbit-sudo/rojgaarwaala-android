@@ -26,6 +26,8 @@ import android.widget.ScrollView
 import android.os.Handler
 import android.os.Looper
 import android.widget.SeekBar
+import android.content.Intent
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
 @AndroidEntryPoint
 class VideoPlayerActivity : AppCompatActivity() {
@@ -83,37 +85,108 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun setupActionRow() {
-        // Set initial like/dislike states from SharedPreferences
-        updateLikeDislikeUI()
-        updateLikeDislikeCounts()
-
         binding.likeButton.setOnClickListener {
-            if (!sharedPrefs.isVideoLiked(videoId)) {
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.likeVideo(videoId)
-                sharedPrefs.setVideoLiked(videoId, true)
-                if (sharedPrefs.isVideoDisliked(videoId)) {
-                    sharedPrefs.setVideoDisliked(videoId, false)
-                    dislikeCount = (dislikeCount - 1).coerceAtLeast(0)
-                }
-                likeCount += 1
-                updateLikeDislikeUI()
-                updateLikeDislikeCounts()
+                viewModel.likeVideoLiveData.observe(this, Observer { result ->
+                    when (result) {
+                        is ApiResult.Success<*> -> {
+                            likeCount++
+                            updateLikeDislikeCounts()
+                            Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
+                        }
+                        is ApiResult.Error -> {
+                            Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
+                    }
+                })
+            } else {
+                // User is not logged in, navigate to login
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                Toast.makeText(this, "Please login to like videos", Toast.LENGTH_SHORT).show()
             }
         }
+
         binding.dislikeButton.setOnClickListener {
-            if (!sharedPrefs.isVideoDisliked(videoId)) {
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.unlikeVideo(videoId)
-                sharedPrefs.setVideoDisliked(videoId, true)
-                if (sharedPrefs.isVideoLiked(videoId)) {
-                    sharedPrefs.setVideoLiked(videoId, false)
-                    likeCount = (likeCount - 1).coerceAtLeast(0)
-                }
-                dislikeCount += 1
-                updateLikeDislikeUI()
-                updateLikeDislikeCounts()
+                viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
+                    when (result) {
+                        is ApiResult.Success<*> -> {
+                            dislikeCount++
+                            updateLikeDislikeCounts()
+                            Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
+                        }
+                        is ApiResult.Error -> {
+                            Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
+                    }
+                })
+            } else {
+                // User is not logged in, navigate to login
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                Toast.makeText(this, "Please login to dislike videos", Toast.LENGTH_SHORT).show()
             }
         }
+
         binding.shareButton.setOnClickListener {
+            shareVideo()
+        }
+
+        // Setup fullscreen action controls with synchronized functionality
+        binding.fullscreenLikeButton.setOnClickListener {
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+                viewModel.likeVideo(videoId)
+                viewModel.likeVideoLiveData.observe(this, Observer { result ->
+                    when (result) {
+                        is ApiResult.Success<*> -> {
+                            likeCount++
+                            updateLikeDislikeCounts()
+                            Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
+                        }
+                        is ApiResult.Error -> {
+                            Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
+                    }
+                })
+            } else {
+                // User is not logged in, navigate to login
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                Toast.makeText(this, "Please login to like videos", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.fullscreenDislikeButton.setOnClickListener {
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+                viewModel.unlikeVideo(videoId)
+                viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
+                    when (result) {
+                        is ApiResult.Success<*> -> {
+                            dislikeCount++
+                            updateLikeDislikeCounts()
+                            Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
+                        }
+                        is ApiResult.Error -> {
+                            Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
+                    }
+                })
+            } else {
+                // User is not logged in, navigate to login
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                Toast.makeText(this, "Please login to dislike videos", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.fullscreenShareButton.setOnClickListener {
             shareVideo()
         }
     }
@@ -121,6 +194,10 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun updateLikeDislikeCounts() {
         binding.likeCount.text = likeCount.toString()
         binding.dislikeCount.text = dislikeCount.toString()
+        
+        // Update fullscreen controls with synchronized counts
+        binding.fullscreenLikeCount.text = likeCount.toString()
+        binding.fullscreenDislikeCount.text = dislikeCount.toString()
     }
 
     private fun updateLikeDislikeUI() {
@@ -192,6 +269,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         dislikeCount = data.unlikes ?: 0
         updateLikeDislikeCounts()
         binding.viewsCount.text = "${data.views ?: 0} views"
+        binding.fullscreenViewsCount.text = "${data.views ?: 0} views"
         // Related videos
         val related = data.relatedVideos ?: emptyList()
         if (related.isNotEmpty()) {
@@ -471,6 +549,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.totalTimeText.visibility = View.GONE
         binding.fullscreenProgressControls.visibility = View.VISIBLE
         
+        // Show fullscreen action controls
+        binding.fullscreenActionControls.visibility = View.VISIBLE
+        
         // Make video player frame take full screen
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
         frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT
@@ -512,6 +593,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.currentTimeText.visibility = View.VISIBLE
         binding.totalTimeText.visibility = View.VISIBLE
         binding.fullscreenProgressControls.visibility = View.GONE
+        
+        // Hide fullscreen action controls
+        binding.fullscreenActionControls.visibility = View.GONE
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
