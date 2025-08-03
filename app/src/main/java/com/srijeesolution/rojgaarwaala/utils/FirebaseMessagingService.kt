@@ -15,7 +15,7 @@ import com.srijeesolution.rojgaarwaala.presentation.ui.activity.MainActivity
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
-class RojgaarwaalaFirebaseMessagingService : FirebaseMessagingService() {
+class FirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "FirebaseMsgService"
