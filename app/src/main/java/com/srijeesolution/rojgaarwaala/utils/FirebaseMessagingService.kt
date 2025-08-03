@@ -78,7 +78,7 @@ class RojgaarwaalaFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
         
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title ?: "Rojgaarwaala")
             .setContentText(messageBody)
             .setAutoCancel(true)
