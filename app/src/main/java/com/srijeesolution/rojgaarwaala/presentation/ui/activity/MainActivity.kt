@@ -7,6 +7,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -45,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
+        // Handle system navigation bar properly
+        setupSystemNavigationBar()
 
         // Request notification permission and get Firebase token
         NotificationUtils.requestNotificationPermission(this)
@@ -294,6 +300,24 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Log.d("MainActivity", "No notification data found in intent")
             }
+        }
+    }
+    
+    private fun setupSystemNavigationBar() {
+        // Enable edge-to-edge display
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // Set status bar color to match app theme
+        window.statusBarColor = ContextCompat.getColor(this, R.color.black)
+        
+        // Set up window insets listener to handle system navigation bar and status bar
+        findViewById<LinearLayout>(R.id.root).setOnApplyWindowInsetsListener { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            
+            // Add top padding for status bar and bottom padding for navigation bar
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            
+            windowInsets
         }
     }
 }

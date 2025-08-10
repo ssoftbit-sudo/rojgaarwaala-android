@@ -7,13 +7,29 @@
     android:padding="4dp"
     android:background="@color/black">
 
-    <ImageView
+<!--
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/circle_background"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/categoryGridIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true" />
+
+    </FrameLayout>
+-->
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/categoryGridIcon"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:scaleType="centerCrop"
         android:background="@drawable/circle_background"
-        android:padding="4dp" />
+        />
+
 
     <TextView
         android:id="@+id/categoryGridTitle"
