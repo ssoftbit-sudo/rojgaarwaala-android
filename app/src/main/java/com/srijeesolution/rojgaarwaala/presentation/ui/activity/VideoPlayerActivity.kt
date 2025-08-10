@@ -28,6 +28,9 @@ import android.os.Looper
 import android.widget.SeekBar
 import android.content.Intent
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
 @AndroidEntryPoint
@@ -56,6 +59,11 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val autoHideRunnable = Runnable {
         binding.playPauseButton.visibility = View.GONE
     }
+    
+    // Gesture detection for swipe to fullscreen
+    private lateinit var gestureDetector: GestureDetector
+    private var initialY = 0f
+    private var isGestureInProgress = false
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -99,6 +107,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         setupRelatedVideosRecycler()
         setupActionRow()
         setupCustomVideoPlayerControls()
+        setupGestureDetector()
         observeVideoDetails()
         observeLikeDislikeActions()
         viewModel.getVideoDetails(videoId)
@@ -478,25 +487,99 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         }
 
-        // Smart touch handling for video area
-        videoView.setOnTouchListener { _, _ ->
-            if (isPlaying) {
-                // Show pause button when video is playing
-                playPauseButton.setImageResource(R.drawable.ic_pause_circle)
-                playPauseButton.visibility = View.VISIBLE
-                startAutoHideTimer()
-            } else {
-                // Show play button when video is paused
-                playPauseButton.setImageResource(R.drawable.ic_play_circle)
-                playPauseButton.visibility = View.VISIBLE
-                startAutoHideTimer()
+        // Smart touch handling for video area with gesture detection
+        videoView.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            
+            if (event.action == MotionEvent.ACTION_UP && !isGestureInProgress) {
+                // Only handle play/pause if no gesture was detected
+                if (isPlaying) {
+                    // Show pause button when video is playing
+                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.visibility = View.VISIBLE
+                    startAutoHideTimer()
+                } else {
+                    // Show play button when video is paused
+                    playPauseButton.setImageResource(R.drawable.ic_play_circle)
+                    playPauseButton.visibility = View.VISIBLE
+                    startAutoHideTimer()
+                }
             }
-            false
+            true
         }
 
         fullscreenButton.setOnClickListener {
             toggleFullscreen()
         }
+    }
+
+    private fun setupGestureDetector() {
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean {
+                initialY = e.y
+                isGestureInProgress = false
+                return true
+            }
+
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                if (e1 != null) {
+                    val deltaY = e2.y - e1.y
+                    val minSwipeDistance = 100f // Minimum distance for swipe detection
+                    
+                    if (Math.abs(deltaY) > minSwipeDistance) {
+                        isGestureInProgress = true
+                        
+                        if (deltaY < 0) {
+                            // Swipe up - enter fullscreen
+                            if (!isFullscreen) {
+                                toggleFullscreen()
+                            }
+                        } else {
+                            // Swipe down - exit fullscreen
+                            if (isFullscreen) {
+                                toggleFullscreen()
+                            }
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 != null) {
+                    val minVelocity = 500f // Minimum velocity for fling detection
+                    
+                    if (Math.abs(velocityY) > minVelocity) {
+                        isGestureInProgress = true
+                        
+                        if (velocityY < 0) {
+                            // Fling up - enter fullscreen
+                            if (!isFullscreen) {
+                                toggleFullscreen()
+                            }
+                        } else {
+                            // Fling down - exit fullscreen
+                            if (isFullscreen) {
+                                toggleFullscreen()
+                            }
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+        })
     }
 
     private fun updateVideoProgress() {
