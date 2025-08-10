@@ -71,15 +71,11 @@
             android:name=".presentation.ui.activity.ProfileActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
-        <activity
-            android:name=".presentation.ui.activity.AddJobActivity"
-            android:theme="@style/AppTheme.NoSplash"
-            android:windowSoftInputMode="adjustPan|stateHidden"/>
+
         <activity
             android:name=".presentation.ui.activity.VideoPlayerActivity"
             android:theme="@style/AppTheme.NoSplash"
-            android:windowSoftInputMode="adjustPan|stateHidden"
-            android:launchMode="singleTask"/>
+            android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".presentation.ui.activity.OtpActivity"
             android:theme="@style/AppTheme.NoSplash"

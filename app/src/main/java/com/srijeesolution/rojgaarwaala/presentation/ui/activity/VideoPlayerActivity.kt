@@ -100,6 +100,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         setupActionRow()
         setupCustomVideoPlayerControls()
         observeVideoDetails()
+        observeLikeDislikeActions()
         viewModel.getVideoDetails(videoId)
     }
 
@@ -107,19 +108,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.likeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.likeVideo(videoId)
-                viewModel.likeVideoLiveData.observe(this, Observer { result ->
-                    when (result) {
-                        is ApiResult.Success<*> -> {
-                            likeCount++
-                            updateLikeDislikeCounts()
-                            Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiResult.Error -> {
-                            Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> {}
-                    }
-                })
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -131,19 +119,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.dislikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.unlikeVideo(videoId)
-                viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
-                    when (result) {
-                        is ApiResult.Success<*> -> {
-                            dislikeCount++
-                            updateLikeDislikeCounts()
-                            Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiResult.Error -> {
-                            Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> {}
-                    }
-                })
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -160,19 +135,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.fullscreenLikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.likeVideo(videoId)
-                viewModel.likeVideoLiveData.observe(this, Observer { result ->
-                    when (result) {
-                        is ApiResult.Success<*> -> {
-                            likeCount++
-                            updateLikeDislikeCounts()
-                            Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiResult.Error -> {
-                            Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> {}
-                    }
-                })
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -184,19 +146,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.fullscreenDislikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 viewModel.unlikeVideo(videoId)
-                viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
-                    when (result) {
-                        is ApiResult.Success<*> -> {
-                            dislikeCount++
-                            updateLikeDislikeCounts()
-                            Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiResult.Error -> {
-                            Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> {}
-                    }
-                })
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -267,6 +216,38 @@ class VideoPlayerActivity : AppCompatActivity() {
         })
     }
 
+    private fun observeLikeDislikeActions() {
+        // Observe like video action
+        viewModel.likeVideoLiveData.observe(this, Observer { result ->
+            when (result) {
+                is ApiResult.Success<*> -> {
+                    // After successful like, refresh video details to get updated counts
+                    viewModel.getVideoDetails(videoId)
+                    //Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
+                }
+                is ApiResult.Error -> {
+                    //Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        })
+
+        // Observe unlike video action
+        viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
+            when (result) {
+                is ApiResult.Success<*> -> {
+                    // After successful unlike, refresh video details to get updated counts
+                    viewModel.getVideoDetails(videoId)
+                    //Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
+                }
+                is ApiResult.Error -> {
+                    //Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        })
+    }
+
     private fun bindVideoDetails(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData) {
         // Show thumbnail overlay while loading
         val thumbnailUrl = data.thumbnail
@@ -287,6 +268,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         likeCount = data.likes ?: 0
         dislikeCount = data.unlikes ?: 0
         updateLikeDislikeCounts()
+        updateLikeDislikeUI()
         binding.viewsCount.text = "${data.views ?: 0} views"
         binding.fullscreenViewsCount.text = "${data.views ?: 0} views"
         // Related videos

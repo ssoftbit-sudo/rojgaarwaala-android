@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +35,7 @@ class VideoAdapter(private val videos: List<TopVideo>) :
                 .into(videoThumbnail)
 
             root.setOnClickListener {
+                Log.d("MANISH_JAIN","YES="+video.id+"NO ="+video.videoUrl)
                 val intent = Intent(root.context, VideoPlayerActivity::class.java)
                 intent.putExtra("video_url", video.videoUrl)
                 intent.putExtra("video_id", video.id)

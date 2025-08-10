@@ -24,12 +24,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tabHome: LinearLayout
     private lateinit var tabAddJob: LinearLayout
     private lateinit var tabCategories: LinearLayout
+    private lateinit var tabImages: LinearLayout
     private lateinit var iconHome: ImageView
     private lateinit var iconAddJob: ImageView
     private lateinit var iconCategories: ImageView
+    private lateinit var iconImages: ImageView
     private lateinit var textHome: TextView
     private lateinit var textAddJob: TextView
     private lateinit var textCategories: TextView
+    private lateinit var textImages: TextView
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -57,12 +60,15 @@ class MainActivity : AppCompatActivity() {
         tabHome = findViewById(R.id.tabHome)
         tabAddJob = findViewById(R.id.tabAddJob)
         tabCategories = findViewById(R.id.tabCategories)
+        tabImages = findViewById(R.id.tabImages)
         iconHome = findViewById(R.id.iconHome)
         iconAddJob = findViewById(R.id.iconAddJob)
         iconCategories = findViewById(R.id.iconCategories)
+        iconImages = findViewById(R.id.iconImages)
         textHome = findViewById(R.id.textHome)
         textAddJob = findViewById(R.id.textAddJob)
         textCategories = findViewById(R.id.textCategories)
+        textImages = findViewById(R.id.textImages)
 
         tabHome.setOnClickListener { selectTab(0) }
         tabAddJob.setOnClickListener { 
@@ -76,6 +82,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         tabCategories.setOnClickListener { selectTab(2) }
+        tabImages.setOnClickListener { selectTab(3) }
 
         // Show home by default
         if (savedInstanceState == null) {
@@ -126,8 +133,8 @@ class MainActivity : AppCompatActivity() {
                 // On Home tab, close the app
                 super.onBackPressed()
             }
-            1, 2 -> {
-                // On Add Job or Categories tab, go back to Home
+            1, 2, 3 -> {
+                // On Add Job, Categories, or Images tab, go back to Home
                 selectTab(0)
             }
             else -> {
@@ -145,9 +152,11 @@ class MainActivity : AppCompatActivity() {
         iconHome.setTint(unselectedColor)
         iconAddJob.setTint(unselectedColor)
         iconCategories.setTint(unselectedColor)
+        iconImages.setTint(unselectedColor)
         textHome.setTextColor(unselectedColor)
         textAddJob.setTextColor(unselectedColor)
         textCategories.setTextColor(unselectedColor)
+        textImages.setTextColor(unselectedColor)
 
         // Set selected
         when (index) {
@@ -165,6 +174,11 @@ class MainActivity : AppCompatActivity() {
                 iconCategories.setTint(selectedColor)
                 textCategories.setTextColor(selectedColor)
                 showFragment(CategoriesFragment())
+            }
+            3 -> {
+                iconImages.setTint(selectedColor)
+                textImages.setTextColor(selectedColor)
+                showFragment(ImagesFragment())
             }
         }
     }
