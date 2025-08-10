@@ -9,13 +9,14 @@ plugins {
 
 android {
     namespace = "com.srijeesolution.rojgaarwaala"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
+        //noinspection OldTargetApi
+        targetSdk = 35
+        versionCode = 2
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -44,6 +45,14 @@ android {
     lint {
         abortOnError = false
         checkReleaseBuilds = false
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file("play_store_file.jks")
+            storePassword = "Rojgaarwaala@123"
+            keyAlias = "Rojgaarwaala"
+            keyPassword = "Rojgaarwaala@123"
+        }
     }
 }
 
