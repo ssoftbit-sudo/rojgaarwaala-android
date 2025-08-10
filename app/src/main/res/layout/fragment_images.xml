@@ -12,24 +12,20 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:gravity="center_vertical"
+        android:gravity="center"
+        android:layout_gravity="center"
         android:background="@color/black">
 
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_image"
-            android:tint="@color/white"
-            android:layout_marginEnd="12dp" />
-
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Images"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:fontFamily="sans-serif-medium" />
 
     </LinearLayout>
@@ -48,42 +44,12 @@
         android:layout_weight="1"
         android:fillViewport="true">
 
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/imagesRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <!-- Placeholder content -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Images Section"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:layout_marginTop="50dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="This is the Images section. Add your image-related content here."
-                android:textColor="@color/gray_light_3"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:layout_marginTop="16dp"
-                android:paddingHorizontal="32dp" />
-
-            <!-- You can add RecyclerView, GridView, or other image display components here -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/imagesRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:visibility="gone" />
-
-        </LinearLayout>
+            android:layout_margin="16dp"
+            android:visibility="visible" />
 
     </ScrollView>
 

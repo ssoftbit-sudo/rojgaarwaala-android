@@ -23,5 +23,6 @@ class NetworkConstants {
         const val VIDEO_INCREMENT_VIEW = "video/increment-view"
         const val JOB_DELETE = "job/delete/{id}"
         const val JOB_UPDATE = "job/update/{id}"
+        const val SCHEDULED_IMAGES_GROUPED = "scheduled-images/grouped"
     }
 }

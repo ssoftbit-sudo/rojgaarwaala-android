@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.data.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls.Companion.BASE_URL
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -193,4 +194,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             })
         }.flowOn(Dispatchers.IO)
     }
+
+    override fun getScheduledImagesGrouped() = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getScheduledImagesGrouped()
+        })
+    }.flowOn(Dispatchers.IO)
 }

@@ -4,6 +4,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
@@ -36,6 +37,7 @@ interface HomePageRepository {
     fun incrementVideoView(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun getScheduledImagesGrouped(): Flow<ApiResult<ImagesApiResponse>>
     fun updateJobWithFiles(
         id: Int,
         jobTitle: String,
