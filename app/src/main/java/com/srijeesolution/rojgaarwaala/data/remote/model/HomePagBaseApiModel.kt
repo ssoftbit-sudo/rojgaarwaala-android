@@ -190,4 +190,40 @@ data class CategoryVideosData(
     val videos: List<TopVideo>? = null
 )
 
+data class ImageListResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: ImageListData? = null
+)
 
+data class ImageListData(
+    @SerializedName("categoryImages")
+    val categoryImages: List<ImageSubItem>? = null
+)
+
+data class ImageSubItem(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("icon_file")
+    val iconFile: String? = null,
+    @SerializedName("images")
+    val images: List<ImageData>? = null
+)
+
+data class ImageData(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("image_url")
+    val imageUrl: String? = null,
+    @SerializedName("publish_date")
+    val publishDate: String? = null
+)

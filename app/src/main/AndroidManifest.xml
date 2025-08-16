@@ -86,6 +86,10 @@
             android:name=".presentation.ui.activity.ImageViewerActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.ImagesListActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"

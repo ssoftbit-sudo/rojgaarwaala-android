@@ -1,0 +1,146 @@
+package com.srijeesolution.rojgaarwaala.presentation.ui.activity
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImageData
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
+import com.srijeesolution.rojgaarwaala.databinding.ActivityImagesListBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesGridAdapter
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class ImagesListActivity : AppCompatActivity() {
+    
+    private lateinit var binding: ActivityImagesListBinding
+    private lateinit var viewModel: HomePageViewModel
+    private var imagesAdapter: ImagesGridAdapter? = null
+    private var categoryId: Int? = null
+    private var categoryTitle: String? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityImagesListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        // Get category info from intent
+        categoryId = intent.getIntExtra("category_id", -1)
+        categoryTitle = intent.getStringExtra("category_title")
+        
+        viewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
+        
+        setupViews()
+        setupObservers()
+        loadImages()
+    }
+
+    private fun setupViews() {
+        // Setup toolbar
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = if (categoryTitle != null) "$categoryTitle Images" else "All Images"
+        }
+        
+        // Setup RecyclerView with GridLayoutManager (3 columns)
+        binding.imagesRecyclerView.layoutManager = GridLayoutManager(this, 3)
+        
+        // Initialize adapter
+        imagesAdapter = ImagesGridAdapter(emptyList()) { image ->
+            onImageClick(image)
+        }
+        binding.imagesRecyclerView.adapter = imagesAdapter
+    }
+
+    private fun setupObservers() {
+        viewModel.imageListLiveData.observe(this) { result ->
+            when (result) {
+                is ApiResult.Loading -> {
+                    // Show loading state if needed
+                }
+                is ApiResult.Success -> {
+                    val data = result.data
+                    if (data?.status == true && !data.data?.categoryImages.isNullOrEmpty()) {
+                        displayAllImages(data.data?.categoryImages ?: emptyList())
+                    } else {
+                        showEmptyState()
+                    }
+                }
+                is ApiResult.Error -> {
+                    showError("Failed to load images")
+                }
+            }
+        }
+    }
+
+    private fun loadImages() {
+        viewModel.getScheduledImages()
+    }
+
+    private fun displayAllImages(categories: List<com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem>) {
+        val allImages = mutableListOf<ImageData>()
+        
+        if (categoryId != null && categoryId != -1) {
+            // Show images from specific category only
+            val specificCategory = categories.find { it.id == categoryId }
+            specificCategory?.images?.let { images ->
+                allImages.addAll(images)
+            }
+        } else {
+            // Show all images from all categories
+            categories.forEach { category ->
+                category.images?.let { images ->
+                    allImages.addAll(images)
+                }
+            }
+        }
+        
+        if (allImages.isNotEmpty()) {
+            imagesAdapter = ImagesGridAdapter(allImages) { image ->
+                onImageClick(image)
+            }
+            binding.imagesRecyclerView.adapter = imagesAdapter
+        } else {
+            showEmptyState()
+        }
+    }
+
+    private fun onImageClick(image: ImageData) {
+        // Launch full-screen image viewer
+        val intent = android.content.Intent(this, ImageViewerActivity::class.java)
+        // Convert ImageData to ScheduledImage for compatibility
+        val scheduledImage = ScheduledImage(
+            id = image.id,
+            title = image.title,
+            description = image.description,
+            imagePath = image.imageUrl,
+            publishDate = image.publishDate,
+            status = null,
+            createdAt = null,
+            updatedAt = null
+        )
+        intent.putExtra("scheduled_image", scheduledImage)
+        startActivity(intent)
+    }
+
+    private fun showEmptyState() {
+        // Handle empty state
+        binding.imagesRecyclerView.visibility = android.view.View.GONE
+        // You can add a TextView to show "No images found" message
+    }
+
+    private fun showError(message: String) {
+        // Handle error state
+        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
+    }
+} 

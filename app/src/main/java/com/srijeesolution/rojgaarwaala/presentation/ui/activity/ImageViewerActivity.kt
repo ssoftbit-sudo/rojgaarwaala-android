@@ -48,7 +48,7 @@ class ImageViewerActivity : AppCompatActivity() {
             binding.imageDescription.text = image.description ?: ""
             
             // Load full-screen image
-            val imageUrl = "https://www.rojgaarwaala.com/${image.imagePath?.replace("\\/", "/")}"
+            val imageUrl = image.imagePath ?: ""
             Glide.with(this)
                 .load(imageUrl)
                 .placeholder(R.drawable.no_image_placeholder)

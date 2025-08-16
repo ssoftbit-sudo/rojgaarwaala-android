@@ -8,6 +8,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -51,6 +52,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val updateJobLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _updateJobLiveData
     private var _scheduledImagesLiveData : MutableLiveData<ApiResult<ImagesApiResponse>> = MutableLiveData()
     val scheduledImagesLiveData : LiveData<ApiResult<ImagesApiResponse>> = _scheduledImagesLiveData
+    private var _imageListLiveData : MutableLiveData<ApiResult<ImageListResponse>> = MutableLiveData()
+    val imageListLiveData : LiveData<ApiResult<ImageListResponse>> = _imageListLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -213,6 +216,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getScheduledImagesGrouped().collectLatest{
                 _scheduledImagesLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getScheduledImages() {
+        viewModelScope.launch {
+            homePageRepository.getScheduledImages().collectLatest{
+                _imageListLiveData.postValue(it)
             }
         }
     }

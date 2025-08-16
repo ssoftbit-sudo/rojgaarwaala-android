@@ -4,6 +4,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
@@ -104,5 +105,7 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_GROUPED)
     suspend fun getScheduledImagesGrouped(): Response<ImagesApiResponse>
+    @GET(NetworkConstants.SCHEDULED_IMAGES)
+    suspend fun getScheduledImages(): Response<ImageListResponse>
 
 }
