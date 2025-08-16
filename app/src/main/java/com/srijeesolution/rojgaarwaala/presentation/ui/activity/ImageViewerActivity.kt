@@ -2,7 +2,6 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -32,6 +31,11 @@ class ImageViewerActivity : AppCompatActivity() {
         setupToolbar()
         setupImage()
         setupClickListeners()
+        
+        // Ensure proper initial scaling after view is fully laid out
+        binding.fullScreenImageView.viewTreeObserver.addOnGlobalLayoutListener {
+            binding.fullScreenImageView.resetZoom()
+        }
     }
 
     private fun setupToolbar() {
@@ -50,15 +54,19 @@ class ImageViewerActivity : AppCompatActivity() {
                 .placeholder(R.drawable.no_image_placeholder)
                 .error(R.drawable.no_image_placeholder)
                 .into(binding.fullScreenImageView)
+                
+            // Reset zoom after a short delay to ensure proper initial scaling
+            binding.fullScreenImageView.postDelayed({
+                binding.fullScreenImageView.resetZoom()
+            }, 100)
         }
     }
 
     private fun setupClickListeners() {
-        // Hide/show UI elements on image tap
-        binding.fullScreenImageView.setOnClickListener {
+        // Set up zoomable image view click listener
+        binding.fullScreenImageView.setOnImageClickListener {
             toggleUI()
         }
-
     }
 
     private fun toggleUI() {
@@ -107,6 +115,8 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        // Reset zoom before going back
+        binding.fullScreenImageView.resetZoom()
         super.onBackPressed()
     }
 } 

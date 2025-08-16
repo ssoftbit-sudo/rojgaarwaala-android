@@ -132,7 +132,7 @@
             android:id="@+id/textImages"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="IMAGES"
+            android:text="STORIES"
             android:textAllCaps="true"
             android:textColor="@color/tab_unselected"
             android:textSize="12sp"

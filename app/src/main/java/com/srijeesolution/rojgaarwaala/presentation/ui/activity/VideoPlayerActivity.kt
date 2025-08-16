@@ -333,7 +333,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         videoView.setOnPreparedListener { mediaPlayer ->
             // Hide thumbnail and start video
             thumbnailOverlay.visibility = View.GONE
-            playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+            playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
             playPauseButton.visibility = View.VISIBLE
             isPlaying = true
             
@@ -357,7 +357,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         
         videoView.setOnCompletionListener {
-            playPauseButton.setImageResource(R.drawable.ic_play_circle)
+            playPauseButton.setImageResource(android.R.drawable.ic_media_play)
+
             playPauseButton.visibility = View.VISIBLE
             isPlaying = false
             progressHandler.removeCallbacks(progressRunnable)
@@ -398,10 +399,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                 isSeeking = true
                 progressHandler.removeCallbacks(progressRunnable)
                 autoHideHandler.removeCallbacks(autoHideRunnable)
-                
+
                 // Show play button during seeking
                 if (isPlaying) {
-                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
                     playPauseButton.visibility = View.VISIBLE
                 }
             }
@@ -410,7 +411,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 if (videoDuration > 0) {
                     val newPosition = (seekBar?.progress ?: 0) * videoDuration / 100
                     videoView.seekTo(newPosition)
-                    
+
                     // Resume progress tracking immediately after seek
                     if (isPlaying) {
                         progressHandler.post(progressRunnable)
@@ -435,10 +436,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                 isSeeking = true
                 progressHandler.removeCallbacks(progressRunnable)
                 autoHideHandler.removeCallbacks(autoHideRunnable)
-                
+
                 // Show play button during seeking
                 if (isPlaying) {
-                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
                     playPauseButton.visibility = View.VISIBLE
                 }
             }
@@ -447,7 +448,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 if (videoDuration > 0) {
                     val newPosition = (seekBar?.progress ?: 0) * videoDuration / 100
                     videoView.seekTo(newPosition)
-                    
+
                     // Resume progress tracking immediately after seek
                     if (isPlaying) {
                         progressHandler.post(progressRunnable)
@@ -461,7 +462,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         playPauseButton.setOnClickListener {
             if (videoView.isPlaying) {
                 videoView.pause()
-                playPauseButton.setImageResource(R.drawable.ic_play_circle)
+                playPauseButton.setImageResource(android.R.drawable.ic_media_play)
                 playPauseButton.visibility = View.VISIBLE
                 isPlaying = false
                 progressHandler.removeCallbacks(progressRunnable)
@@ -470,14 +471,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                 // Hide thumbnail overlay when user clicks play
                 thumbnailOverlay.visibility = View.GONE
                 videoView.start()
-                playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
                 playPauseButton.visibility = View.VISIBLE
                 isPlaying = true
                 progressHandler.post(progressRunnable)
-                
+
                 // Auto-hide play button after 3 seconds
                 startAutoHideTimer()
-                
+
                 // Increment view count only once per session
                 if (!hasIncrementedView) {
                     viewModel.incrementVideoView(videoId)
@@ -490,17 +491,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Smart touch handling for video area with gesture detection
         videoView.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
-            
+
             if (event.action == MotionEvent.ACTION_UP && !isGestureInProgress) {
                 // Only handle play/pause if no gesture was detected
                 if (isPlaying) {
                     // Show pause button when video is playing
-                    playPauseButton.setImageResource(R.drawable.ic_pause_circle)
+                    playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
                     playPauseButton.visibility = View.VISIBLE
                     startAutoHideTimer()
                 } else {
                     // Show play button when video is paused
-                    playPauseButton.setImageResource(R.drawable.ic_play_circle)
+                    playPauseButton.setImageResource(android.R.drawable.ic_media_play)
                     playPauseButton.visibility = View.VISIBLE
                     startAutoHideTimer()
                 }

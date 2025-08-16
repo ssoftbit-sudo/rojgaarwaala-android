@@ -214,7 +214,7 @@
                     android:id="@+id/playPauseButton"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
-                    android:src="@drawable/ic_play_circle"
+                    android:src="@android:drawable/ic_media_play"
                     android:layout_gravity="center"
                     android:visibility="visible"
                     android:tint="@color/white" />

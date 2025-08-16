@@ -15,11 +15,10 @@
         android:layout_weight="1">
 
         <!-- Full Screen Image -->
-        <ImageView
+        <com.srijeesolution.rojgaarwaala.presentation.ui.activity.ZoomableImageView
             android:id="@+id/fullScreenImageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="fitCenter"
             android:background="@color/black" />
 
         <!-- Image Info Container -->
