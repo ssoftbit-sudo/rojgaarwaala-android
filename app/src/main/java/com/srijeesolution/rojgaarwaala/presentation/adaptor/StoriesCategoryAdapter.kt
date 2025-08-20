@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.TimeGroup
 import com.srijeesolution.rojgaarwaala.databinding.ItemStoryCategoryBinding
+import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class StoriesCategoryAdapter(
     private val timeGroups: List<TimeGroup>,
@@ -27,6 +28,9 @@ class StoriesCategoryAdapter(
                 
                 // Setup nested RecyclerView for stories with GridLayoutManager
                 storiesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
+                
+                // Add spacing decoration similar to top videos list
+                storiesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
                 
                 val storiesAdapter = StoriesGridAdapter(timeGroup.stories ?: emptyList()) { story ->
                     onStoryClick(story)

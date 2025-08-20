@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityStoriesListBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesGridAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -49,6 +50,9 @@ class StoriesListActivity : AppCompatActivity() {
         
         // Setup RecyclerView with GridLayoutManager (2 columns for stories)
         binding.storiesRecyclerView.layoutManager = GridLayoutManager(this, 2)
+        
+        // Add spacing decoration similar to top videos list
+        binding.storiesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
         
         // Initialize adapter
         storiesAdapter = StoriesGridAdapter(emptyList()) { story ->
