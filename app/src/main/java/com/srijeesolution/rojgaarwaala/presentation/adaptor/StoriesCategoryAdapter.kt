@@ -32,6 +32,10 @@ class StoriesCategoryAdapter(
                 // Add spacing decoration similar to top videos list
                 storiesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
                 
+                // Optimize for smooth scrolling
+                storiesRecyclerView.setHasFixedSize(true)
+                storiesRecyclerView.isNestedScrollingEnabled = false
+                
                 val storiesAdapter = StoriesGridAdapter(timeGroup.stories ?: emptyList()) { story ->
                     onStoryClick(story)
                 }

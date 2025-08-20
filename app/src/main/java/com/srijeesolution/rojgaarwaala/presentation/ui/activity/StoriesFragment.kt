@@ -50,6 +50,10 @@ class StoriesFragment : Fragment() {
         // Setup RecyclerView with LinearLayoutManager for time groups
         binding.storiesRecyclerView.layoutManager = LinearLayoutManager(context)
         
+        // Optimize for smooth scrolling
+        binding.storiesRecyclerView.setHasFixedSize(true)
+        binding.storiesRecyclerView.setItemViewCacheSize(20)
+        
         // Initialize adapter
         storiesAdapter = StoriesCategoryAdapter(
             emptyList(),

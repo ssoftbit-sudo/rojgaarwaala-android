@@ -23,7 +23,7 @@ class StoriesGridAdapter(
                 // Set description
                 storyDescription.text = story.description ?: ""
                 
-                // Load image using Glide
+                // Load image using Glide with optimizations for smooth scrolling
                 val imageUrl = story.imageUrl ?: ""
                 if (imageUrl.isNotEmpty()) {
                     Glide.with(storyImage.context)
@@ -31,6 +31,8 @@ class StoriesGridAdapter(
                         .placeholder(R.drawable.no_image_placeholder)
                         .error(R.drawable.no_image_placeholder)
                         .centerCrop()
+                        .dontAnimate() // Disable animations for smoother scrolling
+                        .skipMemoryCache(false) // Use memory cache for better performance
                         .into(storyImage)
                 } else {
                     // Set placeholder if no image
