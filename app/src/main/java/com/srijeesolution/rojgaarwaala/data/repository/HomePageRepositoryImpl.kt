@@ -206,4 +206,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).getScheduledImages()
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun getSectionStoriesGrouped() = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getSectionStoriesGrouped()
+        })
+    }.flowOn(Dispatchers.IO)
 }

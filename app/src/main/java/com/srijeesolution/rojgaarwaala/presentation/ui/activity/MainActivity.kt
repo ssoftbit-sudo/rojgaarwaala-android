@@ -36,6 +36,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textAddJob: TextView
     private lateinit var textCategories: TextView
     private lateinit var textImages: TextView
+    private lateinit var tabStories: LinearLayout
+    private lateinit var iconStories: ImageView
+    private lateinit var textStories: TextView
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -67,14 +70,17 @@ class MainActivity : AppCompatActivity() {
         tabAddJob = findViewById(R.id.tabAddJob)
         tabCategories = findViewById(R.id.tabCategories)
         tabImages = findViewById(R.id.tabImages)
+        tabStories = findViewById(R.id.tabStories)
         iconHome = findViewById(R.id.iconHome)
         iconAddJob = findViewById(R.id.iconAddJob)
         iconCategories = findViewById(R.id.iconCategories)
         iconImages = findViewById(R.id.iconImages)
+        iconStories = findViewById(R.id.iconStories)
         textHome = findViewById(R.id.textHome)
         textAddJob = findViewById(R.id.textAddJob)
         textCategories = findViewById(R.id.textCategories)
         textImages = findViewById(R.id.textImages)
+        textStories = findViewById(R.id.textStories)
 
         tabHome.setOnClickListener { selectTab(0) }
         tabAddJob.setOnClickListener { 
@@ -89,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         }
         tabCategories.setOnClickListener { selectTab(2) }
         tabImages.setOnClickListener { selectTab(3) }
+        tabStories.setOnClickListener { selectTab(4) }
 
         // Show home by default
         if (savedInstanceState == null) {
@@ -139,8 +146,8 @@ class MainActivity : AppCompatActivity() {
                 // On Home tab, close the app
                 super.onBackPressed()
             }
-            1, 2, 3 -> {
-                // On Add Job, Categories, or Images tab, go back to Home
+            1, 2, 3, 4 -> {
+                // On Add Job, Categories, Images, or Stories tab, go back to Home
                 selectTab(0)
             }
             else -> {
@@ -159,10 +166,12 @@ class MainActivity : AppCompatActivity() {
         iconAddJob.setTint(unselectedColor)
         iconCategories.setTint(unselectedColor)
         iconImages.setTint(unselectedColor)
+        iconStories.setTint(unselectedColor)
         textHome.setTextColor(unselectedColor)
         textAddJob.setTextColor(unselectedColor)
         textCategories.setTextColor(unselectedColor)
         textImages.setTextColor(unselectedColor)
+        textStories.setTextColor(unselectedColor)
 
         // Set selected
         when (index) {
@@ -185,6 +194,11 @@ class MainActivity : AppCompatActivity() {
                 iconImages.setTint(selectedColor)
                 textImages.setTextColor(selectedColor)
                 showFragment(ImagesFragment())
+            }
+            4 -> {
+                iconStories.setTint(selectedColor)
+                textStories.setTextColor(selectedColor)
+                showFragment(StoriesFragment())
             }
         }
     }

@@ -10,6 +10,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,6 +55,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val scheduledImagesLiveData : LiveData<ApiResult<ImagesApiResponse>> = _scheduledImagesLiveData
     private var _imageListLiveData : MutableLiveData<ApiResult<ImageListResponse>> = MutableLiveData()
     val imageListLiveData : LiveData<ApiResult<ImageListResponse>> = _imageListLiveData
+    private var _storiesLiveData : MutableLiveData<ApiResult<StoriesResponse>> = MutableLiveData()
+    val storiesLiveData : LiveData<ApiResult<StoriesResponse>> = _storiesLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -224,6 +227,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getScheduledImages().collectLatest{
                 _imageListLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getSectionStoriesGrouped() {
+        viewModelScope.launch {
+            homePageRepository.getSectionStoriesGrouped().collectLatest{
+                _storiesLiveData.postValue(it)
             }
         }
     }

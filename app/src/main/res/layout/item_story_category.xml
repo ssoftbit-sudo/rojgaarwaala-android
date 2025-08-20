@@ -38,9 +38,9 @@
             android:focusable="true" />
     </LinearLayout>
 
-    <!-- Images Grid -->
+    <!-- Stories Grid -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/imagesRecyclerView"
+        android:id="@+id/storiesRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="false" />

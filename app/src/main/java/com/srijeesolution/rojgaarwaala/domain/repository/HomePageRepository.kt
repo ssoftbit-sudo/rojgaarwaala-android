@@ -6,6 +6,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
@@ -40,6 +41,7 @@ interface HomePageRepository {
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun getScheduledImagesGrouped(): Flow<ApiResult<ImagesApiResponse>>
     fun getScheduledImages(): Flow<ApiResult<ImageListResponse>>
+    fun getSectionStoriesGrouped(): Flow<ApiResult<StoriesResponse>>
     fun updateJobWithFiles(
         id: Int,
         jobTitle: String,

@@ -227,3 +227,47 @@ data class ImageData(
     @SerializedName("publish_date")
     val publishDate: String? = null
 )
+
+data class StoriesResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: StoriesData? = null
+)
+
+data class StoriesData(
+    @SerializedName("timeGroups")
+    val timeGroups: List<TimeGroup>? = null
+)
+
+data class TimeGroup(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("icon_file")
+    val iconFile: String? = null,
+    @SerializedName("stories")
+    val stories: List<Story>? = null
+)
+
+data class Story(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("title")
+    val title: String? = null,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("image_url")
+    val imageUrl: String? = null,
+    @SerializedName("publish_date")
+    val publishDate: String? = null,
+    @SerializedName("position")
+    val position: Int? = null,
+    @SerializedName("created_by")
+    val createdBy: String? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null
+)
