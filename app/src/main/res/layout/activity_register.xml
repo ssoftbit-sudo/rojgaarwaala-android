@@ -43,13 +43,18 @@
                     android:layout_marginTop="24dp"
                     android:layout_marginBottom="32dp">
 
-                    <ImageView
-                        android:id="@+id/logoImageView"
+                    <androidx.cardview.widget.CardView
                         android:layout_width="120dp"
                         android:layout_height="120dp"
-                        android:layout_marginBottom="24dp"
-                        android:contentDescription="@string/app_name"
-                        android:src="@drawable/rojgaarwaala_logo_modern" />
+                        app:cardCornerRadius="6dp"
+                        android:layout_marginBottom="10dp">
+                        <ImageView
+                            android:id="@+id/logoImageView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/app_name"
+                            android:src="@drawable/rojgaarwaala_logo_new_v" />
+                    </androidx.cardview.widget.CardView>
 
                     <TextView
                         android:layout_width="wrap_content"
