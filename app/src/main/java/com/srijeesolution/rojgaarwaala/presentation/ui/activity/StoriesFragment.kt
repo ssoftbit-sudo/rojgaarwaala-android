@@ -2,6 +2,8 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +28,10 @@ class StoriesFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: HomePageViewModel
     private var storiesAdapter: StoriesCategoryAdapter? = null
+    
+    // Search related variables
+    private var allTimeGroups: List<TimeGroup> = emptyList()
+    private var isSearchMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +48,7 @@ class StoriesFragment : Fragment() {
         viewModel = ViewModelProvider(requireActivity())[HomePageViewModel::class.java]
         
         setupViews()
+        setupSearch()
         setupObservers()
         loadStories()
     }
@@ -61,6 +68,35 @@ class StoriesFragment : Fragment() {
             onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
         )
         binding.storiesRecyclerView.adapter = storiesAdapter
+    }
+
+    private fun setupSearch() {
+        binding.searchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                if (query.isEmpty()) {
+                    // Show all content when search is empty
+                    isSearchMode = false
+                    binding.clearSearchButton.visibility = View.GONE
+                    showAllContent()
+                } else {
+                    // Filter content based on search query
+                    isSearchMode = true
+                    binding.clearSearchButton.visibility = View.VISIBLE
+                    filterContent(query)
+                }
+            }
+        })
+        
+        // Clear search button click listener
+        binding.clearSearchButton.setOnClickListener {
+            binding.searchBar.setText("")
+            binding.searchBar.clearFocus()
+        }
     }
 
     private fun setupObservers() {
@@ -88,9 +124,73 @@ class StoriesFragment : Fragment() {
         viewModel.getSectionStoriesGrouped()
     }
 
+    private fun filterContent(query: String) {
+        val lowerQuery = query.lowercase()
+        
+        // Filter time groups and their stories
+        val filteredTimeGroups = allTimeGroups.mapNotNull { timeGroup ->
+            val filteredStories = timeGroup.stories?.filter { story ->
+                story.title?.lowercase()?.contains(lowerQuery) == true ||
+                story.description?.lowercase()?.contains(lowerQuery) == true ||
+                timeGroup.title?.lowercase()?.contains(lowerQuery) == true
+            } ?: emptyList()
+            
+            if (filteredStories.isNotEmpty()) {
+                timeGroup.copy(stories = filteredStories)
+            } else null
+        }
+        
+        // Update UI with filtered results
+        updateUIWithFilteredContent(filteredTimeGroups)
+    }
+
+    private fun showAllContent() {
+        updateUIWithFilteredContent(allTimeGroups)
+    }
+
+    private fun updateUIWithFilteredContent(timeGroups: List<TimeGroup>) {
+        // Check if we have any results
+        val hasResults = timeGroups.isNotEmpty()
+        
+        if (isSearchMode && !hasResults) {
+            // Show no results message
+            binding.noResultsLayout.visibility = View.VISIBLE
+            binding.searchResultsCount.visibility = View.GONE
+            binding.storiesRecyclerView.visibility = View.GONE
+            return
+        } else {
+            binding.noResultsLayout.visibility = View.GONE
+        }
+        
+        // Show search results count
+        if (isSearchMode) {
+            val totalResults = timeGroups.sumOf { it.stories?.size ?: 0 }
+            binding.searchResultsCount.text = "$totalResults result${if (totalResults != 1) "s" else ""} found"
+            binding.searchResultsCount.visibility = View.VISIBLE
+        } else {
+            binding.searchResultsCount.visibility = View.GONE
+        }
+        
+        // Update RecyclerView with filtered time groups
+        if (timeGroups.isNotEmpty()) {
+            binding.storiesRecyclerView.visibility = View.VISIBLE
+            storiesAdapter = StoriesCategoryAdapter(
+                timeGroups,
+                onStoryClick = { story -> onStoryClick(story) },
+                onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
+            )
+            binding.storiesRecyclerView.adapter = storiesAdapter
+        } else {
+            binding.storiesRecyclerView.visibility = View.GONE
+        }
+    }
+
     private fun displayStories(timeGroups: List<TimeGroup>) {
         // Filter time groups that have stories
         val timeGroupsWithStories = timeGroups.filter { it.stories?.isNotEmpty() == true }
+        
+        // Store all time groups for search functionality
+        allTimeGroups = timeGroupsWithStories
         
         if (timeGroupsWithStories.isNotEmpty()) {
             storiesAdapter = StoriesCategoryAdapter(

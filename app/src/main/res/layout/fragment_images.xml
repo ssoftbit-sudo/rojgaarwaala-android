@@ -31,6 +31,66 @@
 
     </LinearLayout>
 
+    <!-- Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/search_bar_background"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@android:drawable/ic_menu_search"
+            android:contentDescription="Search"
+            android:tint="@color/gray_light_3" />
+
+        <EditText
+            android:id="@+id/searchBar"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:hint="Search images..."
+            android:background="@null"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray_light_3"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:maxLines="1" />
+
+        <ImageView
+            android:id="@+id/clearSearchButton"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Clear search"
+            android:tint="@color/gray_light_3"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <!-- Search Results Count -->
+    <TextView
+        android:id="@+id/searchResultsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="@color/gray_light_3"
+        android:textSize="12sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+
     <!-- Divider -->
     <View
         android:layout_width="match_parent"
@@ -39,19 +99,53 @@
         android:alpha="0.4" />
 
     <!-- Content Area -->
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/imagesRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_margin="16dp"
+        android:visibility="visible"
+        android:scrollbars="vertical"
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/imagesRecyclerView"
-            android:layout_width="match_parent"
+    <!-- No Results Found Message -->
+    <LinearLayout
+        android:id="@+id/noResultsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@android:drawable/ic_menu_search"
+            android:contentDescription="No results"
+            android:tint="@color/gray_light_3"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:visibility="visible" />
+            android:text="No results found"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
-    </ScrollView>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Try searching with different keywords"
+            android:textColor="@color/gray_light_3"
+            android:textSize="14sp"
+            android:gravity="center" />
+
+    </LinearLayout>
 
 </LinearLayout> 

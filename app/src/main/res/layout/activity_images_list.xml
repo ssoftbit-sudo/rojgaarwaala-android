@@ -31,6 +31,10 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_margin="16dp"
-        android:visibility="visible" />
+        android:visibility="visible"
+        android:scrollbars="vertical"
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
 
 </LinearLayout> 

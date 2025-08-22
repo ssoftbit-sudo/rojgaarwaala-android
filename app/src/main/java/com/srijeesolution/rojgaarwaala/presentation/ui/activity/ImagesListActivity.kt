@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityImagesListBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesGridAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -47,8 +48,15 @@ class ImagesListActivity : AppCompatActivity() {
             title = if (categoryTitle != null) "$categoryTitle Images" else "All Images"
         }
         
-        // Setup RecyclerView with GridLayoutManager (3 columns)
-        binding.imagesRecyclerView.layoutManager = GridLayoutManager(this, 3)
+        // Setup RecyclerView with GridLayoutManager (2 columns like stories)
+        binding.imagesRecyclerView.layoutManager = GridLayoutManager(this, 2)
+        
+        // Add spacing decoration similar to stories
+        binding.imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
+        
+        // Optimize for smooth scrolling
+        binding.imagesRecyclerView.setHasFixedSize(true)
+        binding.imagesRecyclerView.setItemViewCacheSize(20)
         
         // Initialize adapter
         imagesAdapter = ImagesGridAdapter(emptyList()) { image ->
@@ -112,20 +120,25 @@ class ImagesListActivity : AppCompatActivity() {
 
     private fun onImageClick(image: ImageData) {
         // Launch full-screen image viewer
-        val intent = android.content.Intent(this, ImageViewerActivity::class.java)
-        // Convert ImageData to ScheduledImage for compatibility
-        val scheduledImage = ScheduledImage(
-            id = image.id,
-            title = image.title,
-            description = image.description,
-            imagePath = image.imageUrl,
-            publishDate = image.publishDate,
-            status = null,
-            createdAt = null,
-            updatedAt = null
-        )
-        intent.putExtra("scheduled_image", scheduledImage)
-        startActivity(intent)
+        if (!image.imageUrl.isNullOrEmpty()) {
+            val intent = android.content.Intent(this, ImageViewerActivity::class.java)
+            // Convert ImageData to ScheduledImage for compatibility
+            val scheduledImage = ScheduledImage(
+                id = image.id,
+                title = image.title,
+                description = image.description,
+                imagePath = image.imageUrl,
+                publishDate = image.publishDate,
+                status = null,
+                createdAt = null,
+                updatedAt = null
+            )
+            intent.putExtra("scheduled_image", scheduledImage)
+            startActivity(intent)
+        } else {
+            // Show toast if no image available
+            android.widget.Toast.makeText(this, "No image available", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showEmptyState() {

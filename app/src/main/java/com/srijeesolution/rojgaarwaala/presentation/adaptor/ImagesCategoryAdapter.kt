@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem
 import com.srijeesolution.rojgaarwaala.databinding.ItemImageCategoryBinding
+import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class ImagesCategoryAdapter(
     private val categories: List<ImageSubItem>,
@@ -25,8 +26,15 @@ class ImagesCategoryAdapter(
                     onViewAllClick(category)
                 }
                 
-                // Setup nested RecyclerView for images with GridLayoutManager
-                imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 3)
+                // Setup nested RecyclerView for images with GridLayoutManager (2 columns like stories)
+                imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
+                
+                // Add spacing decoration similar to stories
+                imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
+                
+                // Optimize for smooth scrolling
+                imagesRecyclerView.setHasFixedSize(true)
+                imagesRecyclerView.isNestedScrollingEnabled = false
                 
                 val imagesAdapter = ImagesGridAdapter(category.images ?: emptyList()) { image ->
                     // Handle image click - convert to ImageSubItem for compatibility

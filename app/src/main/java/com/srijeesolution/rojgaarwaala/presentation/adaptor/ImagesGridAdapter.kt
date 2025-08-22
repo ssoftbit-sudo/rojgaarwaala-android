@@ -20,14 +20,24 @@ class ImagesGridAdapter(
                 // Set title
                 imageTitle.text = image.title ?: ""
                 
-                // Load image using Glide
+                // Set description (similar to stories)
+                imageDescription.text = image.description ?: ""
+                
+                // Load image using Glide with optimizations for smooth scrolling
                 val imageUrl = image.imageUrl ?: ""
-                Glide.with(imageView.context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.no_image_placeholder)
-                    .error(R.drawable.no_image_placeholder)
-                    .centerCrop()
-                    .into(imageView)
+                if (imageUrl.isNotEmpty()) {
+                    Glide.with(imageView.context)
+                        .load(imageUrl)
+                        .placeholder(R.drawable.no_image_placeholder)
+                        .error(R.drawable.no_image_placeholder)
+                        .centerCrop()
+                        .dontAnimate() // Disable animations for smoother scrolling
+                        .skipMemoryCache(false) // Use memory cache for better performance
+                        .into(imageView)
+                } else {
+                    // Set placeholder if no image
+                    imageView.setImageResource(R.drawable.no_image_placeholder)
+                }
                 
                 // Set click listener
                 root.setOnClickListener {

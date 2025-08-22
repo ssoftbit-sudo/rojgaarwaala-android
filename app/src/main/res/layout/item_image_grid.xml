@@ -36,6 +36,18 @@
             android:visibility="gone"
             android:fontFamily="sans-serif-medium" />
 
+        <!-- Description (similar to stories) -->
+        <TextView
+            android:id="@+id/imageDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Image description goes here..."
+            android:textColor="@color/gray_light_3"
+            android:textSize="12sp"
+            android:maxLines="3"
+            android:visibility="gone"
+            android:ellipsize="end" />
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView> 

@@ -1,6 +1,8 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,13 +22,19 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentImagesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesCategoryAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ImagesFragment : Fragment() {
 
     private var _binding: FragmentImagesBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: HomePageViewModel
     private var imagesAdapter: ImagesCategoryAdapter? = null
+    
+    // Search related variables
+    private var allCategories: List<ImageSubItem> = emptyList()
+    private var isSearchMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +50,7 @@ class ImagesFragment : Fragment() {
         
         viewModel = ViewModelProvider(requireActivity())[HomePageViewModel::class.java]
         setupViews()
+        setupSearch()
         setupObservers()
         loadImages()
     }
@@ -50,6 +59,10 @@ class ImagesFragment : Fragment() {
         // Setup RecyclerView with LinearLayoutManager for categories
         binding.imagesRecyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
         
+        // Optimize for smooth scrolling
+        binding.imagesRecyclerView.setHasFixedSize(true)
+        binding.imagesRecyclerView.setItemViewCacheSize(20)
+        
         // Initialize adapter
         imagesAdapter = ImagesCategoryAdapter(
             emptyList(),
@@ -57,6 +70,35 @@ class ImagesFragment : Fragment() {
             onViewAllClick = { category -> onViewAllClick(category) }
         )
         binding.imagesRecyclerView.adapter = imagesAdapter
+    }
+
+    private fun setupSearch() {
+        binding.searchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                if (query.isEmpty()) {
+                    // Show all content when search is empty
+                    isSearchMode = false
+                    binding.clearSearchButton.visibility = View.GONE
+                    showAllContent()
+                } else {
+                    // Filter content based on search query
+                    isSearchMode = true
+                    binding.clearSearchButton.visibility = View.VISIBLE
+                    filterContent(query)
+                }
+            }
+        })
+        
+        // Clear search button click listener
+        binding.clearSearchButton.setOnClickListener {
+            binding.searchBar.setText("")
+            binding.searchBar.clearFocus()
+        }
     }
 
     private fun setupObservers() {
@@ -84,9 +126,73 @@ class ImagesFragment : Fragment() {
         viewModel.getScheduledImages()
     }
 
+    private fun filterContent(query: String) {
+        val lowerQuery = query.lowercase()
+        
+        // Filter categories and their images
+        val filteredCategories = allCategories.mapNotNull { category ->
+            val filteredImages = category.images?.filter { image ->
+                image.title?.lowercase()?.contains(lowerQuery) == true ||
+                image.description?.lowercase()?.contains(lowerQuery) == true ||
+                category.title?.lowercase()?.contains(lowerQuery) == true
+            } ?: emptyList()
+            
+            if (filteredImages.isNotEmpty()) {
+                category.copy(images = filteredImages)
+            } else null
+        }
+        
+        // Update UI with filtered results
+        updateUIWithFilteredContent(filteredCategories)
+    }
+
+    private fun showAllContent() {
+        updateUIWithFilteredContent(allCategories)
+    }
+
+    private fun updateUIWithFilteredContent(categories: List<ImageSubItem>) {
+        // Check if we have any results
+        val hasResults = categories.isNotEmpty()
+        
+        if (isSearchMode && !hasResults) {
+            // Show no results message
+            binding.noResultsLayout.visibility = View.VISIBLE
+            binding.searchResultsCount.visibility = View.GONE
+            binding.imagesRecyclerView.visibility = View.GONE
+            return
+        } else {
+            binding.noResultsLayout.visibility = View.GONE
+        }
+        
+        // Show search results count
+        if (isSearchMode) {
+            val totalResults = categories.sumOf { it.images?.size ?: 0 }
+            binding.searchResultsCount.text = "$totalResults result${if (totalResults != 1) "s" else ""} found"
+            binding.searchResultsCount.visibility = View.VISIBLE
+        } else {
+            binding.searchResultsCount.visibility = View.GONE
+        }
+        
+        // Update RecyclerView with filtered categories
+        if (categories.isNotEmpty()) {
+            binding.imagesRecyclerView.visibility = View.VISIBLE
+            imagesAdapter = ImagesCategoryAdapter(
+                categories,
+                onImageClick = { category -> onImageClick(category) },
+                onViewAllClick = { category -> onViewAllClick(category) }
+            )
+            binding.imagesRecyclerView.adapter = imagesAdapter
+        } else {
+            binding.imagesRecyclerView.visibility = View.GONE
+        }
+    }
+
     private fun displayImages(categories: List<ImageSubItem>) {
         // Filter categories that have images
         val categoriesWithImages = categories.filter { it.images?.isNotEmpty() == true }
+        
+        // Store all categories for search functionality
+        allCategories = categoriesWithImages
         
         if (categoriesWithImages.isNotEmpty()) {
             imagesAdapter = ImagesCategoryAdapter(
@@ -101,8 +207,9 @@ class ImagesFragment : Fragment() {
     }
 
     private fun showEmptyState() {
-        // You can customize this to show a proper empty state
-        Toast.makeText(context, "No images available", Toast.LENGTH_SHORT).show()
+        // Handle empty state
+        binding.imagesRecyclerView.visibility = View.GONE
+        // You can add a TextView to show "No images found" message
     }
 
     private fun showError(message: String) {
