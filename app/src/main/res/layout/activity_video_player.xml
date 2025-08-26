@@ -33,11 +33,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="260dp">
 
-                <VideoView
+                <androidx.media3.ui.PlayerView
                     android:id="@+id/custom_video_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="visible" />
+                    android:visibility="visible"
+                    app:show_timeout="2000"
+                    app:show_buffering="when_playing"
+                    app:use_controller="true"
+                    app:show_subtitle_button="false"
+                    app:show_vr_button="false"
+                    app:resize_mode="fit" />
 
                 <!-- Thumbnail Overlay -->
                 <ImageView
@@ -47,7 +53,7 @@
                     android:scaleType="centerCrop"
                     android:visibility="gone" />
 
-                <!-- Fullscreen Video Progress Controls -->
+                <!-- Fullscreen Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
                 <LinearLayout
                     android:id="@+id/fullscreenProgressControls"
                     android:layout_width="match_parent"
@@ -209,14 +215,14 @@
 
                 </LinearLayout>
 
-                <!-- Play/Pause Button -->
+                <!-- Play/Pause Button - Hidden since ExoPlayer has built-in controls -->
                 <ImageView
                     android:id="@+id/playPauseButton"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:src="@android:drawable/ic_media_play"
                     android:layout_gravity="center"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:tint="@color/white" />
 
                 <!-- Fullscreen Button -->
@@ -228,11 +234,14 @@
                     android:layout_gravity="bottom|end"
                     android:layout_margin="16dp"
                     android:tint="@color/white"
-                    android:visibility="visible" />
+                    android:visibility="visible"
+                    android:clickable="true"
+                    android:focusable="true" />
             </FrameLayout>
 
-            <!-- Video Progress Controls -->
+            <!-- Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
             <LinearLayout
+                android:id="@+id/videoProgressControls"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -240,7 +249,8 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp">
+                android:paddingBottom="8dp"
+                android:visibility="gone">
 
                 <!-- SeekBar -->
                 <SeekBar

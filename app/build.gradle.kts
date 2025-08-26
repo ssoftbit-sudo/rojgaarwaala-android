@@ -74,6 +74,14 @@ dependencies {
     implementation ("com.squareup.okhttp3:okhttp:4.9.0")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
     implementation ("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
+    
+    // ExoPlayer for better video streaming performance
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-ui:1.2.1")
+    implementation("androidx.media3:media3-common:1.2.1")
+    implementation("androidx.media3:media3-datasource:1.2.1")
+    implementation("androidx.media3:media3-session:1.2.1")
+    
     //dagger hilt
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-android-compiler:2.50")

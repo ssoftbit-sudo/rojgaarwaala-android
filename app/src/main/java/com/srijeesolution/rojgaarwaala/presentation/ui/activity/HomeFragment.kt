@@ -36,6 +36,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
+import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
+import android.util.Log
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -319,6 +321,9 @@ class HomeFragment : Fragment() {
                     allCategoryList = data?.categoryList ?: emptyList<Category>()
                     allCategoryVideos = data?.categoryVideos ?: emptyList<CategoryVideo>()
 
+                    // Start background video preloading for better user experience
+                    startBackgroundVideoPreloading()
+
                     // Show all content initially
                     showAllContent()
                 }
@@ -383,6 +388,42 @@ class HomeFragment : Fragment() {
             }
         }
         bannerHandler?.postDelayed(bannerRunnable!!, 3500)
+    }
+
+    private fun startBackgroundVideoPreloading() {
+        try {
+            // Collect all video URLs from top videos and category videos
+            val videoUrls = mutableListOf<String>()
+            
+            // Add top videos
+            allTopVideos.forEach { video ->
+                video.videoUrl?.let { url ->
+                    if (url.isNotEmpty()) {
+                        videoUrls.add(url)
+                    }
+                }
+            }
+            
+            // Add category videos (limit to first 10 videos per category to avoid overwhelming)
+            allCategoryVideos.forEach { categoryVideo ->
+                categoryVideo.videos?.take(10)?.forEach { video ->
+                    video.videoUrl?.let { url ->
+                        if (url.isNotEmpty()) {
+                            videoUrls.add(url)
+                        }
+                    }
+                }
+            }
+            
+            // Start background preloading
+            if (videoUrls.isNotEmpty()) {
+                Log.d("HomeFragment", "Starting background preload for ${videoUrls.size} videos")
+                VideoCacheManager.preloadVideosInBackground(requireContext(), videoUrls)
+            }
+            
+        } catch (e: Exception) {
+            Log.e("HomeFragment", "Error starting background preload: ${e.message}")
+        }
     }
 }
 
