@@ -17,7 +17,7 @@
         app:title="Video Detail" />
 
     <!-- Scrollable Content -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -31,7 +31,7 @@
             <FrameLayout
                 android:id="@+id/videoPlayerFrame"
                 android:layout_width="match_parent"
-                android:layout_height="260dp">
+                android:layout_height="520dp">
 
                 <androidx.media3.ui.PlayerView
                     android:id="@+id/custom_video_view"
@@ -110,16 +110,16 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Fullscreen Action Controls (Right Side) -->
+                <!-- Fullscreen Action Controls (Right Side) - Always Visible -->
                 <LinearLayout
                     android:id="@+id/fullscreenActionControls"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_gravity="end|center_vertical"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="20dp"
-                    android:visibility="gone">
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginTop="60dp"
+                    android:visibility="visible">
 
                     <!-- Like Button -->
                     <LinearLayout
@@ -131,8 +131,8 @@
 
                         <ImageView
                             android:id="@+id/fullscreenLikeButton"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
                             android:src="@drawable/img_like"
                             android:tint="@color/white"
                             android:contentDescription="Like" />
@@ -159,8 +159,8 @@
 
                         <ImageView
                             android:id="@+id/fullscreenDislikeButton"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
                             android:src="@drawable/img_dislike"
                             android:tint="@color/white"
                             android:contentDescription="Dislike" />
@@ -187,8 +187,8 @@
 
                         <ImageView
                             android:id="@+id/fullscreenShareButton"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
                             android:src="@drawable/ic_share"
                             android:tint="@color/white"
                             android:contentDescription="Share" />
@@ -232,7 +232,8 @@
                     android:layout_height="30dp"
                     android:src="@drawable/img_full_screen"
                     android:layout_gravity="bottom|end"
-                    android:layout_margin="16dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="20dp"
                     android:tint="@color/white"
                     android:visibility="visible"
                     android:clickable="true"
@@ -295,7 +296,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Like/Dislike/Share/Views Row -->
+            <!-- Like/Dislike/Share/Views Row - Hidden -->
             <LinearLayout
                 android:id="@+id/actionRow"
                 android:layout_width="match_parent"
@@ -306,7 +307,8 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:visibility="gone">
 
                 <ImageView
                     android:id="@+id/likeButton"
@@ -381,10 +383,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="30dp"
                 android:orientation="horizontal" />
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- ProgressBar for loading (overlay) -->
     <FrameLayout

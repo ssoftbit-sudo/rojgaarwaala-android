@@ -14,7 +14,6 @@ import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
-import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -49,6 +48,7 @@ import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.common.C
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoVerticalAdapter
 
 @AndroidEntryPoint
 @UnstableApi
@@ -267,8 +267,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             VideoOptimizationUtils.AdaptiveQualitySettings.MEDIUM_QUALITY -> "Standard"
             VideoOptimizationUtils.AdaptiveQualitySettings.LOW_QUALITY -> "Low"
         }
-        
-        Toast.makeText(this, "Video quality: $qualityText", Toast.LENGTH_SHORT).show()
+
+    //    Toast.makeText(this, "Video quality: $qualityText", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupActionRow() {
@@ -453,7 +453,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             binding.relatedVideosRecyclerView.visibility = View.VISIBLE
             
             // Create new adapter with related videos
-            val newAdapter = VideoAdapter(related) { videoId ->
+            val newAdapter = VideoVerticalAdapter(related) { videoId ->
                 // Stop current video and load new one
                 stopCurrentVideo()
                 this.videoId = videoId
@@ -485,7 +485,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             binding.relatedVideosRecyclerView.visibility = View.VISIBLE
             
             // Create new adapter with related videos
-            val newAdapter = VideoAdapter(relatedVideos) { videoId ->
+            val newAdapter = VideoVerticalAdapter(relatedVideos) { videoId ->
                 // Stop current video and load new one with zero buffering
                 stopCurrentVideo()
                 this.videoId = videoId
@@ -499,13 +499,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun setupRelatedVideosRecycler() {
-        binding.relatedVideosRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        binding.relatedVideosRecyclerView.adapter = VideoAdapter(emptyList()) { videoId ->
+        binding.relatedVideosRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        binding.relatedVideosRecyclerView.adapter = VideoVerticalAdapter(emptyList()) { videoId ->
             // Stop current video and load new one with zero buffering
             stopCurrentVideo()
             this.videoId = videoId
             viewModel.getVideoDetails(videoId)
         }
+        
+        // Disable nested scrolling to let NestedScrollView handle all scrolling
+        binding.relatedVideosRecyclerView.isNestedScrollingEnabled = false
     }
 
     private fun isYouTubeUrl(url: String): Boolean {
@@ -763,7 +766,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun exitFullscreen() {
         // Show UI elements
         binding.topBar.visibility = View.VISIBLE
-        binding.actionRow.visibility = View.VISIBLE
+        binding.actionRow.visibility = View.GONE // Keep hidden
         binding.viewsCount.visibility = View.VISIBLE
         
         // Refresh related videos display
@@ -775,8 +778,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.totalTimeText.visibility = View.VISIBLE
         binding.fullscreenProgressControls.visibility = View.GONE
         
-        // Hide fullscreen action controls
-        binding.fullscreenActionControls.visibility = View.GONE
+        // Keep fullscreen action controls visible
+        binding.fullscreenActionControls.visibility = View.VISIBLE
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
