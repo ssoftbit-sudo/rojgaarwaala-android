@@ -79,3 +79,58 @@
 
 # Glide
 -keep class com.bumptech.glide.** { *; }
+
+# Keep data models for JSON serialization/deserialization
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.** { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.* { *; }
+
+# Keep all fields and methods in data models
+-keepclassmembers class com.srijeesolution.rojgaarwaala.data.remote.model.** {
+    <fields>;
+    <methods>;
+}
+
+# Keep Gson annotations
+-keepclassmembers class com.srijeesolution.rojgaarwaala.data.remote.model.** {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Keep all data classes
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.HomePageData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.BannerList { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.Category { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideo { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.UserData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.JobListData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.JobItem { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImageListData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImageData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.StoriesData { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.TimeGroup { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.Story { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ImageCategory { *; }
+-keep class com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage { *; }
+
+# Keep all data class constructors and fields
+-keepclassmembers class com.srijeesolution.rojgaarwaala.data.remote.model.** {
+    public <init>(...);
+    public <fields>;
+}
+
+# Keep network error models
+-keep class com.srijeesolution.rojgaarwaala.network.handler.** { *; }
+-keepclassmembers class com.srijeesolution.rojgaarwaala.network.handler.** {
+    <fields>;
+    <methods>;
+}
