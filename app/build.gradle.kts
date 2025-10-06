@@ -8,44 +8,18 @@ plugins {
 }
 
 android {
+    compileSdk = 36
     namespace = "com.srijeesolution.rojgaarwaala"
-    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 24
-        //noinspection OldTargetApi
         targetSdk = 35
-        versionCode = 3
+        versionCode = 9
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-    viewBinding {
-        enable = true
-    }
-    
-    lint {
-        abortOnError = false
-        checkReleaseBuilds = false
-    }
     signingConfigs {
         create("release") {
             storeFile = file("play_store_file.jks")
@@ -53,6 +27,35 @@ android {
             keyAlias = "Rojgaarwaala"
             keyPassword = "Rojgaarwaala@123"
         }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    viewBinding {
+        enable = true
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 
@@ -87,7 +90,10 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0-alpha01")
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
+    //implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+
 
     //image load and loader
     implementation ("com.github.bumptech.glide:glide:4.16.0")

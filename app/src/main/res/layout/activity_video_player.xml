@@ -16,22 +16,12 @@
         app:navigationIcon="@drawable/ic_back_arrow"
         app:title="Video Detail" />
 
-    <!-- Scrollable Content -->
-    <androidx.core.widget.NestedScrollView
+    <!-- Video Player (fixed at top) -->
+    <FrameLayout
+        android:id="@+id/videoPlayerFrame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Video Player (fixed height) -->
-            <FrameLayout
-                android:id="@+id/videoPlayerFrame"
-                android:layout_width="match_parent"
-                android:layout_height="520dp">
+        android:layout_height="520dp"
+        android:elevation="4dp">
 
                 <androidx.media3.ui.PlayerView
                     android:id="@+id/custom_video_view"
@@ -118,7 +108,7 @@
                     android:orientation="vertical"
                     android:layout_gravity="end|center_vertical"
                     android:layout_marginEnd="10dp"
-                    android:layout_marginTop="60dp"
+                    android:layout_marginTop="40dp"
                     android:visibility="visible">
 
                     <!-- Like Button -->
@@ -238,7 +228,25 @@
                     android:visibility="visible"
                     android:clickable="true"
                     android:focusable="true" />
-            </FrameLayout>
+    </FrameLayout>
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Spacer to push content below video player -->
+            <View
+                android:id="@+id/spacerView"
+                android:layout_width="match_parent"
+                android:layout_height="400dp" />
 
             <!-- Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
             <LinearLayout

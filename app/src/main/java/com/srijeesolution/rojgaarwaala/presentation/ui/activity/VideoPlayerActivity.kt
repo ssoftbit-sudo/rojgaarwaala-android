@@ -49,6 +49,9 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.common.C
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoVerticalAdapter
+import android.animation.ValueAnimator
+import android.view.animation.DecelerateInterpolator
+import androidx.core.widget.NestedScrollView
 
 @AndroidEntryPoint
 @UnstableApi
@@ -87,6 +90,13 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private var initialY = 0f
     private var isGestureInProgress = false
+    
+    // Video player scroll zoom variables
+    private val minVideoPlayerHeight = 300 // dp
+    private val scrollThreshold = 200 // scroll pixels to trigger full transition
+    private var maxVideoPlayerHeight = 520 // dp - will be set from layout
+    private var currentVideoPlayerHeight = 520 // dp - will be set from layout
+    private var heightAnimator: ValueAnimator? = null
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -134,6 +144,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         setupActionRow()
         setupCustomVideoPlayerControls()
         setupGestureDetector()
+        setupScrollZoomEffect()
         observeVideoDetails()
         observeLikeDislikeActions()
         viewModel.getVideoDetails(videoId)
@@ -447,27 +458,24 @@ class VideoPlayerActivity : AppCompatActivity() {
         val related = data.relatedVideos ?: emptyList()
         Log.d("VideoPlayerActivity", "Related videos count: ${related.size}")
         
+        // Always show related videos section (it will show empty list if no data)
+        binding.relatedVideosLabel.visibility = View.VISIBLE
+        binding.relatedVideosRecyclerView.visibility = View.VISIBLE
+        
+        // Create new adapter with related videos (empty list if no data)
+        val newAdapter = VideoVerticalAdapter(related) { videoId ->
+            // Stop current video and load new one
+            stopCurrentVideo()
+            this.videoId = videoId
+            viewModel.getVideoDetails(videoId)
+        }
+        binding.relatedVideosRecyclerView.adapter = newAdapter
+        
         if (related.isNotEmpty()) {
-            // Show related videos section when data is available
-            binding.relatedVideosLabel.visibility = View.VISIBLE
-            binding.relatedVideosRecyclerView.visibility = View.VISIBLE
-            
-            // Create new adapter with related videos
-            val newAdapter = VideoVerticalAdapter(related) { videoId ->
-                // Stop current video and load new one
-                stopCurrentVideo()
-                this.videoId = videoId
-                viewModel.getVideoDetails(videoId)
-            }
-            binding.relatedVideosRecyclerView.adapter = newAdapter
-            
             // Preload related videos for faster switching
             preloadRelatedVideos(related)
         } else {
-            // Hide related videos section when no data
-            binding.relatedVideosLabel.visibility = View.GONE
-            binding.relatedVideosRecyclerView.visibility = View.GONE
-            Log.d("VideoPlayerActivity", "No related videos available")
+            Log.d("VideoPlayerActivity", "No related videos available - showing empty list")
         }
         currentVideoTitle = data.title
         currentVideoUrl = data.stream_url?:data.videoUrl
@@ -480,11 +488,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         val relatedVideos = viewModel.videoDetailsLiveData.value?.data?.data?.relatedVideos ?: emptyList()
         Log.d("VideoPlayerActivity", "Refreshing related videos display: ${relatedVideos.size}")
         
-        if (relatedVideos.isNotEmpty() && !isFullscreen) {
+        if (!isFullscreen) {
+            // Keep related videos section visible (it will show empty list if no data)
             binding.relatedVideosLabel.visibility = View.VISIBLE
             binding.relatedVideosRecyclerView.visibility = View.VISIBLE
             
-            // Create new adapter with related videos
+            // Create new adapter with related videos (empty list if no data)
             val newAdapter = VideoVerticalAdapter(relatedVideos) { videoId ->
                 // Stop current video and load new one with zero buffering
                 stopCurrentVideo()
@@ -493,8 +502,94 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             binding.relatedVideosRecyclerView.adapter = newAdapter
         } else {
+            // Only hide when in fullscreen
             binding.relatedVideosLabel.visibility = View.GONE
             binding.relatedVideosRecyclerView.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Setup scroll-based zoom effect for video player
+     */
+    private fun setupScrollZoomEffect() {
+        // Get the actual height from layout
+        binding.videoPlayerFrame.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                binding.videoPlayerFrame.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                
+                // Get the actual height in dp from the layout
+                val heightInPixels = binding.videoPlayerFrame.height
+                maxVideoPlayerHeight = (heightInPixels / resources.displayMetrics.density).toInt()
+                currentVideoPlayerHeight = maxVideoPlayerHeight
+                
+                // Initialize spacer height to show some content initially
+                // Use 80% of video height so related videos are partially visible
+                val initialSpacerHeight = (heightInPixels * 0.08).toInt()
+                val spacerLayoutParams = binding.spacerView.layoutParams
+                spacerLayoutParams.height = initialSpacerHeight
+                binding.spacerView.layoutParams = spacerLayoutParams
+                
+                // Initially show fullscreen button since video is at full size
+                binding.fullscreenButton.visibility = View.VISIBLE
+            }
+        })
+        
+        binding.nestedScrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+            if (isFullscreen) return@setOnScrollChangeListener // Don't apply zoom in fullscreen
+            
+            // Calculate scroll progress (0.0 to 1.0)
+            val scrollProgress = (scrollY.toFloat() / scrollThreshold).coerceIn(0f, 1f)
+            
+            // Calculate target height based on scroll progress
+            val targetHeight = (maxVideoPlayerHeight - (maxVideoPlayerHeight - minVideoPlayerHeight) * scrollProgress).toInt()
+            
+            // Control fullscreen button visibility based on video size
+            // Show when video is large (near top), hide when video is small (scrolled down)
+            val shouldShowFullscreenButton = targetHeight >= (maxVideoPlayerHeight * 0.8) // Show when video is 80% or larger
+            binding.fullscreenButton.visibility = if (shouldShowFullscreenButton) View.VISIBLE else View.GONE
+            
+            // Only animate if the target height has changed significantly
+            if (kotlin.math.abs(targetHeight - currentVideoPlayerHeight) > 5) {
+                animateVideoPlayerHeight(targetHeight)
+            }
+        }
+    }
+    
+    /**
+     * Animate video player height with smooth transition
+     */
+    private fun animateVideoPlayerHeight(targetHeight: Int) {
+        // Cancel any running animation
+        heightAnimator?.cancel()
+        
+        val startHeight = currentVideoPlayerHeight
+        
+        heightAnimator = ValueAnimator.ofInt(startHeight, targetHeight).apply {
+            duration = 200 // Smooth but quick animation
+            interpolator = DecelerateInterpolator()
+            
+            addUpdateListener { animator ->
+                val animatedHeight = animator.animatedValue as Int
+                currentVideoPlayerHeight = animatedHeight
+                
+                val densityPixels = (animatedHeight * resources.displayMetrics.density).toInt()
+                
+                // Update the video player frame height
+                val videoLayoutParams = binding.videoPlayerFrame.layoutParams
+                videoLayoutParams.height = densityPixels
+                binding.videoPlayerFrame.layoutParams = videoLayoutParams
+                
+                // Update the spacer height - use a percentage to keep some content visible
+                // When video is full size (520dp), spacer is 80% so content shows
+                // When video is minimized (300dp), spacer is smaller so more content shows
+                val spacerHeightPercentage = if (animatedHeight > minVideoPlayerHeight + 50) 0.08 else 0.08
+                val spacerHeight = (densityPixels * spacerHeightPercentage).toInt()
+                val spacerLayoutParams = binding.spacerView.layoutParams
+                spacerLayoutParams.height = spacerHeight
+                binding.spacerView.layoutParams = spacerLayoutParams
+            }
+            
+            start()
         }
     }
 
@@ -506,6 +601,10 @@ class VideoPlayerActivity : AppCompatActivity() {
             this.videoId = videoId
             viewModel.getVideoDetails(videoId)
         }
+        
+        // Ensure related videos section is visible by default
+        binding.relatedVideosLabel.visibility = View.VISIBLE
+        binding.relatedVideosRecyclerView.visibility = View.VISIBLE
         
         // Disable nested scrolling to let NestedScrollView handle all scrolling
         binding.relatedVideosRecyclerView.isNestedScrollingEnabled = false
@@ -863,6 +962,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onDestroy()
         progressHandler.removeCallbacks(progressRunnable)
         autoHideHandler.removeCallbacks(autoHideRunnable)
+        
+        // Cancel height animation
+        heightAnimator?.cancel()
+        heightAnimator = null
         
         // Release ExoPlayer resources
         exoPlayer?.release()
