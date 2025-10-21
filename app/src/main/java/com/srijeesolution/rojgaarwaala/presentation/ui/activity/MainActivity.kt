@@ -1,12 +1,14 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -325,7 +327,8 @@ class MainActivity : AppCompatActivity() {
         window.statusBarColor = ContextCompat.getColor(this, R.color.black)
         
         // Set up window insets listener to handle system navigation bar and status bar
-        findViewById<LinearLayout>(R.id.root).setOnApplyWindowInsetsListener { view, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { view, windowInsets ->
+            // Use WindowInsetsCompat which handles API compatibility automatically
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             
             // Add top padding for status bar and bottom padding for navigation bar
