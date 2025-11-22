@@ -30,6 +30,12 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.VideoOptimizationUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
@@ -65,10 +71,17 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var hasIncrementedView = false
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
+    private var currentVideoThumbnail: String? = null
     private var isFullscreen = false
     private var videoDuration = 0L
     private var isSeeking = false
     private var isPlaying = false
+    
+    // Store previous state for rollback on API error
+    private var previousLikeState = false
+    private var previousDislikeState = false
+    private var previousLikeCount = 0
+    private var previousDislikeCount = 0
     private val progressHandler = Handler(Looper.getMainLooper())
     private val progressRunnable = object : Runnable {
         override fun run() {
@@ -285,7 +298,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun setupActionRow() {
         binding.likeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                viewModel.likeVideo(videoId)
+                handleLikeAction()
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -296,7 +309,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         binding.dislikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                viewModel.unlikeVideo(videoId)
+                handleDislikeAction()
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -312,7 +325,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Setup fullscreen action controls with synchronized functionality
         binding.fullscreenLikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                viewModel.likeVideo(videoId)
+                handleLikeAction()
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -323,7 +336,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         binding.fullscreenDislikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                viewModel.unlikeVideo(videoId)
+                handleDislikeAction()
             } else {
                 // User is not logged in, navigate to login
                 val intent = Intent(this, LoginActivity::class.java)
@@ -335,6 +348,84 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.fullscreenShareButton.setOnClickListener {
             shareVideo()
         }
+    }
+    
+    /**
+     * Handle like action with optimistic UI update
+     */
+    private fun handleLikeAction() {
+        val wasLiked = sharedPrefs.isVideoLiked(videoId)
+        val wasDisliked = sharedPrefs.isVideoDisliked(videoId)
+        
+        // Store previous state for potential rollback
+        previousLikeState = wasLiked
+        previousDislikeState = wasDisliked
+        previousLikeCount = likeCount
+        previousDislikeCount = dislikeCount
+        
+        // Optimistic UI update - update immediately
+        if (wasLiked) {
+            // Unlike: decrease like count
+            likeCount = maxOf(0, likeCount - 1)
+            sharedPrefs.setVideoLiked(videoId, false)
+        } else {
+            // Like: increase like count
+            likeCount += 1
+            sharedPrefs.setVideoLiked(videoId, true)
+            
+            // If previously disliked, decrease dislike count
+            if (wasDisliked) {
+                dislikeCount = maxOf(0, dislikeCount - 1)
+                sharedPrefs.setVideoDisliked(videoId, false)
+            }
+            
+            // Show confetti only when user likes the video (not when unliking)
+            binding.confettiView.spawnBurstAtCenter()
+        }
+        
+        // Update UI immediately
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
+        // Make API call in background
+        viewModel.likeVideo(videoId)
+    }
+    
+    /**
+     * Handle dislike action with optimistic UI update
+     */
+    private fun handleDislikeAction() {
+        val wasLiked = sharedPrefs.isVideoLiked(videoId)
+        val wasDisliked = sharedPrefs.isVideoDisliked(videoId)
+        
+        // Store previous state for potential rollback
+        previousLikeState = wasLiked
+        previousDislikeState = wasDisliked
+        previousLikeCount = likeCount
+        previousDislikeCount = dislikeCount
+        
+        // Optimistic UI update - update immediately
+        if (wasDisliked) {
+            // Undislike: decrease dislike count
+            dislikeCount = maxOf(0, dislikeCount - 1)
+            sharedPrefs.setVideoDisliked(videoId, false)
+        } else {
+            // Dislike: increase dislike count
+            dislikeCount += 1
+            sharedPrefs.setVideoDisliked(videoId, true)
+            
+            // If previously liked, decrease like count
+            if (wasLiked) {
+                likeCount = maxOf(0, likeCount - 1)
+                sharedPrefs.setVideoLiked(videoId, false)
+            }
+        }
+        
+        // Update UI immediately
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
+        
+        // Make API call in background
+        viewModel.unlikeVideo(videoId)
     }
 
     private fun updateLikeDislikeCounts() {
@@ -353,17 +444,29 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (isLiked) {
             binding.likeButton.setImageResource(R.drawable.ic_thumb_up_filled)
             binding.likeButton.alpha = 1.0f
+            // Update fullscreen like button
+            binding.fullscreenLikeButton.setImageResource(R.drawable.ic_thumb_up_filled)
+            binding.fullscreenLikeButton.alpha = 1.0f
         } else {
             binding.likeButton.setImageResource(R.drawable.ic_thumb_up_outline)
             binding.likeButton.alpha = 0.7f
+            // Update fullscreen like button
+            binding.fullscreenLikeButton.setImageResource(R.drawable.ic_thumb_up_outline)
+            binding.fullscreenLikeButton.alpha = 0.7f
         }
         // Update dislike button
         if (isDisliked) {
             binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_filled)
             binding.dislikeButton.alpha = 1.0f
+            // Update fullscreen dislike button
+            binding.fullscreenDislikeButton.setImageResource(R.drawable.ic_thumb_down_filled)
+            binding.fullscreenDislikeButton.alpha = 1.0f
         } else {
             binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_outline)
             binding.dislikeButton.alpha = 0.7f
+            // Update fullscreen dislike button
+            binding.fullscreenDislikeButton.setImageResource(R.drawable.ic_thumb_down_outline)
+            binding.fullscreenDislikeButton.alpha = 0.7f
         }
     }
 
@@ -399,11 +502,18 @@ class VideoPlayerActivity : AppCompatActivity() {
         viewModel.likeVideoLiveData.observe(this, Observer { result ->
             when (result) {
                 is ApiResult.Success<*> -> {
-                    // After successful like, refresh video details to get updated counts
-                    viewModel.getVideoDetails(videoId)
-                    //Toast.makeText(this, "Video liked!", Toast.LENGTH_SHORT).show()
+                    // API call succeeded - optimistic update was correct
+                    // No need to refresh video details, UI already updated
+                    // This prevents video from restarting
                 }
                 is ApiResult.Error -> {
+                    // Rollback optimistic update on error
+                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
+                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
+                    likeCount = previousLikeCount
+                    dislikeCount = previousDislikeCount
+                    updateLikeDislikeCounts()
+                    updateLikeDislikeUI()
                     //Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
                 }
                 else -> {}
@@ -414,11 +524,18 @@ class VideoPlayerActivity : AppCompatActivity() {
         viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
             when (result) {
                 is ApiResult.Success<*> -> {
-                    // After successful unlike, refresh video details to get updated counts
-                    viewModel.getVideoDetails(videoId)
-                    //Toast.makeText(this, "Video disliked!", Toast.LENGTH_SHORT).show()
+                    // API call succeeded - optimistic update was correct
+                    // No need to refresh video details, UI already updated
+                    // This prevents video from restarting
                 }
                 is ApiResult.Error -> {
+                    // Rollback optimistic update on error
+                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
+                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
+                    likeCount = previousLikeCount
+                    dislikeCount = previousDislikeCount
+                    updateLikeDislikeCounts()
+                    updateLikeDislikeUI()
                     //Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
                 }
                 else -> {}
@@ -479,6 +596,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         currentVideoTitle = data.title
         currentVideoUrl = data.stream_url?:data.videoUrl
+        currentVideoThumbnail = data.thumbnail
     }
 
     /**
@@ -933,10 +1051,71 @@ class VideoPlayerActivity : AppCompatActivity() {
         val url = currentVideoUrl ?: ""
         val appDetails = "\n\nWatch this video on Rojgaarwaala! Download the app: https://rojgaarwaala.com"
         val shareText = "$title\n$url$appDetails"
-        val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
-        intent.type = "text/plain"
-        intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText)
-        startActivity(android.content.Intent.createChooser(intent, "Share video via"))
+        
+        // If thumbnail is available, share with image
+        if (!currentVideoThumbnail.isNullOrEmpty()) {
+            shareVideoWithThumbnail(shareText, currentVideoThumbnail!!)
+        } else {
+            // Fallback to text-only sharing
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
+            intent.type = "text/plain"
+            intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+            startActivity(android.content.Intent.createChooser(intent, "Share video via"))
+        }
+    }
+    
+    private fun shareVideoWithThumbnail(shareText: String, thumbnailUrl: String) {
+        // Show loading indicator
+        binding.progressBar.visibility = View.VISIBLE
+        
+        // Download thumbnail in background thread
+        Thread {
+            try {
+                // Download thumbnail
+                val url = URL(thumbnailUrl)
+                val connection = url.openConnection()
+                connection.connect()
+                val inputStream = connection.getInputStream()
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream.close()
+                
+                // Save bitmap to cache directory
+                val cacheDir = cacheDir
+                val imageFile = File(cacheDir, "share_thumbnail_${System.currentTimeMillis()}.jpg")
+                val outputStream = FileOutputStream(imageFile)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                outputStream.flush()
+                outputStream.close()
+                
+                // Create FileProvider URI
+                val imageUri = FileProvider.getUriForFile(
+                    this@VideoPlayerActivity,
+                    "${packageName}.fileprovider",
+                    imageFile
+                )
+                
+                // Share on main thread
+                Handler(Looper.getMainLooper()).post {
+                    binding.progressBar.visibility = View.GONE
+                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
+                    intent.type = "image/*"
+                    intent.putExtra(android.content.Intent.EXTRA_STREAM, imageUri)
+                    intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                    intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    startActivity(android.content.Intent.createChooser(intent, "Share video via"))
+                }
+            } catch (e: Exception) {
+                Log.e("VideoPlayerActivity", "Error sharing video with thumbnail: ${e.message}")
+                // Fallback to text-only sharing on error
+                Handler(Looper.getMainLooper()).post {
+                    binding.progressBar.visibility = View.GONE
+                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
+                    intent.type = "text/plain"
+                    intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                    startActivity(android.content.Intent.createChooser(intent, "Share video via"))
+                }
+            }
+        }.start()
     }
 
     override fun onPause() {

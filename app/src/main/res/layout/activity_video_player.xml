@@ -43,6 +43,14 @@
                     android:scaleType="centerCrop"
                     android:visibility="gone" />
 
+                <!-- Confetti View - On top of video, only shows when user likes -->
+                <com.srijeesolution.rojgaarwaala.utils.ConfettiView
+                    android:id="@+id/confetti_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:focusable="false" />
+
                 <!-- Fullscreen Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
                 <LinearLayout
                     android:id="@+id/fullscreenProgressControls"
@@ -112,32 +120,33 @@
                     android:visibility="visible">
 
                     <!-- Like Button -->
-                    <LinearLayout
+                    <RelativeLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp"
                         android:gravity="center"
-                        android:layout_marginBottom="16dp">
+                        android:orientation="vertical">
 
                         <ImageView
                             android:id="@+id/fullscreenLikeButton"
                             android:layout_width="30dp"
                             android:layout_height="30dp"
+                            android:contentDescription="Like"
                             android:src="@drawable/img_like"
-                            android:tint="@color/white"
-                            android:contentDescription="Like" />
+                            android:tint="@color/white" />
 
                         <TextView
                             android:id="@+id/fullscreenLikeCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_below="@+id/fullscreenLikeButton"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
                             android:text="0"
                             android:textColor="@color/white"
-                            android:textSize="12sp"
-                            android:gravity="center"
-                            android:layout_marginTop="4dp" />
+                            android:textSize="12sp" />
 
-                    </LinearLayout>
+                    </RelativeLayout>
 
                     <!-- Dislike Button -->
                     <LinearLayout
