@@ -92,6 +92,17 @@ class ImageViewerActivity : AppCompatActivity() {
             toggleUI()
         }
         
+        // Set up swipe listener for navigation
+        binding.fullScreenImageView.setOnSwipeListener { isLeftSwipe ->
+            if (isLeftSwipe) {
+                // Swipe left - next image
+                navigateToNext()
+            } else {
+                // Swipe right - previous image
+                navigateToPrevious()
+            }
+        }
+        
         // Set up navigation arrow click listeners
         binding.leftArrowButton.setOnClickListener {
             navigateToPrevious()

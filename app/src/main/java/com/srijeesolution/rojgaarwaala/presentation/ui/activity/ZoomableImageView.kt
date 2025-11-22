@@ -36,7 +36,10 @@ class ZoomableImageView @JvmOverloads constructor(
     private var oldMatrix = Matrix()
     private var matrixValues = FloatArray(9)
     private var onImageClickListener: (() -> Unit)? = null
+    private var onSwipeListener: ((Boolean) -> Unit)? = null // true for left swipe (next), false for right swipe (previous)
     private var lastClickTime = 0L
+    private val minSwipeDistance = 100f // Minimum distance for swipe detection
+    private val maxVerticalDeviation = 100f // Maximum vertical movement to consider it a horizontal swipe
 
     companion object {
         private const val NONE = 0
@@ -56,6 +59,14 @@ class ZoomableImageView @JvmOverloads constructor(
 
     fun setOnImageClickListener(listener: () -> Unit) {
         onImageClickListener = listener
+    }
+    
+    fun setOnSwipeListener(listener: (Boolean) -> Unit) {
+        onSwipeListener = listener
+    }
+    
+    fun isAtDefaultScale(): Boolean {
+        return saveScale <= initialScale * 1.1f // Allow small tolerance
     }
 
     fun resetZoom() {
@@ -153,18 +164,47 @@ class ZoomableImageView @JvmOverloads constructor(
                 if (mode == DRAG) {
                     val deltaX = curr.x - last.x
                     val deltaY = curr.y - last.y
-                    val fixTransX = getFixDragTrans(deltaX, viewWidth.toFloat(), origWidth * saveScale)
-                    val fixTransY = getFixDragTrans(deltaY, viewHeight.toFloat(), origHeight * saveScale)
-                    matrix.postTranslate(fixTransX, fixTransY)
-                    fixTrans()
-                    last.set(curr.x, curr.y)
+                    val totalXDiff = curr.x - start.x
+                    val totalYDiff = curr.y - start.y
+                    val absTotalXDiff = Math.abs(totalXDiff)
+                    val absTotalYDiff = Math.abs(totalYDiff)
+                    
+                    // If it's a horizontal swipe at default scale, don't drag the image
+                    if (isAtDefaultScale() && absTotalXDiff > minSwipeDistance && absTotalXDiff > absTotalYDiff && absTotalYDiff < maxVerticalDeviation) {
+                        // This is a swipe gesture, don't drag the image
+                        last.set(curr.x, curr.y)
+                    } else {
+                        // Normal drag for panning zoomed image
+                        val fixTransX = getFixDragTrans(deltaX, viewWidth.toFloat(), origWidth * saveScale)
+                        val fixTransY = getFixDragTrans(deltaY, viewHeight.toFloat(), origHeight * saveScale)
+                        matrix.postTranslate(fixTransX, fixTransY)
+                        fixTrans()
+                        last.set(curr.x, curr.y)
+                    }
                 }
             }
             MotionEvent.ACTION_UP -> {
                 mode = NONE
-                val xDiff = (curr.x - start.x).toInt()
-                val yDiff = (curr.y - start.y).toInt()
-                if (xDiff < CLICK_TIME_SPAN && yDiff < CLICK_TIME_SPAN) {
+                val xDiff = curr.x - start.x
+                val yDiff = curr.y - start.y
+                val absXDiff = Math.abs(xDiff)
+                val absYDiff = Math.abs(yDiff)
+                
+                // Only detect swipe if single touch (not multi-touch/zoom)
+                val isSingleTouch = event.pointerCount == 1
+                
+                // Check for horizontal swipe (only when image is at default scale and single touch)
+                if (isSingleTouch && isAtDefaultScale() && absXDiff > minSwipeDistance && absXDiff > absYDiff && absYDiff < maxVerticalDeviation) {
+                    // Horizontal swipe detected
+                    if (xDiff > 0) {
+                        // Swipe right - previous image
+                        onSwipeListener?.invoke(false)
+                    } else {
+                        // Swipe left - next image
+                        onSwipeListener?.invoke(true)
+                    }
+                } else if (absXDiff < CLICK_TIME_SPAN && absYDiff < CLICK_TIME_SPAN) {
+                    // Click detected
                     val currentTime = System.currentTimeMillis()
                     if (currentTime - lastClickTime < 300) {
                         // Double tap - reset zoom
