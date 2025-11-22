@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,23 +22,42 @@ class ImagesCategoryAdapter(
                 // Set category title
                 categoryTitle.text = category.title ?: ""
                 
-                // Setup View All click listener
-                categoryViewAll.setOnClickListener {
-                    onViewAllClick(category)
+                // Limit to first 4 images for display
+                val allImages = category.images ?: emptyList()
+                val displayImages = allImages.take(4)
+                
+                // Show View All button only if there are more than 4 images
+                if (allImages.size > 4) {
+                    categoryViewAll.visibility = View.VISIBLE
+                    // Setup View All click listener
+                    categoryViewAll.setOnClickListener {
+                        onViewAllClick(category)
+                    }
+                } else {
+                    categoryViewAll.visibility = View.GONE
                 }
+                
+                // Clear previous adapter and decorations to avoid showing extra items
+                imagesRecyclerView.adapter = null
+                imagesRecyclerView.layoutManager = null
+                imagesRecyclerView.clearOnScrollListeners()
                 
                 // Setup nested RecyclerView for images with GridLayoutManager (2 columns like stories)
                 imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
                 
-                // Add spacing decoration similar to stories
+                // Remove all existing decorations and add fresh one
+                while (imagesRecyclerView.itemDecorationCount > 0) {
+                    imagesRecyclerView.removeItemDecorationAt(0)
+                }
                 imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
                 
                 // Optimize for smooth scrolling
                 imagesRecyclerView.setHasFixedSize(true)
                 imagesRecyclerView.isNestedScrollingEnabled = false
                 
-                val imagesAdapter = ImagesGridAdapter(category.images ?: emptyList()) { image, imageIndex ->
-                    // Pass the full category with the clicked image index
+                // Create adapter with exactly 4 items (or fewer if less than 4 available)
+                val imagesAdapter = ImagesGridAdapter(displayImages) { image, imageIndex ->
+                    // Since displayImages is the first 4 images from allImages, the index matches directly
                     onImageClick(category, imageIndex)
                 }
                 
