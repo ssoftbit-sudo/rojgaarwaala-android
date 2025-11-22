@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.content.Intent
 import android.widget.Toast
+import java.util.ArrayList
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -66,7 +67,7 @@ class ImagesFragment : Fragment() {
         // Initialize adapter
         imagesAdapter = ImagesCategoryAdapter(
             emptyList(),
-            onImageClick = { category -> onImageClick(category) },
+            onImageClick = { category, imageIndex -> onImageClick(category, imageIndex) },
             onViewAllClick = { category -> onViewAllClick(category) }
         )
         binding.imagesRecyclerView.adapter = imagesAdapter
@@ -178,7 +179,7 @@ class ImagesFragment : Fragment() {
             binding.imagesRecyclerView.visibility = View.VISIBLE
             imagesAdapter = ImagesCategoryAdapter(
                 categories,
-                onImageClick = { category -> onImageClick(category) },
+                onImageClick = { category, imageIndex -> onImageClick(category, imageIndex) },
                 onViewAllClick = { category -> onViewAllClick(category) }
             )
             binding.imagesRecyclerView.adapter = imagesAdapter
@@ -197,7 +198,7 @@ class ImagesFragment : Fragment() {
         if (categoriesWithImages.isNotEmpty()) {
             imagesAdapter = ImagesCategoryAdapter(
                 categoriesWithImages,
-                onImageClick = { category -> onImageClick(category) },
+                onImageClick = { category, imageIndex -> onImageClick(category, imageIndex) },
                 onViewAllClick = { category -> onViewAllClick(category) }
             )
             binding.imagesRecyclerView.adapter = imagesAdapter
@@ -216,23 +217,29 @@ class ImagesFragment : Fragment() {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun onImageClick(category: ImageSubItem) {
-        // Launch full-screen image viewer with the first image from the category
-        val firstImage = category.images?.firstOrNull()
-        if (firstImage != null) {
+    private fun onImageClick(category: ImageSubItem, imageIndex: Int) {
+        // Launch full-screen image viewer with all images from the category
+        val images = category.images ?: emptyList()
+        if (images.isNotEmpty() && imageIndex >= 0 && imageIndex < images.size) {
             val intent = Intent(context, ImageViewerActivity::class.java)
-            // Convert Images to ScheduledImage for compatibility
-            val scheduledImage = ScheduledImage(
-                id = firstImage.id,
-                title = firstImage.title,
-                description = firstImage.description,
-                imagePath = firstImage.imageUrl,
-                publishDate = firstImage.publishDate,
-                status = null,
-                createdAt = null,
-                updatedAt = null
-            )
-            intent.putExtra("scheduled_image", scheduledImage)
+            
+            // Convert all ImageData to ScheduledImage list
+            val scheduledImages = images.map { imageData ->
+                ScheduledImage(
+                    id = imageData.id,
+                    title = imageData.title,
+                    description = imageData.description,
+                    imagePath = imageData.imageUrl,
+                    publishDate = imageData.publishDate,
+                    status = null,
+                    createdAt = null,
+                    updatedAt = null
+                )
+            }
+            
+            // Pass the list and current index
+            intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
+            intent.putExtra("current_index", imageIndex)
             startActivity(intent)
         }
     }

@@ -21,6 +21,36 @@
             android:layout_height="match_parent"
             android:background="@color/black" />
 
+        <!-- Left Navigation Arrow -->
+        <ImageButton
+            android:id="@+id/leftArrowButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/arrow_button_background"
+            android:src="@drawable/ic_chevron_left"
+            android:contentDescription="Previous image"
+            android:visibility="gone"
+            android:tint="@color/white"
+            android:padding="12dp"
+            android:layout_marginBottom="100dp"/>
+
+        <!-- Right Navigation Arrow -->
+        <ImageButton
+            android:id="@+id/rightArrowButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/arrow_button_background"
+            android:src="@drawable/ic_chevron_right"
+            android:contentDescription="Next image"
+            android:visibility="gone"
+            android:tint="@color/white"
+            android:padding="12dp"
+            android:layout_marginBottom="100dp"/>
+
         <!-- Image Info Container -->
         <LinearLayout
             android:id="@+id/imageInfoContainer"

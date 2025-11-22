@@ -9,28 +9,52 @@ import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
+import java.util.ArrayList
 
 class ImageViewerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityImageViewerBinding
     private var scheduledImage: ScheduledImage? = null
+    private var imageList: ArrayList<ScheduledImage>? = null
+    private var currentIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Get image data from intent
-        scheduledImage = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("scheduled_image", ScheduledImage::class.java)
+        // Get image data from intent - support both old (single image) and new (list) formats
+        if (intent.hasExtra("scheduled_images")) {
+            // New format: list of images with current index
+            imageList = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableArrayListExtra("scheduled_images", ScheduledImage::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableArrayListExtra("scheduled_images")
+            }
+            currentIndex = intent.getIntExtra("current_index", 0)
+            
+            // Validate index
+            if (imageList != null && imageList!!.isNotEmpty()) {
+                if (currentIndex < 0 || currentIndex >= imageList!!.size) {
+                    currentIndex = 0
+                }
+                scheduledImage = imageList!![currentIndex]
+            }
         } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("scheduled_image")
+            // Old format: single image (backward compatibility)
+            scheduledImage = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra("scheduled_image", ScheduledImage::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra("scheduled_image")
+            }
         }
         
         setupToolbar()
         setupImage()
         setupClickListeners()
+        setupNavigationArrows()
         
         // Ensure proper initial scaling after view is fully laid out
         binding.fullScreenImageView.viewTreeObserver.addOnGlobalLayoutListener {
@@ -66,6 +90,61 @@ class ImageViewerActivity : AppCompatActivity() {
         // Set up zoomable image view click listener
         binding.fullScreenImageView.setOnImageClickListener {
             toggleUI()
+        }
+        
+        // Set up navigation arrow click listeners
+        binding.leftArrowButton.setOnClickListener {
+            navigateToPrevious()
+        }
+        
+        binding.rightArrowButton.setOnClickListener {
+            navigateToNext()
+        }
+    }
+    
+    private fun setupNavigationArrows() {
+        // Show navigation arrows only if there are multiple images
+        val hasMultipleImages = imageList != null && imageList!!.size > 1
+        if (hasMultipleImages) {
+            binding.leftArrowButton.visibility = View.VISIBLE
+            binding.rightArrowButton.visibility = View.VISIBLE
+            updateArrowVisibility()
+        } else {
+            binding.leftArrowButton.visibility = View.GONE
+            binding.rightArrowButton.visibility = View.GONE
+        }
+    }
+    
+    private fun updateArrowVisibility() {
+        // Hide left arrow if at first image
+        binding.leftArrowButton.visibility = if (currentIndex > 0) View.VISIBLE else View.GONE
+        
+        // Hide right arrow if at last image
+        binding.rightArrowButton.visibility = if (imageList != null && currentIndex < imageList!!.size - 1) View.VISIBLE else View.GONE
+    }
+    
+    private fun navigateToPrevious() {
+        if (imageList != null && currentIndex > 0) {
+            currentIndex--
+            loadImageAtIndex(currentIndex)
+            updateArrowVisibility()
+        }
+    }
+    
+    private fun navigateToNext() {
+        if (imageList != null && currentIndex < imageList!!.size - 1) {
+            currentIndex++
+            loadImageAtIndex(currentIndex)
+            updateArrowVisibility()
+        }
+    }
+    
+    private fun loadImageAtIndex(index: Int) {
+        if (imageList != null && index >= 0 && index < imageList!!.size) {
+            // Reset zoom before loading new image
+            binding.fullScreenImageView.resetZoom()
+            scheduledImage = imageList!![index]
+            setupImage()
         }
     }
 

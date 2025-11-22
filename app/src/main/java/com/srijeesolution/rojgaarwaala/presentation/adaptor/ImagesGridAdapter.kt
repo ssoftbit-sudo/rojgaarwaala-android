@@ -10,7 +10,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ItemImageGridBinding
 
 class ImagesGridAdapter(
     private val images: List<ImageData>,
-    private val onImageClick: (ImageData) -> Unit
+    private val onImageClick: (ImageData, Int) -> Unit
 ) : RecyclerView.Adapter<ImagesGridAdapter.ImageViewHolder>() {
 
     inner class ImageViewHolder(private val binding: ItemImageGridBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -41,7 +41,10 @@ class ImagesGridAdapter(
                 
                 // Set click listener
                 root.setOnClickListener {
-                    onImageClick(image)
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        onImageClick(image, position)
+                    }
                 }
             }
         }

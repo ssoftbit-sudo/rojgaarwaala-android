@@ -10,7 +10,7 @@ import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class ImagesCategoryAdapter(
     private val categories: List<ImageSubItem>,
-    private val onImageClick: (ImageSubItem) -> Unit,
+    private val onImageClick: (ImageSubItem, Int) -> Unit,
     private val onViewAllClick: (ImageSubItem) -> Unit
 ) : RecyclerView.Adapter<ImagesCategoryAdapter.CategoryViewHolder>() {
 
@@ -36,15 +36,9 @@ class ImagesCategoryAdapter(
                 imagesRecyclerView.setHasFixedSize(true)
                 imagesRecyclerView.isNestedScrollingEnabled = false
                 
-                val imagesAdapter = ImagesGridAdapter(category.images ?: emptyList()) { image ->
-                    // Handle image click - convert to ImageSubItem for compatibility
-                    val tempCategory = ImageSubItem(
-                        id = category.id,
-                        title = category.title,
-                        iconFile = category.iconFile,
-                        images = listOf(image)
-                    )
-                    onImageClick(tempCategory)
+                val imagesAdapter = ImagesGridAdapter(category.images ?: emptyList()) { image, imageIndex ->
+                    // Pass the full category with the clicked image index
+                    onImageClick(category, imageIndex)
                 }
                 
                 imagesRecyclerView.adapter = imagesAdapter

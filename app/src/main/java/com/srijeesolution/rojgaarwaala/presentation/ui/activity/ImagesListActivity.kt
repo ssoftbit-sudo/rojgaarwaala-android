@@ -13,6 +13,7 @@ import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesGridAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.ArrayList
 
 @AndroidEntryPoint
 class ImagesListActivity : AppCompatActivity() {
@@ -59,8 +60,8 @@ class ImagesListActivity : AppCompatActivity() {
         binding.imagesRecyclerView.setItemViewCacheSize(20)
         
         // Initialize adapter
-        imagesAdapter = ImagesGridAdapter(emptyList()) { image ->
-            onImageClick(image)
+        imagesAdapter = ImagesGridAdapter(emptyList()) { image, imageIndex ->
+            onImageClick(image, imageIndex)
         }
         binding.imagesRecyclerView.adapter = imagesAdapter
     }
@@ -108,9 +109,12 @@ class ImagesListActivity : AppCompatActivity() {
             }
         }
         
+        // Store the list for navigation
+        allImagesList = allImages
+        
         if (allImages.isNotEmpty()) {
-            imagesAdapter = ImagesGridAdapter(allImages) { image ->
-                onImageClick(image)
+            imagesAdapter = ImagesGridAdapter(allImages) { image, imageIndex ->
+                onImageClick(image, imageIndex)
             }
             binding.imagesRecyclerView.adapter = imagesAdapter
         } else {
@@ -118,22 +122,30 @@ class ImagesListActivity : AppCompatActivity() {
         }
     }
 
-    private fun onImageClick(image: ImageData) {
-        // Launch full-screen image viewer
-        if (!image.imageUrl.isNullOrEmpty()) {
+    private var allImagesList: List<ImageData> = emptyList()
+    
+    private fun onImageClick(image: ImageData, imageIndex: Int) {
+        // Launch full-screen image viewer with all images from the category
+        if (!image.imageUrl.isNullOrEmpty() && imageIndex >= 0 && imageIndex < allImagesList.size) {
             val intent = android.content.Intent(this, ImageViewerActivity::class.java)
-            // Convert ImageData to ScheduledImage for compatibility
-            val scheduledImage = ScheduledImage(
-                id = image.id,
-                title = image.title,
-                description = image.description,
-                imagePath = image.imageUrl,
-                publishDate = image.publishDate,
-                status = null,
-                createdAt = null,
-                updatedAt = null
-            )
-            intent.putExtra("scheduled_image", scheduledImage)
+            
+            // Convert all ImageData to ScheduledImage list
+            val scheduledImages = allImagesList.map { imageData ->
+                ScheduledImage(
+                    id = imageData.id,
+                    title = imageData.title,
+                    description = imageData.description,
+                    imagePath = imageData.imageUrl,
+                    publishDate = imageData.publishDate,
+                    status = null,
+                    createdAt = null,
+                    updatedAt = null
+                )
+            }
+            
+            // Pass the list and current index
+            intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
+            intent.putExtra("current_index", imageIndex)
             startActivity(intent)
         } else {
             // Show toast if no image available
