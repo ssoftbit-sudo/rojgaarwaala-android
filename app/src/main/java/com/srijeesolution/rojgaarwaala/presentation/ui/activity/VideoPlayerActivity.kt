@@ -1053,7 +1053,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun shareVideo() {
         val title = currentVideoTitle ?: "Check out this video!"
         val url = currentVideoUrl ?: ""
-        val appDetails = "\n\nWatch this video on Rojgaarwaala! Download the app: https://rojgaarwaala.com"
+        val appDetails = "\n\nWatch this video on Rojgaarwaala! Download the app: https://play.google.com/store/apps/details?id=com.srijeesolution.rojgaarwaala"
         val shareText = "$title\n$url$appDetails"
         
         // If thumbnail is available, share with image
