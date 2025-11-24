@@ -2,6 +2,7 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -22,6 +23,9 @@ class ImageViewerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Prevent screenshots and screen recording
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
 
         // Get image data from intent - support both old (single image) and new (list) formats
         if (intent.hasExtra("scheduled_images")) {

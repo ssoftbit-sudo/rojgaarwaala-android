@@ -30,6 +30,7 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import android.view.WindowManager
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -118,6 +119,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Prevent screenshots and screen recording
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
 
         // Initialize ExoPlayer components
         initializeExoPlayer()
