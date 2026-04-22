@@ -19,29 +19,70 @@
             android:scaleType="centerCrop"
             android:background="@color/black" />
 
+        <!-- Action Buttons Overlay -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:gravity="end">
+
+            <ImageButton
+                android:id="@+id/callButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_call"
+                android:background="@drawable/circle_background"
+                android:tint="@color/white"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Call" />
+
+            <Button
+                android:id="@+id/applyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Apply"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@drawable/rounded_button_primary"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+        </LinearLayout>
+
+        <!-- Bottom Info Overlay -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:orientation="vertical"
             android:background="#CC000000"
-            android:padding="4dp"
-            android:gravity="bottom|start">
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/topVideoTitle"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:padding="8dp"
-                android:gravity="top"
-                android:layout_gravity="top"
                 android:maxLines="2"
-                android:ellipsize="end"
-                android:visibility="gone"/>
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/topVideoTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:alpha="0.7"
+                android:layout_marginTop="4dp" />
+
         </LinearLayout>
+
     </FrameLayout>
 
 </androidx.cardview.widget.CardView> 

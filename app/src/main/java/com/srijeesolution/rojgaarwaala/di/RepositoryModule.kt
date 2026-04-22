@@ -3,7 +3,6 @@ package com.srijeesolution.rojgaarwaala.di
 import android.content.Context
 import com.srijeesolution.rojgaarwaala.data.repository.HomePageRepositoryImpl
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
-import com.srijeesolution.rojgaarwaala.network.retorfit.HeaderInterceptor
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.Module
 import dagger.Provides
@@ -19,16 +18,10 @@ object RepositoryModule {
     @Provides
     fun provideSharedPrefs(@ApplicationContext appContext: Context): SharedPrefs = SharedPrefs(appContext)
 
-
-    @Provides
-    @Singleton
-    fun provideHeaderInterceptor(sharedPrefs: SharedPrefs): HeaderInterceptor {
-        return HeaderInterceptor(sharedPrefs)
-    }
-
     @Singleton
     @Provides
-    fun provideHomePageRepository1(): HomePageRepository = HomePageRepositoryImpl()
-
+    fun provideHomePageRepository(
+        homePageRepositoryImpl: HomePageRepositoryImpl
+    ): HomePageRepository = homePageRepositoryImpl
 
 }

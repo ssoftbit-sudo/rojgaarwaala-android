@@ -40,6 +40,17 @@ android {
         }
     }
 
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+
+    buildFeatures {
+        viewBinding = true
+        dataBinding = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -48,20 +59,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
-    viewBinding {
-        enable = true
-    }
-
-    lint {
-        abortOnError = false
-        checkReleaseBuilds = false
-    }
 }
 
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.activity:activity-ktx:1.9.0")
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     testImplementation(libs.junit)
@@ -85,11 +88,6 @@ dependencies {
     implementation("androidx.media3:media3-datasource:1.2.1")
     implementation("androidx.media3:media3-session:1.2.1")
     
-    //dagger hilt
-    implementation("com.google.dagger:hilt-android:2.50")
-    kapt("com.google.dagger:hilt-android-compiler:2.50")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0-alpha01")
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
     //implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
@@ -107,6 +105,15 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
     implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // Razorpay Payment Gateway
+    implementation("com.razorpay:checkout:1.6.35")
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.50")
+    kapt("com.google.dagger:hilt-compiler:2.50")
 }
 kapt { correctErrorTypes = true }

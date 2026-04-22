@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,6 +59,7 @@ class AddJobFragment : Fragment() {
     private var pdfFile: File? = null
     private var imageFile: File? = null
     private var logoFile: File? = null
+    private var candidateResumeFile: File? = null
     
     // Existing file URLs (for edit mode)
     private var existingPdfUrl: String? = null
@@ -75,6 +77,9 @@ class AddJobFragment : Fragment() {
     
     private val logoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handleLogoSelection(it) }
+    }
+    private val candidateResumeLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { handleCandidateResumeSelection(it) }
     }
 
     override fun onCreateView(
@@ -128,6 +133,7 @@ class AddJobFragment : Fragment() {
         observeJobSubmitData()
         observeJobUpdateData()
         setupCategoryDropdown()
+        setupUserTypeFlow()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
             binding.submitBtn.isEnabled = false
@@ -143,6 +149,26 @@ class AddJobFragment : Fragment() {
         
         // Set up file upload button click listeners
         setupFileUploadListeners()
+    }
+
+    private fun setupUserTypeFlow() {
+        binding.userTypeGroup.setOnCheckedChangeListener { _, checkedId ->
+            val isCandidate = checkedId == binding.candidateTypeRadio.id
+            binding.candidateFieldsContainer.visibility = if (isCandidate) View.VISIBLE else View.GONE
+            binding.jobResponsibility.hint = if (isCandidate) "Why should recruiter consider you?" else "Enter job responsibility"
+            binding.submitBtn.text = if (isCandidate) "Submit Profile" else if (updateJobId != null) "Update Job" else "Submit Job"
+        }
+
+        val categorySuggestions = arrayOf(
+            "Sales Executive", "Telecaller", "Back Office", "Delivery", "Marketing",
+            "Accountant", "Driver", "Electrician", "Plumber", "Teacher", "Data Entry"
+        )
+        binding.candidateJobCategory.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categorySuggestions)
+        )
+        binding.candidateLocation.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, LocationSuggestions.districtList)
+        )
     }
 
     private fun hideKeyboard() {
@@ -250,10 +276,14 @@ class AddJobFragment : Fragment() {
     }
 
     private fun validateLogin() {
+        val isCandidate = binding.userTypeGroup.checkedRadioButtonId == binding.candidateTypeRadio.id
         val jobTitle = binding.jobTitle.text.toString().trim()
         val jobDescription = binding.jobDescription.text.toString().trim()
         val jobCategory = binding.jobCategory.text.toString().trim()
         val jobResponsibility = binding.jobResponsibility.text.toString().trim()
+        val candidateCategory = binding.candidateJobCategory.text.toString().trim()
+        val candidateLocation = binding.candidateLocation.text.toString().trim()
+        val candidateMobile = binding.candidateMobile.text.toString().trim()
 
         if (jobTitle.isEmpty()) {
             binding.jobTitle.error = "Title is required"
@@ -265,7 +295,7 @@ class AddJobFragment : Fragment() {
             return
         }
 
-        if (jobCategory.isEmpty()) {
+        if (!isCandidate && jobCategory.isEmpty()) {
             binding.jobCategory.error = "Category is required"
             return
         }
@@ -275,8 +305,33 @@ class AddJobFragment : Fragment() {
             return
         }
 
+        if (isCandidate) {
+            if (candidateCategory.isEmpty()) {
+                binding.candidateJobCategory.error = "Interested category is required"
+                return
+            }
+            if (candidateLocation.isEmpty()) {
+                binding.candidateLocation.error = "Preferred location is required"
+                return
+            }
+            if (candidateMobile.length != 10) {
+                binding.candidateMobile.error = "Enter valid 10 digit mobile number"
+                return
+            }
+            if (candidateResumeFile == null) {
+                Toast.makeText(requireContext(), "Please upload candidate resume (PDF/DOC)", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
         // ✅ If all fields are valid
-        onSuccess(jobTitle, jobDescription, jobCategory, jobResponsibility)
+        val effectiveCategory = if (isCandidate) candidateCategory else jobCategory
+        val effectiveResponsibility = if (isCandidate) {
+            "$jobResponsibility | preferred_location=$candidateLocation | candidate_mobile=$candidateMobile | post_type=candidate"
+        } else {
+            jobResponsibility
+        }
+        onSuccess(jobTitle, jobDescription, effectiveCategory, effectiveResponsibility)
     }
 
     private fun onSuccess(
@@ -378,6 +433,34 @@ class AddJobFragment : Fragment() {
         
         binding.uploadLogoBtn.setOnClickListener {
             logoLauncher.launch("image/*")
+        }
+
+        binding.uploadCandidateResumeBtn.setOnClickListener {
+            candidateResumeLauncher.launch("*/*")
+        }
+    }
+
+    private fun handleCandidateResumeSelection(uri: Uri) {
+        try {
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            val fileName = getFileName(uri) ?: "candidate_resume.pdf"
+            val lower = fileName.lowercase()
+            if (!(lower.endsWith(".pdf") || lower.endsWith(".doc") || lower.endsWith(".docx"))) {
+                Toast.makeText(requireContext(), "Only PDF, DOC, DOCX allowed", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val file = File(requireContext().cacheDir, fileName)
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            candidateResumeFile = file
+            binding.candidateResumeFileName.text = "Selected: $fileName"
+            binding.candidateResumeFileName.visibility = View.VISIBLE
+            pdfFile = file
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Error selecting resume file", Toast.LENGTH_SHORT).show()
         }
     }
 

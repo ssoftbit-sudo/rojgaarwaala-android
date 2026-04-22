@@ -3,15 +3,16 @@ package com.srijeesolution.rojgaarwaala.presentation.adaptor
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ItemGridVideoBinding
-import com.srijeesolution.rojgaarwaala.databinding.ItemTopVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
 
-class GridVideosListAdapter(private val videos: List<TopVideo>) : RecyclerView.Adapter<GridVideosListAdapter.TopVideoViewHolder>() {
+class GridVideosListAdapter : ListAdapter<TopVideo, GridVideosListAdapter.TopVideoViewHolder>(DIFF_CALLBACK) {
     class TopVideoViewHolder(val binding: ItemGridVideoBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopVideoViewHolder {
@@ -20,7 +21,7 @@ class GridVideosListAdapter(private val videos: List<TopVideo>) : RecyclerView.A
     }
 
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
-        val video = videos[position]
+        val video = getItem(position)
         holder.binding.topVideoTitle.text = video.title
         Glide.with(holder.binding.topVideoThumbnail.context)
             .load(video.thumbnail)
@@ -35,5 +36,15 @@ class GridVideosListAdapter(private val videos: List<TopVideo>) : RecyclerView.A
         }
     }
 
-    override fun getItemCount(): Int = videos.size
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TopVideo>() {
+            override fun areItemsTheSame(oldItem: TopVideo, newItem: TopVideo): Boolean {
+                return oldItem.id == newItem.id
+            }
+
+            override fun areContentsTheSame(oldItem: TopVideo, newItem: TopVideo): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
 } 

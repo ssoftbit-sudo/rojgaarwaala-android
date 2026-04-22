@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageData
-import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImagesListBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -60,7 +59,7 @@ class ImagesListActivity : AppCompatActivity() {
         binding.imagesRecyclerView.setItemViewCacheSize(20)
         
         // Initialize adapter
-        imagesAdapter = ImagesGridAdapter(emptyList()) { image, imageIndex ->
+        imagesAdapter = ImagesGridAdapter { image, imageIndex ->
             onImageClick(image, imageIndex)
         }
         binding.imagesRecyclerView.adapter = imagesAdapter
@@ -110,13 +109,13 @@ class ImagesListActivity : AppCompatActivity() {
         }
         
         // Store the list for navigation
-        allImagesList = allImages
+        allImagesList = allImages.sortedWith(
+            compareBy<ImageData> { it.sortOrder ?: Int.MAX_VALUE }
+                .thenByDescending { it.publishDate.orEmpty() }
+        )
         
-        if (allImages.isNotEmpty()) {
-            imagesAdapter = ImagesGridAdapter(allImages) { image, imageIndex ->
-                onImageClick(image, imageIndex)
-            }
-            binding.imagesRecyclerView.adapter = imagesAdapter
+        if (allImagesList.isNotEmpty()) {
+            imagesAdapter?.submitList(allImagesList)
         } else {
             showEmptyState()
         }

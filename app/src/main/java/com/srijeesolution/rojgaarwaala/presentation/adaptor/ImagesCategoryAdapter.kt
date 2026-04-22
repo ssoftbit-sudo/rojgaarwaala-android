@@ -56,11 +56,11 @@ class ImagesCategoryAdapter(
                 imagesRecyclerView.isNestedScrollingEnabled = false
                 
                 // Create adapter with exactly 4 items (or fewer if less than 4 available)
-                val imagesAdapter = ImagesGridAdapter(displayImages) { image, imageIndex ->
+                val imagesAdapter = ImagesGridAdapter { image, imageIndex ->
                     // Since displayImages is the first 4 images from allImages, the index matches directly
                     onImageClick(category, imageIndex)
                 }
-                
+                imagesAdapter.submitList(displayImages)
                 imagesRecyclerView.adapter = imagesAdapter
             }
         }

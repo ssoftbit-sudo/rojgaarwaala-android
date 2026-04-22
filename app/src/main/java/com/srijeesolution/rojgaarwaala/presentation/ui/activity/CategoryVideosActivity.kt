@@ -9,8 +9,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ActivityCategoryVideosBinding
-import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.GridVideosListAdapter
@@ -20,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class CategoryVideosActivity : ComponentActivity() {
     private lateinit var binding: ActivityCategoryVideosBinding
     private val viewModel: HomePageViewModel by viewModels()
+    private lateinit var videosAdapter: GridVideosListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +56,8 @@ class CategoryVideosActivity : ComponentActivity() {
         }
 
         binding.videosRecyclerView.layoutManager = GridLayoutManager(this, 2)
+        videosAdapter = GridVideosListAdapter()
+        binding.videosRecyclerView.adapter = videosAdapter
 
         if (finalCategoryId == -1 && categoryTitle == "Top Videos") {
             // Handle top videos case
@@ -101,7 +104,7 @@ class CategoryVideosActivity : ComponentActivity() {
                         } else {
                             binding.noVideosText.visibility = View.GONE
                             binding.videosRecyclerView.visibility = View.VISIBLE
-                            binding.videosRecyclerView.adapter = GridVideosListAdapter(topVideos)
+                            videosAdapter.submitList(orderVideos(topVideos))
                         }
                     }
                     is ApiResult.Error -> {
@@ -126,7 +129,7 @@ class CategoryVideosActivity : ComponentActivity() {
                         } else {
                             binding.noVideosText.visibility = View.GONE
                             binding.videosRecyclerView.visibility = View.VISIBLE
-                            binding.videosRecyclerView.adapter = GridVideosListAdapter(videos)
+                            videosAdapter.submitList(orderVideos(videos))
                         }
                     }
                     is ApiResult.Error -> {
@@ -136,6 +139,13 @@ class CategoryVideosActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun orderVideos(videos: List<TopVideo>): List<TopVideo> {
+        return videos.sortedWith(
+            compareBy<TopVideo> { it.sortOrder ?: Int.MAX_VALUE }
+                .thenByDescending { it.createdAt.orEmpty() }
+        )
     }
     override fun onBackPressed() {
         // Check if user came from notification

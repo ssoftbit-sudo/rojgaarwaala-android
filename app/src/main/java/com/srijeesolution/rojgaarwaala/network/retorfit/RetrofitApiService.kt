@@ -10,34 +10,23 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitApiService {
     @JvmStatic
     fun create(baseUrl: String): RetrofitApiInterface {
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor(HeaderInterceptor(SharedPrefs(RojgaarwalaApplication.getAppContext())))
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
-            .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
             .client(httpClient)
-            .addConverterFactory(GsonConverterFactory.create()).build()
+            .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
         return retrofit.create(RetrofitApiInterface::class.java)
     }
 
     /**
      * build interceptor with the header information and define expiry time for API request/response
      */
-    private val httpClient: OkHttpClient
-        get() {
-            // initializing logging interceptor
-            val interceptor = HttpLoggingInterceptor()
-            interceptor.level = HttpLoggingInterceptor.Level.BODY
-            // initializing http client
-            val httpClient = OkHttpClient.Builder()
-            // adding header interceptor
-            httpClient.addInterceptor(HeaderInterceptor(SharedPrefs(RojgaarwalaApplication.getAppContext())))
-            httpClient.addInterceptor(LoggingInterceptor())
-            httpClient.addInterceptor(interceptor).build() //commented for removing logs on production
-            return httpClient.build()
-        }
-    private val interceptor1 = run {
-        val httpLoggingInterceptor = HttpLoggingInterceptor()
-        httpLoggingInterceptor.apply {
-            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-        }
-    }
+
 }

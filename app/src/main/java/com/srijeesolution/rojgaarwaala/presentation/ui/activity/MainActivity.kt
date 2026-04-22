@@ -111,12 +111,12 @@ class MainActivity : AppCompatActivity() {
         checkForBackgroundNotification()
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d("MainActivity", "=== onNewIntent called ===")
-        Log.d("MainActivity", "Intent action: ${intent?.action}")
-        Log.d("MainActivity", "Intent data: ${intent?.data}")
-        Log.d("MainActivity", "Intent extras: ${intent?.extras?.keySet()}")
+        Log.d("MainActivity", "Intent action: ${intent.action}")
+        Log.d("MainActivity", "Intent data: ${intent.data}")
+        Log.d("MainActivity", "Intent extras: ${intent.extras?.keySet()}")
         
         // Reset notification processed flag for new intents
         notificationProcessed = false

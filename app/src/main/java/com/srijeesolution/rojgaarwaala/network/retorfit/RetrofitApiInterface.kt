@@ -34,17 +34,16 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.VERIFY_OTP)
     suspend fun verifyOtp(@Body request: HashMap<String, String>): Response<HomePagBaseApiModel>
 
-    @GET(NetworkConstants.ON_LOGOUT)
+    @POST(NetworkConstants.ON_LOGOUT)
     suspend fun onLogoutData(): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.HOMEPAGE_DATA)
-    suspend fun getHomePageData(@Query("query") searchTerm:String): Response<HomePagBaseApiModel>
-
-    @GET(NetworkConstants.HOMEPAGE_DATA)
-    suspend fun getProfileData(@Query("query") searchTerm:String): Response<HomePagBaseApiModel>
+    suspend fun getHomePageData(@Query("search") searchTerm: String): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.GET_PROFILE)
     suspend fun getProfileData(): Response<HomePagBaseApiModel>
+
+
 
     @POST(NetworkConstants.UPDATE_PROFILE)
     suspend fun updateProfileLiveData(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>

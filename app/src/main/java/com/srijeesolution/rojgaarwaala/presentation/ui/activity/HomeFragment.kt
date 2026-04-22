@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -37,6 +38,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
+import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import android.util.Log
 
 @AndroidEntryPoint
@@ -54,6 +56,8 @@ class HomeFragment : Fragment() {
     private var allCategoryList: List<Category> = emptyList()
     private var allCategoryVideos: List<CategoryVideo> = emptyList()
     private var isSearchMode = false
+    private var currentLocationQuery = ""
+    private lateinit var topVideosAdapter: TopVideosAdapter
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -70,6 +74,7 @@ class HomeFragment : Fragment() {
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
         
         // Set up profile icon click listener
+        topVideosAdapter = TopVideosAdapter()
         binding.profileIcon.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 val intent = Intent(requireContext(), ProfileActivity::class.java)
@@ -84,6 +89,7 @@ class HomeFragment : Fragment() {
         
         // Set up search functionality
         setupSearch()
+        setupLocationAutocomplete()
         
         // Set up View All click listeners
         setupViewAllClickListeners()
@@ -100,16 +106,45 @@ class HomeFragment : Fragment() {
             
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString()?.trim() ?: ""
-                if (query.isEmpty()) {
+                val locationQuery = binding.locationSearchBar.text?.toString()?.trim() ?: ""
+                if (query.isEmpty() && locationQuery.isEmpty()) {
                     // Show all content when search is empty
                     isSearchMode = false
                     binding.clearSearchButton.visibility = View.GONE
+                    binding.clearLocationButton.visibility = View.GONE
                     showAllContent()
                 } else {
                     // Filter content based on search query
                     isSearchMode = true
-                    binding.clearSearchButton.visibility = View.VISIBLE
-                    filterContent(query)
+                    binding.clearSearchButton.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+                    binding.clearLocationButton.visibility = if (locationQuery.isNotEmpty()) View.VISIBLE else View.GONE
+                    filterContent(query, locationQuery)
+                }
+            }
+        })
+
+        // Location search
+        binding.locationSearchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = binding.searchBar.text?.toString()?.trim() ?: ""
+                val locationQuery = s?.toString()?.trim() ?: ""
+                currentLocationQuery = locationQuery
+                if (query.isEmpty() && locationQuery.isEmpty()) {
+                    // Show all content when search is empty
+                    isSearchMode = false
+                    binding.clearSearchButton.visibility = View.GONE
+                    binding.clearLocationButton.visibility = View.GONE
+                    showAllContent()
+                } else {
+                    // Filter content based on search query
+                    isSearchMode = true
+                    binding.clearSearchButton.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+                    binding.clearLocationButton.visibility = if (locationQuery.isNotEmpty()) View.VISIBLE else View.GONE
+                    filterContent(query, locationQuery)
                 }
             }
         })
@@ -118,7 +153,44 @@ class HomeFragment : Fragment() {
         binding.clearSearchButton.setOnClickListener {
             binding.searchBar.setText("")
             binding.searchBar.clearFocus()
+            if (binding.locationSearchBar.text?.isEmpty() == true) {
+                binding.clearLocationButton.visibility = View.GONE
+            }
         }
+
+        // Clear location button click listener
+        binding.clearLocationButton.setOnClickListener {
+            binding.locationSearchBar.setText("")
+            binding.locationSearchBar.clearFocus()
+            currentLocationQuery = ""
+            if (binding.searchBar.text?.isEmpty() == true) {
+                binding.clearSearchButton.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun setupLocationAutocomplete() {
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            LocationSuggestions.districtList
+        )
+        binding.locationSearchBar.setAdapter(adapter)
+        binding.locationSearchBar.setOnItemClickListener { _, _, _, _ ->
+            val query = binding.searchBar.text?.toString()?.trim().orEmpty()
+            val locationQuery = binding.locationSearchBar.text?.toString()?.trim().orEmpty()
+            filterContent(query, locationQuery)
+        }
+        binding.locationSearchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val suggestions = LocationSuggestions.filter(s?.toString().orEmpty())
+                adapter.clear()
+                adapter.addAll(suggestions)
+                adapter.notifyDataSetChanged()
+            }
+        })
     }
 
     private fun setupViewAllClickListeners() {
@@ -133,28 +205,41 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun filterContent(query: String) {
+    private fun filterContent(query: String, locationQuery: String = "") {
         val lowerQuery = query.lowercase()
+        val lowerLocationQuery = locationQuery.lowercase()
         
         // Filter categories
         val filteredCategories = allCategoryList.filter { category ->
-            category.title?.lowercase()?.contains(lowerQuery) == true
+            category.title?.lowercase()?.contains(lowerQuery) == true ||
+            (locationQuery.isNotEmpty() && category.title?.lowercase()?.contains(lowerLocationQuery) == true)
         }
         
         // Filter top videos
         val filteredTopVideos = allTopVideos.filter { video ->
-            video.title?.lowercase()?.contains(lowerQuery) == true ||
+            (video.title?.lowercase()?.contains(lowerQuery) == true ||
             video.description?.lowercase()?.contains(lowerQuery) == true ||
-            video.user?.name?.lowercase()?.contains(lowerQuery) == true
+            video.user?.name?.lowercase()?.contains(lowerQuery) == true) ||
+            (locationQuery.isNotEmpty() && (
+                video.user?.city?.lowercase()?.contains(lowerLocationQuery) == true ||
+                video.user?.state?.lowercase()?.contains(lowerLocationQuery) == true ||
+                video.user?.name?.lowercase()?.contains(lowerLocationQuery) == true
+            ))
         }
         
         // Filter category videos
         val filteredCategoryVideos = allCategoryVideos.mapNotNull { categoryVideo ->
             val filteredVideos = categoryVideo.videos?.filter { video ->
-                video.title?.lowercase()?.contains(lowerQuery) == true ||
+                (video.title?.lowercase()?.contains(lowerQuery) == true ||
                 video.description?.lowercase()?.contains(lowerQuery) == true ||
                 video.user?.name?.lowercase()?.contains(lowerQuery) == true ||
-                categoryVideo.title?.lowercase()?.contains(lowerQuery) == true
+                categoryVideo.title?.lowercase()?.contains(lowerQuery) == true) ||
+                (locationQuery.isNotEmpty() && (
+                    video.user?.city?.lowercase()?.contains(lowerLocationQuery) == true ||
+                    video.user?.state?.lowercase()?.contains(lowerLocationQuery) == true ||
+                    video.user?.name?.lowercase()?.contains(lowerLocationQuery) == true ||
+                    categoryVideo.title?.lowercase()?.contains(lowerLocationQuery) == true
+                ))
             } ?: emptyList()
             
             if (filteredVideos.isNotEmpty()) {
@@ -230,9 +315,9 @@ class HomeFragment : Fragment() {
             binding.topVideosLabel.visibility = View.VISIBLE
             binding.topVideosRecyclerView.visibility = View.VISIBLE
             binding.topVideosViewAll.visibility = View.VISIBLE
-            val topVideosAdapter = TopVideosAdapter(topVideos)
             binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             binding.topVideosRecyclerView.adapter = topVideosAdapter
+            topVideosAdapter.submitList(orderVideos(topVideos))
         } else {
             binding.topVideosLabel.visibility = View.GONE
             binding.topVideosRecyclerView.visibility = View.GONE
@@ -267,7 +352,9 @@ class HomeFragment : Fragment() {
                     }
                     
                     sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                    sectionRecycler.adapter = VideoAdapter(cat.videos ?: emptyList())
+                    val adapter = VideoAdapter()
+                    sectionRecycler.adapter = adapter
+                    adapter.submitList(orderVideos(cat.videos ?: emptyList()))
                     binding.categorySectionsContainer.addView(sectionView)
                 }
             }
@@ -317,9 +404,12 @@ class HomeFragment : Fragment() {
                     setupBannerSlider()
                     
                     // Store all data for search functionality
-                    allTopVideos = data?.topVideos ?: emptyList<TopVideo>()
+                    allTopVideos = orderVideos(data?.topVideos ?: emptyList())
                     allCategoryList = data?.categoryList ?: emptyList<Category>()
-                    allCategoryVideos = data?.categoryVideos ?: emptyList<CategoryVideo>()
+                    allCategoryVideos = (data?.categoryVideos ?: emptyList()).map { category ->
+                        val orderedVideos = orderVideos(category.videos ?: emptyList())
+                        category.copy(videos = ArrayList(orderedVideos))
+                    }
 
                     // Start background video preloading for better user experience
                     startBackgroundVideoPreloading()
@@ -338,6 +428,13 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun orderVideos(videos: List<TopVideo>): List<TopVideo> {
+        return videos.sortedWith(
+            compareBy<TopVideo> { it.sortOrder ?: Int.MAX_VALUE }
+                .thenByDescending { it.createdAt.orEmpty() }
+        )
     }
 
     private fun setupBannerSlider() {

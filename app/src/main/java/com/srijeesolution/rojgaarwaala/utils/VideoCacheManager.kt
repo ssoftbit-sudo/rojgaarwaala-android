@@ -1,16 +1,15 @@
 package com.srijeesolution.rojgaarwaala.utils
 
 import android.content.Context
+import android.net.Uri
+import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.common.MediaItem
 import androidx.media3.datasource.cache.CacheDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -22,13 +21,17 @@ import java.util.concurrent.Executors
  */
 @UnstableApi
 object VideoCacheManager {
+    private const val TAG = "VideoCacheManager"
+    private const val MAX_PREFETCH_VIDEOS = 3
+    private const val PREFETCH_BYTES_MOBILE = 256L * 1024L // 256KB on mobile data.
+    private const val PREFETCH_BYTES_WIFI = 1024L * 1024L // 1MB on regular Wi-Fi.
+    private const val PREFETCH_BYTES_GOOD_WIFI = 2L * 1024L * 1024L // 2MB on strong Wi-Fi/ethernet.
     
     private var cache: Cache? = null
     private val cacheLock = Object()
-    private val preloadPlayers = ConcurrentHashMap<String, ExoPlayer>()
     private val preloadExecutor = Executors.newFixedThreadPool(3) // 3 background threads
-    private val preloadHandler = Handler(Looper.getMainLooper())
-    private val preloadedVideos = mutableSetOf<String>() // Track preloaded videos
+    private val preloadedVideos = ConcurrentHashMap.newKeySet<String>() // Track preloaded videos safely
+    private val inFlightPrefetch = ConcurrentHashMap.newKeySet<String>()
     
     /**
      * Get or create the singleton cache instance
@@ -55,84 +58,85 @@ object VideoCacheManager {
      * Preload videos in background for better user experience
      */
     fun preloadVideosInBackground(context: Context, videoUrls: List<String>) {
-        preloadExecutor.execute {
-            try {
-                Log.d("VideoCacheManager", "Starting background preload for ${videoUrls.size} videos")
-                
-                videoUrls.forEachIndexed { index, videoUrl ->
-                    if (videoUrl.isNotEmpty()) {
-                        // Add delay between preloads to avoid overwhelming the network
-                        if (index > 0) {
-                            Thread.sleep(500) // 500ms delay between preloads
-                        }
-                        
-                        preloadSingleVideo(context, videoUrl)
-                    }
+        val appContext = context.applicationContext
+        val candidates = videoUrls
+            .asSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .filterNot { preloadedVideos.contains(it) }
+            .take(MAX_PREFETCH_VIDEOS)
+            .toList()
+
+        if (candidates.isEmpty()) {
+            return
+        }
+
+        candidates.forEach { videoUrl ->
+            if (!inFlightPrefetch.add(videoUrl)) return@forEach
+            preloadExecutor.execute {
+                try {
+                    prefetchSingleVideo(appContext, videoUrl)
+                } finally {
+                    inFlightPrefetch.remove(videoUrl)
                 }
-                
-                Log.d("VideoCacheManager", "Background preload completed for ${videoUrls.size} videos")
-            } catch (e: Exception) {
-                Log.e("VideoCacheManager", "Error in background preload: ${e.message}")
             }
         }
     }
 
-    /**
-     * Preload a single video in background
-     */
-    private fun preloadSingleVideo(context: Context, videoUrl: String) {
+    private fun prefetchSingleVideo(context: Context, videoUrl: String) {
         try {
-            // Check if already preloading
-            if (preloadPlayers.containsKey(videoUrl)) {
+            if (preloadedVideos.contains(videoUrl)) {
                 return
             }
+            val prefetchBytes = getAdaptivePrefetchBytes(context)
 
-            // Create optimized data source factory
+            // Warm cache by reading the first chunk through CacheDataSource. No decoder is created.
             val httpDataSourceFactory = VideoOptimizationUtils.getInstantHttpDataSourceFactory()
-            val dataSourceFactory = CacheDataSource.Factory()
+            val cacheDataSource = CacheDataSource.Factory()
                 .setCache(getCache(context))
                 .setUpstreamDataSourceFactory(httpDataSourceFactory)
                 .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+                .createDataSource()
 
-            // Create preload player
-            val preloadPlayer = ExoPlayer.Builder(context)
-                .setLoadControl(VideoOptimizationUtils.getZeroBufferLoadControl())
+            val dataSpec = DataSpec.Builder()
+                .setUri(Uri.parse(videoUrl))
+                .setPosition(0)
+                .setLength(prefetchBytes)
                 .build()
 
-            // Store player reference
-            preloadPlayers[videoUrl] = preloadPlayer
-
-            // Create media item and start preloading
-            val mediaItem = MediaItem.Builder().setUri(videoUrl).build()
-            preloadPlayer.setMediaItem(mediaItem)
-            preloadPlayer.prepare()
-
-            // Mark as preloaded
+            readToCache(cacheDataSource, dataSpec, prefetchBytes)
             preloadedVideos.add(videoUrl)
-
-            // Preload for 3 seconds then release
-            preloadHandler.postDelayed({
-                releasePreloadPlayer(videoUrl)
-            }, 3000)
-
-            Log.d("VideoCacheManager", "Started preloading: $videoUrl")
-            
+            Log.d(TAG, "Cache warmed for: $videoUrl (${prefetchBytes / 1024}KB)")
         } catch (e: Exception) {
-            Log.e("VideoCacheManager", "Error preloading video $videoUrl: ${e.message}")
-            releasePreloadPlayer(videoUrl)
+            Log.e(TAG, "Error warming cache for $videoUrl: ${e.message}")
         }
     }
 
-    /**
-     * Release preload player and clean up
-     */
-    private fun releasePreloadPlayer(videoUrl: String) {
+    private fun getAdaptivePrefetchBytes(context: Context): Long {
+        return when {
+            VideoOptimizationUtils.isMobileDataConnection(context) -> PREFETCH_BYTES_MOBILE
+            VideoOptimizationUtils.isGoodNetworkConnection(context) -> PREFETCH_BYTES_GOOD_WIFI
+            else -> PREFETCH_BYTES_WIFI
+        }
+    }
+
+    private fun readToCache(
+        dataSource: DataSource,
+        dataSpec: DataSpec,
+        maxBytes: Long
+    ) {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var totalRead = 0L
         try {
-            val player = preloadPlayers.remove(videoUrl)
-            player?.release()
-            Log.d("VideoCacheManager", "Released preload player for: $videoUrl")
-        } catch (e: Exception) {
-            Log.e("VideoCacheManager", "Error releasing preload player: ${e.message}")
+            dataSource.open(dataSpec)
+            while (totalRead < maxBytes) {
+                val toRead = minOf(buffer.size.toLong(), maxBytes - totalRead).toInt()
+                val read = dataSource.read(buffer, 0, toRead)
+                if (read == C.RESULT_END_OF_INPUT) break
+                if (read > 0) totalRead += read
+            }
+        } finally {
+            dataSource.close()
         }
     }
 
@@ -171,15 +175,7 @@ object VideoCacheManager {
      */
     fun releaseCache() {
         synchronized(cacheLock) {
-            // Release all preload players
-            preloadPlayers.values.forEach { player ->
-                try {
-                    player.release()
-                } catch (e: Exception) {
-                    Log.e("VideoCacheManager", "Error releasing player: ${e.message}")
-                }
-            }
-            preloadPlayers.clear()
+            inFlightPrefetch.clear()
             preloadedVideos.clear()
             
             // Release cache
@@ -193,15 +189,7 @@ object VideoCacheManager {
      */
     fun clearCache() {
         synchronized(cacheLock) {
-            // Release all preload players
-            preloadPlayers.values.forEach { player ->
-                try {
-                    player.release()
-                } catch (e: Exception) {
-                    Log.e("VideoCacheManager", "Error releasing player: ${e.message}")
-                }
-            }
-            preloadPlayers.clear()
+            inFlightPrefetch.clear()
             preloadedVideos.clear()
             
             // Clear cache

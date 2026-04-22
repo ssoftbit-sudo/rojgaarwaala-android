@@ -50,6 +50,12 @@ data class TopVideo(
     val isTopVideo: Boolean? = null,
     @SerializedName("user")
     val user: UserData? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null,
+    @SerializedName("phone_number")
+    val phoneNumber: String? = null,
+    @SerializedName("sort_order")
+    val sortOrder: Int? = null,
 )
 
 data class Category(
@@ -225,7 +231,13 @@ data class ImageData(
     @SerializedName("image_url")
     val imageUrl: String? = null,
     @SerializedName("publish_date")
-    val publishDate: String? = null
+    val publishDate: String? = null,
+    @SerializedName("user")
+    val user: UserData? = null,
+    @SerializedName("phone_number")
+    val phoneNumber: String? = null,
+    @SerializedName("sort_order")
+    val sortOrder: Int? = null,
 )
 
 data class StoriesResponse(

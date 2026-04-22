@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_DOCUMENTS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     
     <application
         android:name=".utils.RojgaarwalaApplication"
@@ -27,13 +28,7 @@
         android:usesCleartextTraffic="true">
 
         <!-- Firebase Messaging Service -->
-        <service
-            android:name=".utils.FirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
+
 
         <activity
             android:name=".presentation.ui.activity.SplashActivity"
@@ -94,6 +89,18 @@
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
             android:name=".presentation.ui.activity.StoriesListActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.ApplyFormActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.PaymentActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.ApplicationStatusActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
 

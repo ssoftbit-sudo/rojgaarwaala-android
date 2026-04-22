@@ -559,13 +559,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             binding.videoThumbnailOverlay.visibility = View.GONE
         }
-        // Play video with preloading for better performance
+        // Play video (decoder-safe mode: disable extra preload players to avoid NO_MEMORY on some devices).
         if (data.videoUrl != null) {
             // Reset view count flag for new video
             hasIncrementedView = false
-            
-            // Preload the video for better streaming
-            preloadVideo(data.videoUrl)
             startVideoWithCacheCheck(data.videoUrl)
         }
         // Like/Dislike/Share/Views
@@ -592,10 +589,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         binding.relatedVideosRecyclerView.adapter = newAdapter
         
-        if (related.isNotEmpty()) {
-            // Preload related videos for faster switching
-            preloadRelatedVideos(related)
-        } else {
+        if (related.isEmpty()) {
             Log.d("VideoPlayerActivity", "No related videos available - showing empty list")
         }
         currentVideoTitle = data.title
@@ -783,47 +777,14 @@ class VideoPlayerActivity : AppCompatActivity() {
      * Preload video for better streaming performance
      */
     private fun preloadVideo(url: String) {
-        try {
-            // Use zero-buffer load control for instant preloading
-            val loadControl = VideoOptimizationUtils.getZeroBufferLoadControl()
-            
-            // Create a temporary ExoPlayer instance for preloading
-            val preloadPlayer = ExoPlayer.Builder(this)
-                .setLoadControl(loadControl)
-                .build()
-            
-            val mediaItem = MediaItem.Builder()
-                .setUri(Uri.parse(url))
-                .build()
-            preloadPlayer.setMediaItem(mediaItem)
-            preloadPlayer.prepare()
-            
-            // Preload for a very short duration then release
-            Handler(Looper.getMainLooper()).postDelayed({
-                preloadPlayer.release()
-            }, 1000) // Ultra-fast preload time
-            
-        } catch (e: Exception) {
-            Log.e("VideoPlayerActivity", "Error preloading video: ${e.message}")
-        }
+        Log.d("VideoPlayerActivity", "Skipping decoder preload for stability: $url")
     }
 
     /**
      * Preload related videos for faster switching
      */
     private fun preloadRelatedVideos(videos: List<com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo>) {
-        try {
-            // Preload first 2 related videos for faster switching
-            videos.take(2).forEach { video ->
-                video.videoUrl?.let { url ->
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        preloadVideo(url)
-                    }, 2000) // Delay preloading to not interfere with current video
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("VideoPlayerActivity", "Error preloading related videos: ${e.message}")
-        }
+        Log.d("VideoPlayerActivity", "Related decoder preload disabled for device stability. Count=${videos.size}")
     }
 
     private fun extractYouTubeVideoId(url: String): String? {

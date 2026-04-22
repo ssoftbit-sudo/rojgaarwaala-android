@@ -1,16 +1,21 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
 import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ItemTopVideoBinding
+import com.srijeesolution.rojgaarwaala.presentation.ui.activity.ApplyFormActivity
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 
-class TopVideosAdapter(private val videos: List<TopVideo>) : RecyclerView.Adapter<TopVideosAdapter.TopVideoViewHolder>() {
+class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHolder>(DIFF_CALLBACK) {
     class TopVideoViewHolder(val binding: ItemTopVideoBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopVideoViewHolder {
@@ -19,20 +24,56 @@ class TopVideosAdapter(private val videos: List<TopVideo>) : RecyclerView.Adapte
     }
 
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
-        val video = videos[position]
-        holder.binding.topVideoTitle.text = video.title
-        Glide.with(holder.binding.topVideoThumbnail.context)
-            .load(video.thumbnail)
-            .placeholder(R.drawable.no_image_placeholder)
-            .into(holder.binding.topVideoThumbnail)
-            
-        holder.binding.root.setOnClickListener {
-            val intent = Intent(holder.binding.root.context, VideoPlayerActivity::class.java)
-            intent.putExtra("video_url", video.videoUrl)
-            intent.putExtra("video_id", video.id)
-            holder.binding.root.context.startActivity(intent)
+        val video = getItem(position)
+        with(holder.binding) {
+            topVideoTitle.text = video.title
+
+            // Set relative time
+            topVideoTime.text = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
+
+            Glide.with(topVideoThumbnail.context)
+                .load(video.thumbnail)
+                .placeholder(R.drawable.no_image_placeholder)
+                .into(topVideoThumbnail)
+
+            // Apply button click
+            applyButton.setOnClickListener {
+                val intent = Intent(root.context, ApplyFormActivity::class.java)
+                intent.putExtra("video_id", video.id)
+                intent.putExtra("video_title", video.title)
+                root.context.startActivity(intent)
+            }
+
+            // Call button click
+            callButton.setOnClickListener {
+                val phoneNumber = video.phoneNumber ?: video.user?.mobile
+                if (!phoneNumber.isNullOrEmpty()) {
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:$phoneNumber")
+                    }
+                    root.context.startActivity(intent)
+                }
+            }
+
+            // Video thumbnail click
+            root.setOnClickListener {
+                val intent = Intent(root.context, VideoPlayerActivity::class.java)
+                intent.putExtra("video_url", video.videoUrl)
+                intent.putExtra("video_id", video.id)
+                root.context.startActivity(intent)
+            }
         }
     }
 
-    override fun getItemCount(): Int = videos.size
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TopVideo>() {
+            override fun areItemsTheSame(oldItem: TopVideo, newItem: TopVideo): Boolean {
+                return oldItem.id == newItem.id
+            }
+
+            override fun areContentsTheSame(oldItem: TopVideo, newItem: TopVideo): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
 } 
