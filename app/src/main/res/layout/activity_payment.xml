@@ -77,6 +77,16 @@
                 android:textColor="@color/gray"
                 android:layout_marginBottom="24dp" />
 
+            <TextView
+                android:id="@+id/paymentModeHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Demo/Test Payment Mode"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_color_yellow"
+                android:layout_marginBottom="12dp" />
+
             <Button
                 android:id="@+id/payButton"
                 android:layout_width="match_parent"

@@ -58,7 +58,5 @@ class VideoVerticalAdapter(
         }
     }
     
-
-
     override fun getItemCount(): Int = videos.size
 }

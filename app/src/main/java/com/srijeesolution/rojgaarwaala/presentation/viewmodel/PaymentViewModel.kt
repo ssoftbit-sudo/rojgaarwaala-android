@@ -18,13 +18,16 @@ class PaymentViewModel @Inject constructor() : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun updateApplicationStatus(applicationId: String, status: String, paymentId: String?) {
+    fun updateApplicationAfterPayment(applicationId: String, paymentId: String?) {
         viewModelScope.launch {
             try {
                 val updateData = hashMapOf<String, Any>(
-                    "status" to status,
+                    // After successful payment, resume can be treated as forwarded to HR queue.
+                    "status" to "pending",
+                    "paymentStatus" to "paid",
                     "paymentId" to (paymentId ?: ""),
-                    "paidAt" to System.currentTimeMillis()
+                    "paidAt" to System.currentTimeMillis(),
+                    "hrForwardedAt" to System.currentTimeMillis()
                 )
 
                 firestore.collection("applications")
@@ -36,6 +39,26 @@ class PaymentViewModel @Inject constructor() : ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 _updateResult.value = false
+            }
+        }
+    }
+
+    fun updatePaymentFailure(applicationId: String) {
+        if (applicationId.isBlank()) return
+        viewModelScope.launch {
+            try {
+                firestore.collection("applications")
+                    .document(applicationId)
+                    .update(
+                        mapOf(
+                            "paymentStatus" to "failed",
+                            "status" to "payment_failed",
+                            "updatedAt" to System.currentTimeMillis()
+                        )
+                    )
+                    .await()
+            } catch (_: Exception) {
+                // Best-effort update; do not block UI flow on failure.
             }
         }
     }

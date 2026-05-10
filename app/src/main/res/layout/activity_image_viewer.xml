@@ -21,6 +21,109 @@
             android:layout_height="match_parent"
             android:background="@color/black" />
 
+        <LinearLayout
+            android:id="@+id/fullscreenActionControls"
+            android:layout_width="84dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/fullscreenApplyButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_apply_label_outline"
+                    android:gravity="center"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="APPLY"
+                    android:textColor="@color/brand_color_yellow"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_apply_now_badge"
+                    android:gravity="center"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="NOW!"
+                    android:textAllCaps="true"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="-3dp"
+                    android:background="@drawable/bg_apply_now_pointer"
+                    android:rotation="45" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/fullscreenCallButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="Call"
+                    android:src="@android:drawable/ic_menu_call"
+                    app:tint="@color/brand_color_yellow" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="Call"
+                    android:textColor="@color/brand_color_yellow"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/fullscreenShareButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="Share"
+                    android:src="@drawable/ic_share"
+                    android:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="Share"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
         <!-- Left Navigation Arrow -->
         <ImageButton
             android:id="@+id/leftArrowButton"
@@ -60,7 +163,8 @@
             android:orientation="vertical"
             android:background="@drawable/gradient_overlay"
             android:padding="16dp"
-            android:visibility="gone">
+            android:paddingEnd="104dp"
+            android:visibility="visible">
 
             <!-- Title -->
             <TextView
@@ -84,6 +188,15 @@
                 android:textSize="14sp"
                 android:maxLines="3"
                 android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/imageUploadTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 

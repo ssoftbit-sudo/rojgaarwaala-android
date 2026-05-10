@@ -233,7 +233,8 @@ class ImagesFragment : Fragment() {
                     publishDate = imageData.publishDate,
                     status = null,
                     createdAt = null,
-                    updatedAt = null
+                    updatedAt = null,
+                    phoneNumber = imageData.phoneNumber
                 )
             }
             

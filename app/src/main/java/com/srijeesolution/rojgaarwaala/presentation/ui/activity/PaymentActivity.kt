@@ -19,6 +19,18 @@ class PaymentActivity : AppCompatActivity(), PaymentResultListener {
     private lateinit var viewModel: PaymentViewModel
     private var videoId: Int = 0
     private var applicationId: String = ""
+    private var candidateName: String = ""
+    private var candidatePhone: String = ""
+    private var candidateEmail: String = ""
+
+    companion object {
+        // Demo Razorpay test key (public key). Replace with your project-specific test key anytime.
+        private const val DEMO_RAZORPAY_TEST_KEY = "rzp_test_1DP5mmOlF5G5ag"
+        private const val APPLICATION_FEE_PAISE = 10000
+    }
+
+    private val isLocalBypassFlow: Boolean
+        get() = applicationId.startsWith("local_")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +42,9 @@ class PaymentActivity : AppCompatActivity(), PaymentResultListener {
         // Get intent extras
         videoId = intent.getIntExtra("video_id", 0)
         applicationId = intent.getStringExtra("application_id") ?: ""
+        candidateName = intent.getStringExtra("candidate_name") ?: ""
+        candidatePhone = intent.getStringExtra("candidate_phone") ?: ""
+        candidateEmail = intent.getStringExtra("candidate_email") ?: ""
 
         Checkout.preload(applicationContext)
 
@@ -48,20 +63,29 @@ class PaymentActivity : AppCompatActivity(), PaymentResultListener {
     }
 
     private fun startPayment() {
+        if (applicationId.isBlank()) {
+            Toast.makeText(this, "Application not found. Please re-apply.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         val checkout = Checkout()
-        // Set your Razorpay key here
-        checkout.setKeyID("YOUR_RAZORPAY_KEY_ID")
+        checkout.setKeyID(DEMO_RAZORPAY_TEST_KEY)
 
         try {
             val options = JSONObject()
             options.put("name", "Rojgaarwaala")
-            options.put("description", "Job Application Fee")
+            options.put("description", "Job Application Fee - Resume Forwarding")
             options.put("currency", "INR")
-            options.put("amount", "10000") // Amount in paise (₹100 = 10000 paise)
+            options.put("amount", APPLICATION_FEE_PAISE)
+            options.put("notes", JSONObject().apply {
+                put("application_id", applicationId)
+                put("video_id", videoId)
+            })
 
             val prefill = JSONObject()
-            prefill.put("email", "user@example.com")
-            prefill.put("contact", "9876543210")
+            prefill.put("name", candidateName)
+            prefill.put("email", candidateEmail)
+            prefill.put("contact", candidatePhone)
             options.put("prefill", prefill)
 
             checkout.open(this, options)
@@ -72,26 +96,36 @@ class PaymentActivity : AppCompatActivity(), PaymentResultListener {
     }
 
     override fun onPaymentSuccess(razorpayPaymentId: String?) {
-        Toast.makeText(this, "Payment successful", Toast.LENGTH_SHORT).show()
-        viewModel.updateApplicationStatus(applicationId, "paid", razorpayPaymentId)
+        Toast.makeText(this, "Payment successful. Resume forwarded to HR.", Toast.LENGTH_SHORT).show()
+        if (isLocalBypassFlow) {
+            openStatusScreen("pending")
+            return
+        }
+        viewModel.updateApplicationAfterPayment(applicationId, razorpayPaymentId)
     }
 
     override fun onPaymentError(code: Int, response: String?) {
-        Toast.makeText(this, "Payment failed", Toast.LENGTH_SHORT).show()
-        // Handle payment failure
+        if (!isLocalBypassFlow) {
+            viewModel.updatePaymentFailure(applicationId)
+        }
+        Toast.makeText(this, "Payment failed. Please try again.", Toast.LENGTH_SHORT).show()
     }
 
     private fun observeViewModel() {
         viewModel.updateResult.observe(this) { success ->
             if (success) {
-                // Navigate to status screen or back to main
-                val intent = Intent(this, ApplicationStatusActivity::class.java)
-                intent.putExtra("application_id", applicationId)
-                startActivity(intent)
-                finish()
+                openStatusScreen()
             } else {
                 Toast.makeText(this, "Failed to update payment status", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun openStatusScreen(statusOverride: String? = null) {
+        val intent = Intent(this, ApplicationStatusActivity::class.java)
+        intent.putExtra("application_id", applicationId)
+        statusOverride?.let { intent.putExtra("status_override", it) }
+        startActivity(intent)
+        finish()
     }
 }

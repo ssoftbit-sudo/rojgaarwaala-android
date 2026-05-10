@@ -1,15 +1,17 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
-import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
+import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 import java.util.ArrayList
 
 class ImageViewerActivity : AppCompatActivity() {
@@ -66,14 +68,15 @@ class ImageViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupToolbar() {
-    }
+    private fun setupToolbar() {}
 
     private fun setupImage() {
         scheduledImage?.let { image ->
             // Set title
             binding.imageTitle.text = image.title ?: ""
             binding.imageDescription.text = image.description ?: ""
+            val uploadTime = TimeUtils.getRelativeTimeSpanString(this, image.createdAt ?: image.publishDate)
+            binding.imageUploadTime.text = if (uploadTime.isNotEmpty()) uploadTime else "Recently uploaded"
             
             // Load full-screen image
             val imageUrl = image.imagePath ?: ""
@@ -114,6 +117,29 @@ class ImageViewerActivity : AppCompatActivity() {
         
         binding.rightArrowButton.setOnClickListener {
             navigateToNext()
+        }
+
+        binding.fullscreenApplyButton.setOnClickListener {
+            val applyIntent = Intent(this, ApplyFormActivity::class.java)
+            applyIntent.putExtra("video_id", scheduledImage?.id ?: 0)
+            applyIntent.putExtra("video_title", scheduledImage?.title ?: "Job Opportunity")
+            startActivity(applyIntent)
+        }
+
+        binding.fullscreenCallButton.setOnClickListener {
+            val phone = scheduledImage?.phoneNumber?.takeIf { it.isNotBlank() }
+            if (phone.isNullOrEmpty()) {
+                Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phone")
+            }
+            startActivity(dialIntent)
+        }
+
+        binding.fullscreenShareButton.setOnClickListener {
+            shareImage()
         }
     }
     

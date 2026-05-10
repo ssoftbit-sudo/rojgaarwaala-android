@@ -42,5 +42,7 @@ data class ScheduledImage(
     @SerializedName("created_at")
     val createdAt: String? = null,
     @SerializedName("updated_at")
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    @SerializedName("phone_number")
+    val phoneNumber: String? = null
 ) : Parcelable 

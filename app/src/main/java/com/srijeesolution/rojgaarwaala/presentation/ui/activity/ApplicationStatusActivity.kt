@@ -14,6 +14,7 @@ class ApplicationStatusActivity : AppCompatActivity() {
     private lateinit var binding: ActivityApplicationStatusBinding
     private lateinit var viewModel: StatusViewModel
     private var applicationId: String = ""
+    private var statusOverride: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,10 +24,17 @@ class ApplicationStatusActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[StatusViewModel::class.java]
 
         applicationId = intent.getStringExtra("application_id") ?: ""
+        statusOverride = intent.getStringExtra("status_override") ?: ""
 
         setupClickListeners()
         observeViewModel()
-        loadStatus()
+        if (statusOverride.isNotEmpty()) {
+            updateStatusDisplay(statusOverride)
+            binding.checkStatusButton.isEnabled = false
+            binding.checkStatusButton.text = "Demo Status"
+        } else {
+            loadStatus()
+        }
     }
 
     private fun setupClickListeners() {
@@ -43,7 +51,11 @@ class ApplicationStatusActivity : AppCompatActivity() {
     }
 
     private fun loadStatus() {
-        if (applicationId.isNotEmpty()) {
+        if (statusOverride.isNotEmpty()) {
+            updateStatusDisplay(statusOverride)
+            return
+        }
+        if (applicationId.isNotEmpty() && !applicationId.startsWith("local_")) {
             viewModel.getApplicationStatus(applicationId)
         }
     }
@@ -62,9 +74,11 @@ class ApplicationStatusActivity : AppCompatActivity() {
     private fun updateStatusDisplay(status: String) {
         val (statusText, statusColor) = when (status.lowercase()) {
             "pending" -> "Resume HR ko forward kar diya gaya hai" to android.R.color.holo_blue_dark
+            "forwarded_to_hr" -> "Resume HR ko forward kar diya gaya hai" to android.R.color.holo_blue_dark
             "selected" -> "Selected" to android.R.color.holo_green_dark
             "rejected" -> "Rejected" to android.R.color.holo_red_dark
-            "paid" -> "Payment completed. Application under review." to android.R.color.holo_orange_dark
+            "payment_failed" -> "Payment failed. Please retry application payment." to android.R.color.holo_red_dark
+            "paid" -> "Payment completed. Application under review." to android.R.color.holo_blue_dark
             else -> "Status: $status" to android.R.color.darker_gray
         }
 

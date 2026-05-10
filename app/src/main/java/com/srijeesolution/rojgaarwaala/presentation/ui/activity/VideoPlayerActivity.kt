@@ -40,6 +40,7 @@ import android.graphics.BitmapFactory
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.VideoOptimizationUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 
 // ExoPlayer imports
 import androidx.media3.common.MediaItem
@@ -73,6 +74,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
     private var currentVideoThumbnail: String? = null
+    private var currentContactNumber: String? = null
     private var isFullscreen = false
     private var videoDuration = 0L
     private var isSeeking = false
@@ -111,6 +113,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var maxVideoPlayerHeight = 520 // dp - will be set from layout
     private var currentVideoPlayerHeight = 520 // dp - will be set from layout
     private var heightAnimator: ValueAnimator? = null
+    private var preFullscreenVideoHeightPx: Int = 0
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -327,6 +330,29 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         // Setup fullscreen action controls with synchronized functionality
+        binding.fullscreenApplyButton.setOnClickListener {
+            if (videoId <= 0) {
+                Toast.makeText(this, "Video details are loading", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val applyIntent = Intent(this, ApplyFormActivity::class.java)
+            applyIntent.putExtra("video_id", videoId)
+            applyIntent.putExtra("video_title", currentVideoTitle ?: "Job Opportunity")
+            startActivity(applyIntent)
+        }
+
+        binding.fullscreenCallButton.setOnClickListener {
+            val phoneNumber = currentContactNumber
+            if (phoneNumber.isNullOrBlank()) {
+                Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val callIntent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+            }
+            startActivity(callIntent)
+        }
+
         binding.fullscreenLikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 handleLikeAction()
@@ -572,6 +598,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         updateLikeDislikeUI()
         binding.viewsCount.text = "${data.views ?: 0} views"
         binding.fullscreenViewsCount.text = "${data.views ?: 0} views"
+        val relativeUploadTime = TimeUtils.getRelativeTimeSpanString(this, data.createdAt)
+        binding.uploadTimeLabel.text = if (relativeUploadTime.isNotEmpty()) relativeUploadTime else "Recently uploaded"
         // Related videos
         val related = data.relatedVideos ?: emptyList()
         Log.d("VideoPlayerActivity", "Related videos count: ${related.size}")
@@ -595,6 +623,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         currentVideoTitle = data.title
         currentVideoUrl = data.stream_url?:data.videoUrl
         currentVideoThumbnail = data.thumbnail
+        currentContactNumber = data.user?.mobile
     }
 
     /**
@@ -906,6 +935,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun enterFullscreen() {
+        preFullscreenVideoHeightPx = binding.videoPlayerFrame.layoutParams.height
+
         // Hide UI elements
         binding.topBar.visibility = View.GONE
         binding.actionRow.visibility = View.GONE
@@ -965,9 +996,16 @@ class VideoPlayerActivity : AppCompatActivity() {
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
-        frameParams.height = 260.dpToPx()
+        frameParams.height = if (preFullscreenVideoHeightPx > 0) {
+            preFullscreenVideoHeightPx
+        } else {
+            260.dpToPx()
+        }
         frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
         binding.videoPlayerFrame.layoutParams = frameParams
+
+        // Sync scroll-zoom state with restored height so UI stays consistent.
+        currentVideoPlayerHeight = (frameParams.height / resources.displayMetrics.density).toInt()
         
         // Restore video player size with proper centering
         val layoutParams = FrameLayout.LayoutParams(
@@ -1177,7 +1215,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             
             // Show cache status to user
             if (isCached) {
-                Toast.makeText(this, "Playing from cache", Toast.LENGTH_SHORT).show()
+                Log.i("VideoPlayerActivity", "Playing from cache")
             }
             
             val mediaItem = MediaItem.Builder().setUri(videoUrl).build()

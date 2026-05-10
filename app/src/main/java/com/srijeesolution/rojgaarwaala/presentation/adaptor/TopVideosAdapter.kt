@@ -36,25 +36,6 @@ class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHold
                 .placeholder(R.drawable.no_image_placeholder)
                 .into(topVideoThumbnail)
 
-            // Apply button click
-            applyButton.setOnClickListener {
-                val intent = Intent(root.context, ApplyFormActivity::class.java)
-                intent.putExtra("video_id", video.id)
-                intent.putExtra("video_title", video.title)
-                root.context.startActivity(intent)
-            }
-
-            // Call button click
-            callButton.setOnClickListener {
-                val phoneNumber = video.phoneNumber ?: video.user?.mobile
-                if (!phoneNumber.isNullOrEmpty()) {
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        data = Uri.parse("tel:$phoneNumber")
-                    }
-                    root.context.startActivity(intent)
-                }
-            }
-
             // Video thumbnail click
             root.setOnClickListener {
                 val intent = Intent(root.context, VideoPlayerActivity::class.java)

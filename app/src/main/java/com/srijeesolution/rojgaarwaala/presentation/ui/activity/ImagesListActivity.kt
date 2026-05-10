@@ -138,7 +138,8 @@ class ImagesListActivity : AppCompatActivity() {
                     publishDate = imageData.publishDate,
                     status = null,
                     createdAt = null,
-                    updatedAt = null
+                    updatedAt = null,
+                    phoneNumber = imageData.phoneNumber
                 )
             }
             

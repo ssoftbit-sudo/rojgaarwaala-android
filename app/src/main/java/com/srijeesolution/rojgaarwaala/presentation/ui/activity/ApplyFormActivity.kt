@@ -68,15 +68,10 @@ class ApplyFormActivity : AppCompatActivity() {
             return
         }
 
-        if (selectedResumeUri == null) {
-            Toast.makeText(this, "Please select a resume", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         binding.submitButton.isEnabled = false
         binding.submitButton.text = "Submitting..."
 
-        viewModel.submitApplication(videoId, name, phone, email, selectedResumeUri!!)
+        viewModel.submitApplication(videoId, name, phone, email, selectedResumeUri)
     }
 
     private fun observeViewModel() {
@@ -89,10 +84,17 @@ class ApplyFormActivity : AppCompatActivity() {
                 val intent = Intent(this, PaymentActivity::class.java)
                 intent.putExtra("video_id", videoId)
                 intent.putExtra("application_id", viewModel.applicationId.value)
+                intent.putExtra("candidate_name", binding.nameInput.text?.toString()?.trim().orEmpty())
+                intent.putExtra("candidate_phone", binding.phoneInput.text?.toString()?.trim().orEmpty())
+                intent.putExtra("candidate_email", binding.emailInput.text?.toString()?.trim().orEmpty())
                 startActivity(intent)
                 finish()
             } else {
-                Toast.makeText(this, "Failed to submit application", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    viewModel.errorMessage.value ?: "Failed to submit application",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 

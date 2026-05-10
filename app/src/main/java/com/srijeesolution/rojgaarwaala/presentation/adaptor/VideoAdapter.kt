@@ -43,28 +43,8 @@ class VideoAdapter(
                 .centerCrop()
                 .into(videoThumbnail)
 
-            // Apply button click
-            applyButton.setOnClickListener {
-                val intent = Intent(root.context, ApplyFormActivity::class.java)
-                intent.putExtra("video_id", video.id)
-                intent.putExtra("video_title", video.title)
-                root.context.startActivity(intent)
-            }
-
-            // Call button click
-            callButton.setOnClickListener {
-                val phoneNumber = video.phoneNumber ?: video.user?.mobile
-                if (!phoneNumber.isNullOrEmpty()) {
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        data = Uri.parse("tel:$phoneNumber")
-                    }
-                    root.context.startActivity(intent)
-                }
-            }
-
             root.setOnClickListener {
                 Log.d("MANISH_JAIN","YES="+video.id+"NO ="+video.videoUrl)
-
                 // If click listener is provided, use it (for same activity video switching)
                 onVideoClick?.invoke(video.id ?: 0)
 
