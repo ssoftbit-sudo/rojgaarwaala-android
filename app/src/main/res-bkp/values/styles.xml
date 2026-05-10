@@ -1,7 +1,0 @@
-<resources>
-    <!-- ... existing styles ... -->
-    <style name="ThemeOverlay.App.ProgressBarWhite" parent="">
-        <item name="android:colorAccent">@color/white</item>
-        <item name="android:indeterminateTint">@color/white</item>
-    </style>
-</resources> 
