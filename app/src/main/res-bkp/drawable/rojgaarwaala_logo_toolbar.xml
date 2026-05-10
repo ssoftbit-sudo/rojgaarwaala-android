@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#4A90E2"
+        android:pathData="M24,24m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0" />
+
+    <!-- Inner Circle for Depth -->
+    <path
+        android:fillColor="#357ABD"
+        android:pathData="M24,24m-18,0a18,18 0,1 1,36 0a18,18 0,1 1,-36 0" />
+
+    <!-- Briefcase Icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,18h12c1.5,0 2.7,1.2 2.7,2.7v9.6c0,1.5 -1.2,2.7 -2.7,2.7H18c-1.5,0 -2.7,-1.2 -2.7,-2.7V20.7C15.3,19.2 16.5,18 18,18zM19.5,22v7.5h9V22H19.5z" />
+
+    <!-- Briefcase Handle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M21,20h6c0.8,0 1.4,0.6 1.4,1.4s-0.6,1.4 -1.4,1.4H21c-0.8,0 -1.4,-0.6 -1.4,-1.4S20.2,20 21,20z" />
+
+    <!-- Job Search Lines (Document Lines) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,24h8v0.5h-8z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,26h4v0.5h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,28h4.5v0.5h-4.5z" />
+
+    <!-- Small Decorative Elements -->
+    <path
+        android:fillColor="#4A90E2"
+        android:pathData="M21,30h6v0.5h-6z" />
+    <path
+        android:fillColor="#4A90E2"
+        android:pathData="M22.5,31.5h3v0.5h-3z" />
+
+</vector> 

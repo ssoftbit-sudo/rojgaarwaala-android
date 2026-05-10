@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolBar"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/black"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+    android:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
+    android:gravity="center"
+    app:contentInsetStartWithNavigation="0dp"
+    app:contentInsetLeft="0dp"
+    app:contentInsetStart="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center|start"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:paddingHorizontal="16dp">
+
+        <ImageView
+            android:id="@+id/ivDrawer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/rojgaarwaala_logo_toolbar"
+            android:padding="4dp"
+            android:contentDescription="Rojgaarwaala Logo"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.4"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-light"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/app_name"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:maxWidth="200dp"
+                    android:letterSpacing="0.05"/>
+                    
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Your Job Search Partner"
+                    android:textColor="@color/gray_light_3"
+                    android:textSize="11sp"
+                    android:textStyle="normal"
+                    android:maxWidth="200dp"
+                    android:layout_marginTop="1dp"
+                    android:letterSpacing="0.02"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="0.8"
+            android:gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_profile"
+            android:id="@+id/ivProfile"
+            app:tint="@color/white"
+            android:visibility="visible"
+            android:contentDescription="Profile"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="4dp"/>
+    </LinearLayout>
+
+</androidx.appcompat.widget.Toolbar>

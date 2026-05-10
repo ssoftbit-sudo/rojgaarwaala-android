@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Rojgaarwaala</string>
+    <string name="signup_prompt">Don\'t have an account? <font color="#FFFFFF"><u>Sign Up</u></font></string>
+    <string name="sign_in_prompt">Already have an account? <font color="#FFFFFF"><u>Login</u></font></string>
+    <string name="navigation_drawer_open">Open Navigation</string>
+    <string name="navigation_drawer_close">Close Navigation</string>
+    <string name="skip"><u>Skip</u></string>
+    <string name="no_videos_found">No videos found</string>
+
+</resources>

@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/black">
+
+    <!-- 👇 Your existing layout content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/black">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:theme="@style/ThemeOverlay.App.ProgressBarWhite"/>
+
+            <ScrollView
+                android:id="@+id/scrollView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="20dp">
+
+                <!-- Existing form inside LinearLayout -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center|top"
+                    android:layout_marginBottom="20dp">
+
+                    <!-- Header Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="32dp">
+
+                        <TextView
+                            android:id="@+id/pageTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add New Job"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"
+                            android:textSize="28sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Share job opportunities with the community"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="16sp"
+                            android:gravity="center" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="I am posting as"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <RadioGroup
+                            android:id="@+id/userTypeGroup"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp">
+
+                            <RadioButton
+                                android:id="@+id/companyTypeRadio"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Company"
+                                android:textColor="@color/white"
+                                android:checked="true" />
+
+                            <RadioButton
+                                android:id="@+id/candidateTypeRadio"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="20dp"
+                                android:text="Candidate"
+                                android:textColor="@color/white" />
+                        </RadioGroup>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/candidateFieldsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Interested Job Category"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <AutoCompleteTextView
+                            android:id="@+id/candidateJobCategory"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Choose job category"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp"
+                            android:completionThreshold="1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Preferred Location"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="14dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <AutoCompleteTextView
+                            android:id="@+id/candidateLocation"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Select district"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp"
+                            android:completionThreshold="1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mobile Number"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="14dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <EditText
+                            android:id="@+id/candidateMobile"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Enter mobile number"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp"
+                            android:inputType="phone"
+                            android:maxLength="10" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="14dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Candidate Resume"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadCandidateResumeBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/candidateResumeFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp" />
+                    </LinearLayout>
+
+                    <!-- Job Title Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Job Title"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <EditText
+                            android:id="@+id/jobTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Enter job title"
+                            android:inputType="textPersonName"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+
+                    </LinearLayout>
+
+                    <!-- Job Description Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Job Description"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <EditText
+                            android:id="@+id/jobDescription"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Enter job description"
+                            android:inputType="textCapSentences"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+
+                    </LinearLayout>
+
+                    <!-- Job Category Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Job Category"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <EditText
+                            android:id="@+id/jobCategory"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Enter job category"
+                            android:inputType="textPersonName"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+
+                    </LinearLayout>
+
+                    <!-- Job Responsibility Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Job Responsibility"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <EditText
+                            android:id="@+id/jobResponsibility"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Enter job responsibility"
+                            android:inputType="textCapSentences"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+
+                    </LinearLayout>
+
+                    <!-- File Upload Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="32dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Upload Files (Optional)"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- PDF Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_pdf"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="PDF Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="PDF Document"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadPdfBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 10MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/pdfFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
+
+                        <!-- Image Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_image"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="Image Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Job Image"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadImageBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 2MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/imageFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
+
+                        <!-- Logo Upload -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_logo"
+                                android:layout_marginEnd="12dp"
+                                android:contentDescription="Logo Icon" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Company Logo"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:layout_marginEnd="12dp" />
+
+                            <Button
+                                android:id="@+id/uploadLogoBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:text="Choose"
+                                android:textSize="12sp"
+                                android:background="@drawable/modern_button_background"
+                                android:textColor="@color/white"
+                                android:minWidth="80dp" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="📏 Maximum size: 2MB"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginStart="16dp" />
+
+                        <TextView
+                            android:id="@+id/logoFileName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"
+                            android:visibility="gone"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground" />
+
+                    </LinearLayout>
+
+                    <!-- Submit Button -->
+                    <Button
+                        android:id="@+id/submitBtn"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Submit Job"
+                        android:textAllCaps="true"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:background="@drawable/modern_button_background"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- View All Jobs Button -->
+                    <Button
+                        android:id="@+id/viewAllJobsBtn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="View All Jobs"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:background="@drawable/modern_button_background"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="24dp" />
+
+                </LinearLayout>
+
+            </ScrollView>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout> 
