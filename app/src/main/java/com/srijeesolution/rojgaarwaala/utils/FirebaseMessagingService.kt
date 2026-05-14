@@ -155,6 +155,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             Log.d(TAG, "Notification channel created: $channelId")
         }
 
+        // Show in-app bell on MainActivity when user opens the app
+        SharedPrefs(this).setPrefsData(Pair(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, true))
+
         // Use a unique notification ID to ensure proper handling
         val notificationId = System.currentTimeMillis().toInt()
         notificationManager.notify(notificationId, notificationBuilder.build())

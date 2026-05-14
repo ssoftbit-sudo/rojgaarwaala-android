@@ -52,6 +52,10 @@ class ProfileActivity : AppCompatActivity() {
             validateAndUpdateProfile()
         }
 
+        binding.profileBackButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
         // Handle Logout button click
         binding.logoutButton.setOnClickListener {
             logoutUser()

@@ -35,6 +35,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val jobSubmitLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _jobSubmitLiveData
     private var _categoriesLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val categoriesLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _categoriesLiveData
+    private var _cityListLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val cityListLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _cityListLiveData
     private var _videoDetailsLiveData : MutableLiveData<ApiResult<VideoDetailsResponse>> = MutableLiveData()
     val videoDetailsLiveData : LiveData<ApiResult<VideoDetailsResponse>> = _videoDetailsLiveData
     private var _jobListLiveData : MutableLiveData<ApiResult<JobListResponse>> = MutableLiveData()
@@ -147,6 +149,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getCategoriesData().collectLatest{
                 _categoriesLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getCityList() {
+        viewModelScope.launch {
+            homePageRepository.getCityList().collectLatest {
+                _cityListLiveData.postValue(it)
             }
         }
     }

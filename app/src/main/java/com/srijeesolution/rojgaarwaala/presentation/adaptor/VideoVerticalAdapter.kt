@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala.presentation.adaptor
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -11,6 +12,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ItemVerticalVideoBinding
 import com.srijeesolution.rojgaarwaala.databinding.ItemVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 
 class VideoVerticalAdapter(
     private val videos: List<TopVideo>,
@@ -31,8 +33,12 @@ class VideoVerticalAdapter(
             // Set video title
             videoTitle.text = video.title ?: "Video Title"
 
-            // Set video description
-            videoDescription.text = video.description ?: "Video Description"
+            val viewsPart = video.views?.takeIf { it > 0 }?.let { formatViewCount(it) + " views" }
+            val timePart = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
+                .takeIf { it.isNotBlank() }
+            videoMeta.text = listOfNotNull(viewsPart, timePart).joinToString(" • ")
+                .ifBlank { root.context.getString(com.srijeesolution.rojgaarwaala.R.string.channel_placeholder) }
+            videoDescription.visibility = View.GONE
 
             // Load thumbnail using Glide
             Glide.with(videoThumbnail.context)
@@ -59,4 +65,16 @@ class VideoVerticalAdapter(
     }
     
     override fun getItemCount(): Int = videos.size
+
+    private fun formatViewCount(n: Int): String = when {
+        n >= 1_000_000 -> {
+            val v = n / 1_000_000.0
+            if (v >= 10) "${(v).toInt()}M" else String.format("%.1fM", v).replace(".0M", "M")
+        }
+        n >= 1_000 -> {
+            val v = n / 1_000.0
+            if (v >= 10) "${v.toInt()}K" else String.format("%.1fK", v).replace(".0K", "K")
+        }
+        else -> n.toString()
+    }
 }

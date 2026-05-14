@@ -2,13 +2,10 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,13 +20,11 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.Category
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideo
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.CategoryGridAdapter
-import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
-import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -38,7 +33,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
-import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import android.util.Log
 
 @AndroidEntryPoint
@@ -56,11 +50,9 @@ class HomeFragment : Fragment() {
     private var allCategoryList: List<Category> = emptyList()
     private var allCategoryVideos: List<CategoryVideo> = emptyList()
     private var isSearchMode = false
-    private var currentLocationQuery = ""
     private lateinit var topVideosAdapter: TopVideosAdapter
 
-    @Inject
-    lateinit var sharedPrefs: SharedPrefs
+    private lateinit var mainToolbarViewModel: MainToolbarViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -72,24 +64,10 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
-        
-        // Set up profile icon click listener
+        mainToolbarViewModel = ViewModelProvider(requireActivity())[MainToolbarViewModel::class.java]
+
         topVideosAdapter = TopVideosAdapter()
-        binding.profileIcon.setOnClickListener {
-            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                val intent = Intent(requireContext(), ProfileActivity::class.java)
-                startActivity(intent)
-            } else {
-                // User is not logged in, navigate to login screen
-                val intent = Intent(requireContext(), LoginActivity::class.java)
-                startActivity(intent)
-                Toast.makeText(requireContext(), "Please login to access profile", Toast.LENGTH_SHORT).show()
-            }
-        }
-        
-        // Set up search functionality
-        setupSearch()
-        setupLocationAutocomplete()
+        observeMainToolbarFilters()
         
         // Set up View All click listeners
         setupViewAllClickListeners()
@@ -98,99 +76,28 @@ class HomeFragment : Fragment() {
         callApi()
     }
 
-    private fun setupSearch() {
-        binding.searchBar.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            
-            override fun afterTextChanged(s: Editable?) {
-                val query = s?.toString()?.trim() ?: ""
-                val locationQuery = binding.locationSearchBar.text?.toString()?.trim() ?: ""
-                if (query.isEmpty() && locationQuery.isEmpty()) {
-                    // Show all content when search is empty
-                    isSearchMode = false
-                    binding.clearSearchButton.visibility = View.GONE
-                    binding.clearLocationButton.visibility = View.GONE
-                    showAllContent()
-                } else {
-                    // Filter content based on search query
-                    isSearchMode = true
-                    binding.clearSearchButton.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
-                    binding.clearLocationButton.visibility = if (locationQuery.isNotEmpty()) View.VISIBLE else View.GONE
-                    filterContent(query, locationQuery)
-                }
-            }
-        })
-
-        // Location search
-        binding.locationSearchBar.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            
-            override fun afterTextChanged(s: Editable?) {
-                val query = binding.searchBar.text?.toString()?.trim() ?: ""
-                val locationQuery = s?.toString()?.trim() ?: ""
-                currentLocationQuery = locationQuery
-                if (query.isEmpty() && locationQuery.isEmpty()) {
-                    // Show all content when search is empty
-                    isSearchMode = false
-                    binding.clearSearchButton.visibility = View.GONE
-                    binding.clearLocationButton.visibility = View.GONE
-                    showAllContent()
-                } else {
-                    // Filter content based on search query
-                    isSearchMode = true
-                    binding.clearSearchButton.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
-                    binding.clearLocationButton.visibility = if (locationQuery.isNotEmpty()) View.VISIBLE else View.GONE
-                    filterContent(query, locationQuery)
-                }
-            }
-        })
-        
-        // Clear search button click listener
-        binding.clearSearchButton.setOnClickListener {
-            binding.searchBar.setText("")
-            binding.searchBar.clearFocus()
-            if (binding.locationSearchBar.text?.isEmpty() == true) {
-                binding.clearLocationButton.visibility = View.GONE
-            }
+    private fun observeMainToolbarFilters() {
+        mainToolbarViewModel.searchQuery.observe(viewLifecycleOwner) {
+            if (hasHomeListData()) applyFromToolbarState()
         }
-
-        // Clear location button click listener
-        binding.clearLocationButton.setOnClickListener {
-            binding.locationSearchBar.setText("")
-            binding.locationSearchBar.clearFocus()
-            currentLocationQuery = ""
-            if (binding.searchBar.text?.isEmpty() == true) {
-                binding.clearSearchButton.visibility = View.GONE
-            }
+        mainToolbarViewModel.selectedLocation.observe(viewLifecycleOwner) {
+            if (hasHomeListData()) applyFromToolbarState()
         }
     }
 
-    private fun setupLocationAutocomplete() {
-        val adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            LocationSuggestions.districtList
-        )
-        binding.locationSearchBar.setAdapter(adapter)
-        binding.locationSearchBar.setOnItemClickListener { _, _, _, _ ->
-            val query = binding.searchBar.text?.toString()?.trim().orEmpty()
-            val locationQuery = binding.locationSearchBar.text?.toString()?.trim().orEmpty()
-            filterContent(query, locationQuery)
+    private fun hasHomeListData(): Boolean =
+        allCategoryList.isNotEmpty() || allTopVideos.isNotEmpty() || allCategoryVideos.isNotEmpty()
+
+    private fun applyFromToolbarState() {
+        val q = mainToolbarViewModel.searchQuery.value.orEmpty().trim()
+        val loc = mainToolbarViewModel.selectedLocation.value.orEmpty().trim()
+        if (q.isEmpty() && loc.isEmpty()) {
+            isSearchMode = false
+            showAllContent()
+        } else {
+            isSearchMode = true
+            filterContent(q, loc)
         }
-        binding.locationSearchBar.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val suggestions = LocationSuggestions.filter(s?.toString().orEmpty())
-                adapter.clear()
-                adapter.addAll(suggestions)
-                adapter.notifyDataSetChanged()
-            }
-        })
     }
 
     private fun setupViewAllClickListeners() {
@@ -414,8 +321,8 @@ class HomeFragment : Fragment() {
                     // Start background video preloading for better user experience
                     startBackgroundVideoPreloading()
 
-                    // Show all content initially
-                    showAllContent()
+                    // Apply toolbar search/location if any
+                    applyFromToolbarState()
                 }
                 is ApiResult.Error -> {
                     binding.loaderLayout.visibility = View.GONE

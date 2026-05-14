@@ -6,14 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@color/black">
+    android:background="@color/app_background">
 
-    <!-- 👇 Your existing layout content -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@color/black">
+        android:background="@color/app_background">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -32,7 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fillViewport="true"
-                android:layout_marginHorizontal="24dp"
+                android:layout_marginHorizontal="16dp"
                 android:layout_marginBottom="20dp">
 
                 <!-- Existing form inside LinearLayout -->
@@ -40,42 +39,57 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center|top"
+                    android:gravity="top"
                     android:layout_marginBottom="20dp">
 
-                    <!-- Header Section -->
+
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/bg_theme_panel"
                         android:orientation="vertical"
-                        android:gravity="center"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginBottom="32dp">
+                        android:padding="20dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_theme_chip"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:text="ADD NEW JOB"
+                            android:textColor="@color/accent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/pageTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
                             android:text="Add New Job"
                             android:textColor="@color/white"
-                            android:textStyle="bold"
-                            android:textSize="28sp"
-                            android:layout_marginBottom="8dp"/>
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Share job opportunities with the community"
+                            android:layout_marginTop="6dp"
+                            android:text="Share a hiring post in the same dark theme used across the app."
                             android:textColor="@color/gray_light_3"
-                            android:textSize="16sp"
-                            android:gravity="center" />
-
+                            android:textSize="15sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:layout_marginTop="20dp"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -208,15 +222,25 @@
                                 android:textSize="14sp"
                                 android:layout_marginEnd="12dp" />
 
-                            <Button
+                            <TextView
                                 android:id="@+id/uploadCandidateResumeBtn"
                                 android:layout_width="wrap_content"
-                                android:layout_height="40dp"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_theme_chip"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                android:gravity="center"
+                                android:minHeight="40dp"
+                                android:minWidth="80dp"
+                                android:paddingStart="12dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="6dp"
                                 android:text="Choose"
+                                android:textColor="@color/accent"
                                 android:textSize="12sp"
-                                android:background="@drawable/modern_button_background"
-                                android:textColor="@color/white"
-                                android:minWidth="80dp" />
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
@@ -397,15 +421,25 @@
                                 android:textSize="14sp"
                                 android:layout_marginEnd="12dp" />
 
-                            <Button
+                            <TextView
                                 android:id="@+id/uploadPdfBtn"
                                 android:layout_width="wrap_content"
-                                android:layout_height="40dp"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_theme_chip"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                android:gravity="center"
+                                android:minHeight="40dp"
+                                android:minWidth="80dp"
+                                android:paddingStart="12dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="6dp"
                                 android:text="Choose"
+                                android:textColor="@color/accent"
                                 android:textSize="12sp"
-                                android:background="@drawable/modern_button_background"
-                                android:textColor="@color/white"
-                                android:minWidth="80dp" />
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -459,15 +493,25 @@
                                 android:textSize="14sp"
                                 android:layout_marginEnd="12dp" />
 
-                            <Button
+                            <TextView
                                 android:id="@+id/uploadImageBtn"
                                 android:layout_width="wrap_content"
-                                android:layout_height="40dp"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_theme_chip"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                android:gravity="center"
+                                android:minHeight="40dp"
+                                android:minWidth="80dp"
+                                android:paddingStart="12dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="6dp"
                                 android:text="Choose"
+                                android:textColor="@color/accent"
                                 android:textSize="12sp"
-                                android:background="@drawable/modern_button_background"
-                                android:textColor="@color/white"
-                                android:minWidth="80dp" />
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -521,15 +565,25 @@
                                 android:textSize="14sp"
                                 android:layout_marginEnd="12dp" />
 
-                            <Button
+                            <TextView
                                 android:id="@+id/uploadLogoBtn"
                                 android:layout_width="wrap_content"
-                                android:layout_height="40dp"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_theme_chip"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                android:gravity="center"
+                                android:minHeight="40dp"
+                                android:minWidth="80dp"
+                                android:paddingStart="12dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="6dp"
                                 android:text="Choose"
+                                android:textColor="@color/accent"
                                 android:textSize="12sp"
-                                android:background="@drawable/modern_button_background"
-                                android:textColor="@color/white"
-                                android:minWidth="80dp" />
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -560,28 +614,48 @@
                     </LinearLayout>
 
                     <!-- Submit Button -->
-                    <Button
+                    <TextView
                         android:id="@+id/submitBtn"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="56dp"
+                        android:paddingStart="16dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="10dp"
                         android:text="Submit Job"
-                        android:textAllCaps="true"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:background="@drawable/modern_button_background"
+                        android:textAllCaps="false"
+                        android:textColor="@color/accent"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="16dp" />
 
                     <!-- View All Jobs Button -->
-                    <Button
+                    <TextView
                         android:id="@+id/viewAllJobsBtn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="52dp"
+                        android:paddingStart="16dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="10dp"
                         android:text="View All Jobs"
                         android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:background="@drawable/modern_button_background"
+                        android:textColor="@color/accent"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
                         android:layout_marginTop="12dp"
                         android:layout_marginBottom="24dp" />
 

@@ -2,10 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/customBottomNav"
     android:layout_width="match_parent"
-    android:layout_height="66dp"
+    android:layout_height="wrap_content"
+    android:minHeight="74dp"
     android:orientation="horizontal"
-    android:background="@color/black"
-    android:paddingBottom="10dp">
+    android:gravity="center_vertical"
+    android:background="@color/app_background"
+    android:elevation="10dp"
+    android:paddingStart="4dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="4dp"
+    android:paddingBottom="8dp">
 
     <!-- Home Tab -->
     <LinearLayout
@@ -15,28 +21,35 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingVertical="4dp"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/iconHome"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_home_bottom"
-            android:tint="@color/tab_selected"
-            android:layout_gravity="center_horizontal" />
+        <FrameLayout
+            android:id="@+id/pillHome"
+            android:layout_width="52dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_bottom_nav_selected">
+
+            <ImageView
+                android:id="@+id/iconHome"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_home_bottom"
+                android:tint="@color/app_background" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/textHome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="HOME"
-            android:textAllCaps="true"
+            android:text="Home"
             android:textColor="@color/tab_selected"
-            android:textSize="12sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:layout_gravity="center_horizontal"
             android:includeFontPadding="false" />
     </LinearLayout>
@@ -49,28 +62,34 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingVertical="4dp"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/iconAddJob"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_add_job_bottom"
-            android:tint="@color/tab_unselected"
-            android:layout_gravity="center_horizontal" />
+        <FrameLayout
+            android:id="@+id/pillAddJob"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconAddJob"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_add_job_bottom"
+                android:tint="@color/tab_unselected" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/textAddJob"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ADD JOB"
-            android:textAllCaps="true"
+            android:text="Add Job"
             android:textColor="@color/tab_unselected"
-            android:textSize="12sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:layout_gravity="center_horizontal"
             android:includeFontPadding="false" />
     </LinearLayout>
@@ -83,28 +102,34 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingVertical="4dp"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/iconCategories"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_categories_bottom"
-            android:tint="@color/tab_unselected"
-            android:layout_gravity="center_horizontal" />
+        <FrameLayout
+            android:id="@+id/pillCategories"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconCategories"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_categories_bottom"
+                android:tint="@color/tab_unselected" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/textCategories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CATEGORIES"
-            android:textAllCaps="true"
+            android:text="Categories"
             android:textColor="@color/tab_unselected"
-            android:textSize="12sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:layout_gravity="center_horizontal"
             android:includeFontPadding="false" />
     </LinearLayout>
@@ -117,28 +142,34 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingVertical="4dp"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/iconImages"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_image"
-            android:tint="@color/tab_unselected"
-            android:layout_gravity="center_horizontal" />
+        <FrameLayout
+            android:id="@+id/pillImages"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconImages"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_image"
+                android:tint="@color/tab_unselected" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/textImages"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="IMAGES"
-            android:textAllCaps="true"
+            android:text="Images"
             android:textColor="@color/tab_unselected"
-            android:textSize="12sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:layout_gravity="center_horizontal"
             android:includeFontPadding="false" />
     </LinearLayout>
@@ -151,28 +182,34 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingVertical="4dp"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/iconStories"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_image"
-            android:tint="@color/tab_unselected"
-            android:layout_gravity="center_horizontal" />
+        <FrameLayout
+            android:id="@+id/pillStories"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconStories"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_image"
+                android:tint="@color/tab_unselected" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/textStories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="STORIES"
-            android:textAllCaps="true"
+            android:text="Stories"
             android:textColor="@color/tab_unselected"
-            android:textSize="12sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:layout_gravity="center_horizontal"
             android:includeFontPadding="false" />
     </LinearLayout>

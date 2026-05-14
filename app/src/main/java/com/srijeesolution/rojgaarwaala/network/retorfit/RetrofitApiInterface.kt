@@ -66,6 +66,9 @@ interface RetrofitApiInterface {
     @GET(NetworkConstants.CATEGORIES_LIST)
     suspend fun getCategoriesData(): Response<HomePagBaseApiModel>
 
+    @GET(NetworkConstants.CITY_LIST)
+    suspend fun getCityList(@Query("q") query: String = ""): Response<HomePagBaseApiModel>
+
     @GET(NetworkConstants.VIDEO_DETAILS)
     suspend fun getVideoDetails(@Path("id") id: Int): Response<VideoDetailsResponse>
 

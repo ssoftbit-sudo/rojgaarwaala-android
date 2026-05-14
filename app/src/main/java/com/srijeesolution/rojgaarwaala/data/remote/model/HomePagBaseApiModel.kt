@@ -26,6 +26,15 @@ data class HomePageData(
     val categoryVideos: ArrayList<CategoryVideo>? = ArrayList(),
     @SerializedName("userDetails")
     val userDetails: UserData? = null,
+    @SerializedName("cityList")
+    val cityList: ArrayList<CityItem>? = ArrayList(),
+)
+
+data class CityItem(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("name")
+    val name: String? = null,
 )
 
 data class BannerList(
@@ -56,6 +65,8 @@ data class TopVideo(
     val phoneNumber: String? = null,
     @SerializedName("sort_order")
     val sortOrder: Int? = null,
+    @SerializedName("views")
+    val views: Int? = null,
 )
 
 data class Category(

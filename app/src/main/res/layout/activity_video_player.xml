@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- FrameLayout root: progress overlay must not be a weighted sibling (breaks NestedScrollView height). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
-    android:orientation="vertical">
+    android:background="@color/black">
 
-    <!-- Top Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:orientation="vertical">
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:background="@color/black"
         app:navigationIcon="@drawable/ic_back_arrow"
-        app:title="Video Detail"
+        app:title="@string/video_detail_title"
         app:titleTextColor="@color/white" />
 
-    <!-- Video Player (fixed at top) -->
     <FrameLayout
         android:id="@+id/videoPlayerFrame"
         android:layout_width="match_parent"
-        android:layout_height="520dp"
+        android:layout_height="@dimen/video_player_min_height"
+        android:background="@color/black"
         android:elevation="4dp">
 
         <androidx.media3.ui.PlayerView
@@ -29,13 +35,12 @@
             android:layout_height="match_parent"
             android:visibility="visible"
             app:resize_mode="fit"
-            app:show_buffering="when_playing"
+            app:show_buffering="never"
             app:show_subtitle_button="false"
-            app:show_timeout="2000"
+            app:show_timeout="0"
             app:show_vr_button="false"
-            app:use_controller="true" />
+            app:use_controller="false" />
 
-        <!-- Thumbnail Overlay -->
         <ImageView
             android:id="@+id/videoThumbnailOverlay"
             android:layout_width="match_parent"
@@ -43,7 +48,6 @@
             android:scaleType="centerCrop"
             android:visibility="gone" />
 
-        <!-- Confetti View - On top of video, only shows when user likes -->
         <com.srijeesolution.rojgaarwaala.utils.ConfettiView
             android:id="@+id/confetti_view"
             android:layout_width="match_parent"
@@ -51,291 +55,76 @@
             android:clickable="false"
             android:focusable="false" />
 
-        <!-- Fullscreen Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
-        <LinearLayout
-            android:id="@+id/fullscreenProgressControls"
+        <!-- Custom controls (mockup: play center, skip ±10s, seek, fullscreen) -->
+        <FrameLayout
+            android:id="@+id/playerControlsOverlay"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:background="@drawable/gradient_overlay"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingTop="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp"
-            android:visibility="gone">
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent">
 
-            <!-- Fullscreen SeekBar -->
-            <SeekBar
-                android:id="@+id/fullscreenVideoSeekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="100"
-                android:progress="0"
-                android:progressBackgroundTint="@color/gray_light_3"
-                android:progressTint="@color/color_green"
-                android:thumbTint="@color/color_green" />
-
-            <!-- Fullscreen Time Display -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/fullscreenCurrentTimeText"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:fontFamily="monospace"
-                    android:gravity="start"
-                    android:text="0:00"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
+                <ImageButton
+                    android:id="@+id/skipBackButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_skip_back_10"
+                    app:tint="@color/white" />
 
-                <TextView
-                    android:id="@+id/fullscreenTotalTimeText"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:fontFamily="monospace"
-                    android:gravity="end"
-                    android:text="0:00"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
+                <ImageButton
+                    android:id="@+id/playPauseOverlay"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:background="@drawable/bg_action_circle_outline"
+                    android:contentDescription="@null"
+                    android:padding="14dp"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_media_play"
+                    app:tint="@color/white" />
 
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Fullscreen Action Controls (Right Side) - Always Visible -->
-        <LinearLayout
-            android:id="@+id/fullscreenActionControls"
-            android:layout_width="84dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|center_vertical"
-            android:layout_marginTop="40dp"
-            android:layout_marginEnd="8dp"
-            android:gravity="end"
-            android:orientation="vertical"
-            android:visibility="visible">
-
-            <LinearLayout
-                android:id="@+id/fullscreenApplyButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_apply_label_outline"
-                    android:gravity="center"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp"
-                    android:text="APPLY"
-                    android:textColor="@color/brand_color_yellow"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:background="@drawable/bg_apply_now_badge"
-                    android:gravity="center"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="NOW!"
-                    android:textAllCaps="true"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="-3dp"
-                    android:background="@drawable/bg_apply_now_pointer"
-                    android:rotation="45" />
-
+                <ImageButton
+                    android:id="@+id/skipForwardButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_skip_forward_10"
+                    app:tint="@color/white" />
             </LinearLayout>
 
-            <!-- Call Button -->
-            <LinearLayout
-                android:id="@+id/fullscreenCallButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:contentDescription="Call"
-                    android:src="@android:drawable/ic_menu_call"
-                    app:tint="@color/brand_color_yellow" />
-
-            </LinearLayout>
-
-            <!-- Like Button -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/fullscreenLikeButton"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:contentDescription="Like"
-                    android:src="@drawable/img_like"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/fullscreenLikeCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center"
-                    android:text="0"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-            <!-- Dislike Button -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/fullscreenDislikeButton"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:contentDescription="Dislike"
-                    android:src="@drawable/img_dislike"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/fullscreenDislikeCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center"
-                    android:text="0"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-            <!-- Share Button -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/fullscreenShareButton"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:contentDescription="Share"
-                    android:src="@drawable/ic_share"
-                    android:tint="@color/white" />
-
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Play/Pause Button - Hidden since ExoPlayer has built-in controls -->
-        <ImageView
-            android:id="@+id/playPauseButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="center"
-            android:src="@android:drawable/ic_media_play"
-            android:tint="@color/white"
-            android:visibility="gone" />
-
-        <!-- Fullscreen Button -->
-
-        <LinearLayout
-            android:id="@+id/ll"
-            android:layout_width="84dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:gravity="center"
-            android:visibility="visible">
-
-            <ImageView
-                android:id="@+id/fullscreenButton"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_fullscreen"
-                android:visibility="visible"
-                app:tint="@color/white" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <!-- Scrollable Content -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Spacer to push content below video player -->
-            <View
-                android:id="@+id/spacerView"
-                android:layout_width="match_parent"
-                android:layout_height="400dp" />
-
-            <!-- Video Progress Controls - Hidden since ExoPlayer has built-in controls -->
-            <LinearLayout
-                android:id="@+id/videoProgressControls"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/black"
+                android:layout_gravity="bottom"
+                android:background="@drawable/gradient_overlay"
                 android:orientation="vertical"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
-                android:visibility="gone">
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="8dp">
 
-                <!-- SeekBar -->
                 <SeekBar
                     android:id="@+id/videoSeekBar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:max="100"
+                    android:max="1000"
                     android:progress="0"
                     android:progressBackgroundTint="@color/gray_light_3"
-                    android:progressTint="@color/color_green"
-                    android:thumbTint="@color/color_green" />
+                    android:progressTint="@color/accent"
+                    android:thumbTint="@color/accent" />
 
-                <!-- Time Display -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -344,10 +133,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:fontFamily="monospace"
-                        android:gravity="start"
                         android:text="0:00"
                         android:textColor="@color/white"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/totalTimeText"
@@ -358,140 +146,474 @@
                         android:gravity="end"
                         android:text="0:00"
                         android:textColor="@color/white"
-                        android:textSize="12sp" />
-
+                        android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Like/Dislike/Share/Views Row - Hidden -->
-            <LinearLayout
-                android:id="@+id/actionRow"
+            <ImageButton
+                android:id="@+id/fullscreenButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="6dp"
+                android:src="@drawable/ic_fullscreen"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Hidden legacy fullscreen seek UI (code still references IDs) -->
+        <LinearLayout
+            android:id="@+id/fullscreenProgressControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <SeekBar
+                android:id="@+id/fullscreenVideoSeekBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:max="100" />
+
+            <TextView
+                android:id="@+id/fullscreenCurrentTimeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/fullscreenTotalTimeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/fullscreenActionControls"
+            android:layout_width="72dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="6dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/fullscreenApplyButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_button_outline_yellow"
+                    android:gravity="center"
+                    android:paddingVertical="4dp"
+                    android:text="APPLY"
+                    android:textColor="@color/accent"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/fullscreenCallButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="@null"
+                    android:src="@android:drawable/ic_menu_call"
+                    app:tint="@color/accent" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/fullscreenLikeButton"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginBottom="4dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_thumb_up_outline"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/fullscreenLikeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp" />
+
+            <ImageView
+                android:id="@+id/fullscreenDislikeButton"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginBottom="4dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_thumb_down_outline"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/fullscreenDislikeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp" />
+
+            <ImageView
+                android:id="@+id/fullscreenShareButton"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_share"
+                app:tint="@color/white" />
+        </LinearLayout>
+
+        <!-- Legacy id for code that toggles playPauseButton -->
+        <ImageView
+            android:id="@+id/playPauseButton"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:id="@+id/videoDetailTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:paddingStart="16dp"
                 android:paddingTop="12dp"
                 android:paddingEnd="16dp"
-                android:paddingBottom="12dp"
-                android:visibility="gone">
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="Video title" />
 
-                <ImageView
-                    android:id="@+id/likeButton"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="Like"
-                    android:src="@drawable/img_like"
-                    android:tint="@color/white" />
+            <TextView
+                android:id="@+id/videoSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/gray_light_3"
+                android:textSize="14sp"
+                android:visibility="gone"
+                tools:text="Subtitle"
+                tools:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/likeCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="18dp"
-                    android:text="0"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-
-                <ImageView
-                    android:id="@+id/dislikeButton"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="0dp"
-                    android:contentDescription="Dislike"
-                    android:src="@drawable/img_dislike"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/dislikeCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="18dp"
-                    android:text="0"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-
-                <ImageView
-                    android:id="@+id/shareButton"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="0dp"
-                    android:layout_marginEnd="18dp"
-                    android:contentDescription="Share"
-                    android:src="@drawable/ic_share"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/viewsCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="0dp"
-                    android:text="0 views"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <!-- Related Videos Title -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-                android:orientation="horizontal">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="8dp">
 
                 <TextView
                     android:id="@+id/uploadTimeLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="start|center_vertical"
-                    android:text="Upload Time"
                     android:textColor="@color/gray_light_3"
-                    android:textSize="14sp" />
+                    android:textSize="13sp"
+                    tools:text="48K views • 2 days ago" />
 
-                <!-- Views Count -->
-                <TextView
-                    android:id="@+id/fullscreenViewsCount"
+                <ImageButton
+                    android:id="@+id/expandDescriptionButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:rotation="90"
+                    android:src="@drawable/ic_chevron_right"
+                    android:visibility="gone"
+                    app:tint="@color/gray_light_3" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/videoDetailDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="3"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/gray_light_3"
+                android:textSize="14sp"
+                android:visibility="gone"
+                tools:text="Description"
+                tools:visibility="visible" />
+
+            <!-- Mockup-style action row: circular outline icons + labels -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:scrollbars="none">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="end|center_vertical"
-                    android:text="Upload Time"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <FrameLayout
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_action_circle_outline">
+
+                            <ImageView
+                                android:id="@+id/likeButton"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_thumb_up_outline"
+                                app:tint="@color/white" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/likeCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="0"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <FrameLayout
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_action_circle_outline">
+
+                            <ImageView
+                                android:id="@+id/dislikeButton"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_thumb_down_outline"
+                                app:tint="@color/white" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/dislikeCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="0"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <FrameLayout
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_action_circle_outline">
+
+                            <ImageView
+                                android:id="@+id/shareButton"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_share"
+                                app:tint="@color/white" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/action_share"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/inlineCallColumn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <FrameLayout
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_action_circle_outline">
+
+                            <ImageView
+                                android:id="@+id/inlineCallButton"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/call_now"
+                                android:src="@drawable/ic_phone"
+                                app:tint="@color/accent" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/call_now"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/inlineApplyColumn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <FrameLayout
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_action_circle_outline">
+
+                            <ImageView
+                                android:id="@+id/inlineApplyButton"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/apply_now"
+                                android:src="@drawable/ic_apply_job"
+                                app:tint="@color/accent" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/apply_now"
+                            android:textColor="@color/gray_light_3"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Legacy row (hidden; keeps binding) -->
+            <LinearLayout
+                android:id="@+id/actionRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/viewsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/relatedVideosLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:text="Related Videos"
+                android:paddingStart="16dp"
+                android:layout_marginTop="20dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="16dp"
+                android:text="@string/up_next"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Related Videos RecyclerView (Horizontal) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/relatedVideosRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="30dp"
-                android:orientation="horizontal" />
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="12dp"
+                android:paddingBottom="16dp"
+                tools:listitem="@layout/item_vertical_video" />
+
+            <!-- Hidden: fullscreen duplicate meta -->
+            <TextView
+                android:id="@+id/fullscreenViewsCount"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- ProgressBar for loading (overlay) -->
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:clickable="false">
+        android:clickable="false"
+        android:focusable="false">
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -501,4 +623,4 @@
             android:visibility="gone" />
     </FrameLayout>
 
-</LinearLayout>
+</FrameLayout>

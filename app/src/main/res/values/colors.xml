@@ -26,4 +26,11 @@
     <color name="tab_selected">#FFFFFF</color>
     <color name="colorPrimary">#121212</color>
     <color name="gray">#CCCCCC</color>
+
+    <!-- Global dark screen + search bar (matches pill search mockup) -->
+    <color name="app_background">#121212</color>
+    <color name="search_bar_fill">#252525</color>
+    <color name="search_bar_stroke">#3A3A3C</color>
+    <color name="search_hint">#8E8E93</color>
+    <color name="search_icon_tint">#EBEBF5</color>
 </resources>

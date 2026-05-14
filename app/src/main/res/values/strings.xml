@@ -6,5 +6,37 @@
     <string name="navigation_drawer_close">Close Navigation</string>
     <string name="skip"><u>Skip</u></string>
     <string name="no_videos_found">No videos found</string>
+    <string name="search">Search</string>
+    <string name="video_detail_title">Video</string>
+    <string name="image_detail_title">Image</string>
+    <string name="previous_image">Previous image</string>
+    <string name="next_image">Next image</string>
+    <string name="up_next">Up next</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="subscribers_placeholder">Community</string>
+    <string name="download_started">Download started</string>
+    <string name="save_poster">Save</string>
+    <string name="channel_placeholder">Rojgaarwaala</string>
+    <string name="action_share">Share</string>
+    <string name="download">Download</string>
+    <string name="call_now">Call</string>
+    <string name="apply_now">Apply</string>
+    <string name="profile">Profile</string>
+    <string name="home">Home</string>
+    <string name="add_job">Add Job</string>
+    <string name="categories">Categories</string>
+    <string name="images">Images</string>
+    <string name="stories">Stories</string>
+    <string name="choose_location">Choose location</string>
+    <string name="search_jobs_categories_hint">Search jobs, categories…</string>
+    <string name="location_picker_title">Select location</string>
+    <string name="notifications">Notifications</string>
+    <string name="close_search">Close search</string>
+    <string name="more_options">More options</string>
+    <string name="search_location">Search location</string>
+    <string name="change_location">Change location</string>
+    <string name="clear_location">Clear location</string>
+    <string name="clear_search">Clear search</string>
+    <string name="location_cleared">Location cleared</string>
 
 </resources>

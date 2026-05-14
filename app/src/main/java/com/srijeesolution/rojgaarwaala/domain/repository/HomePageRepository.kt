@@ -31,6 +31,7 @@ interface HomePageRepository {
         logoFile: MultipartBody.Part?
     ): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
+    fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
     fun getCategoryVideos(id: Int): Flow<ApiResult<CategoryVideosResponse>>
