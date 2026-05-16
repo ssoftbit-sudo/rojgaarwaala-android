@@ -265,6 +265,8 @@ data class ImageData(
     val description: String? = null,
     @SerializedName("image_url")
     val imageUrl: String? = null,
+    @SerializedName("location")
+    val location: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
     @SerializedName("user")

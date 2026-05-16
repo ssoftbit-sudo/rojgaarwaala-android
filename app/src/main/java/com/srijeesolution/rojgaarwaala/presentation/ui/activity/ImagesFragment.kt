@@ -236,6 +236,7 @@ class ImagesFragment : Fragment() {
                     title = imageData.title,
                     description = imageData.description,
                     imagePath = imageData.imageUrl,
+                    location = imageData.location,
                     publishDate = imageData.publishDate,
                     status = null,
                     createdAt = null,
@@ -248,10 +249,6 @@ class ImagesFragment : Fragment() {
             intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
             intent.putExtra("current_index", imageIndex)
             intent.putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, category.title)
-            intent.putExtra(
-                ImageViewerActivity.EXTRA_IMAGE_LOCATION,
-                sharedPrefs.getPrefs(SharedPrefsConstant.HOME_SELECTED_LOCATION, "")
-            )
             startActivity(intent)
         }
     }

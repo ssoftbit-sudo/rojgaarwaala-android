@@ -22,6 +22,7 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
@@ -140,6 +141,19 @@ class ImageViewerActivity : AppCompatActivity() {
         return "image_$currentIndex".hashCode()
     }
 
+    private fun resolveImageLocation(image: ScheduledImage): String {
+        image.location?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+        imageLocation?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+        val desc = image.description.orEmpty()
+        Regex("(?i)(?:location|loc\\.?)\\s*:\\s*([^\\n\\r]+)").find(desc)?.groupValues
+            ?.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+        val lower = desc.lowercase()
+        for (city in LocationSuggestions.districtList) {
+            if (lower.contains(city.lowercase())) return city
+        }
+        return ""
+    }
+
     private fun loadReactionCountsFromPrefs() {
         val key = currentImageKey()
         likeCount = sharedPrefs.getImageLikeCount(key)
@@ -164,21 +178,20 @@ class ImageViewerActivity : AppCompatActivity() {
                 binding.videoSubtitle.visibility = View.GONE
             }
 
-            val relativeUploadTime =
-                TimeUtils.getRelativeTimeSpanString(this, image.createdAt ?: image.publishDate)
-            binding.uploadTimeLabel.text =
-                if (relativeUploadTime.isNotEmpty()) relativeUploadTime
-                else getString(R.string.channel_placeholder)
+            val publishMeta = TimeUtils.formatPublishMeta(
+                this,
+                image.publishDate,
+                image.createdAt
+            )
+            binding.uploadTimeLabel.text = publishMeta.ifEmpty { "Recently posted" }
 
-            val location = imageLocation?.trim().orEmpty()
+            val location = resolveImageLocation(image)
             if (location.isNotEmpty()) {
                 binding.videoLocationLabel.visibility = View.VISIBLE
                 binding.videoLocationLabel.text = location
             } else {
                 binding.videoLocationLabel.visibility = View.GONE
             }
-
-            descriptionExpanded = false
 
             loadReactionCountsFromPrefs()
             refreshLikeDislikeUi()

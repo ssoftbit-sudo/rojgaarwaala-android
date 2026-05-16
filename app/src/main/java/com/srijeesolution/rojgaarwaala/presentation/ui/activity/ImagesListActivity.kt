@@ -135,6 +135,7 @@ class ImagesListActivity : AppCompatActivity() {
                     title = imageData.title,
                     description = imageData.description,
                     imagePath = imageData.imageUrl,
+                    location = imageData.location,
                     publishDate = imageData.publishDate,
                     status = null,
                     createdAt = null,
@@ -146,6 +147,7 @@ class ImagesListActivity : AppCompatActivity() {
             // Pass the list and current index
             intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
             intent.putExtra("current_index", imageIndex)
+            intent.putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, categoryTitle)
             startActivity(intent)
         } else {
             // Show toast if no image available
