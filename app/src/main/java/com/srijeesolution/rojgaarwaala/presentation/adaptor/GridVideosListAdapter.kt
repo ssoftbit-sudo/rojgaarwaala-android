@@ -22,7 +22,6 @@ class GridVideosListAdapter : ListAdapter<TopVideo, GridVideosListAdapter.TopVid
 
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
         val video = getItem(position)
-        holder.binding.topVideoTitle.text = video.title
         Glide.with(holder.binding.topVideoThumbnail.context)
             .load(video.thumbnail)
             .placeholder(R.drawable.no_image_placeholder)

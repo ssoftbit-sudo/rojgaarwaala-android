@@ -144,8 +144,32 @@ data class VideoDetailsData(
     val user: UserData? = null,
     @SerializedName("category")
     val category: Category? = null,
+    @SerializedName("location_hint")
+    val locationHint: String? = null,
     @SerializedName("related_videos")
     val relatedVideos: List<TopVideo>? = null
+)
+
+data class VideoLikeApiModel(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: VideoReactionData? = null
+)
+
+data class VideoReactionData(
+    @SerializedName("video_id")
+    val videoId: Int? = null,
+    @SerializedName("like_count")
+    val likeCount: Int? = null,
+    @SerializedName("unlike_count")
+    val unlikeCount: Int? = null,
+    @SerializedName("is_liked")
+    val isLiked: Boolean? = null,
+    @SerializedName("is_unliked")
+    val isUnliked: Boolean? = null
 )
 
 data class JobListResponse(

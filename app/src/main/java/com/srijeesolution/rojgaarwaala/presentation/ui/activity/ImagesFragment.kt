@@ -23,7 +23,10 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentImagesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesCategoryAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ImagesFragment : Fragment() {
@@ -31,6 +34,9 @@ class ImagesFragment : Fragment() {
     private var _binding: FragmentImagesBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: HomePageViewModel
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
     private var imagesAdapter: ImagesCategoryAdapter? = null
     
     // Search related variables
@@ -241,6 +247,11 @@ class ImagesFragment : Fragment() {
             // Pass the list and current index
             intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
             intent.putExtra("current_index", imageIndex)
+            intent.putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, category.title)
+            intent.putExtra(
+                ImageViewerActivity.EXTRA_IMAGE_LOCATION,
+                sharedPrefs.getPrefs(SharedPrefsConstant.HOME_SELECTED_LOCATION, "")
+            )
             startActivity(intent)
         }
     }

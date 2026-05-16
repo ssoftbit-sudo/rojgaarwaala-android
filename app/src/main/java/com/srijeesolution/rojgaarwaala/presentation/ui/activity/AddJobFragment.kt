@@ -82,6 +82,17 @@ class AddJobFragment : Fragment() {
         uri?.let { handleCandidateResumeSelection(it) }
     }
 
+    private val candidateLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val location = result.data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
+            if (location.isNotBlank()) {
+                binding.candidateLocation.text = location
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -166,9 +177,9 @@ class AddJobFragment : Fragment() {
         binding.candidateJobCategory.setAdapter(
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categorySuggestions)
         )
-        binding.candidateLocation.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, LocationSuggestions.districtList)
-        )
+        binding.candidateLocation.setOnClickListener {
+            candidateLocationLauncher.launch(Intent(requireContext(), LocationPickerActivity::class.java))
+        }
     }
 
     private fun hideKeyboard() {
@@ -311,7 +322,7 @@ class AddJobFragment : Fragment() {
                 return
             }
             if (candidateLocation.isEmpty()) {
-                binding.candidateLocation.error = "Preferred location is required"
+                Toast.makeText(requireContext(), "Preferred location is required", Toast.LENGTH_SHORT).show()
                 return
             }
             if (candidateMobile.length != 10) {
@@ -319,7 +330,7 @@ class AddJobFragment : Fragment() {
                 return
             }
             if (candidateResumeFile == null) {
-                Toast.makeText(requireContext(), "Please upload candidate resume (PDF/DOC)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Please upload candidate resume (Photo or PDF)", Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -436,7 +447,7 @@ class AddJobFragment : Fragment() {
         }
 
         binding.uploadCandidateResumeBtn.setOnClickListener {
-            candidateResumeLauncher.launch("*/*")
+            candidateResumeLauncher.launch("image/*,application/pdf")
         }
     }
 
@@ -445,8 +456,10 @@ class AddJobFragment : Fragment() {
             val inputStream = requireContext().contentResolver.openInputStream(uri)
             val fileName = getFileName(uri) ?: "candidate_resume.pdf"
             val lower = fileName.lowercase()
-            if (!(lower.endsWith(".pdf") || lower.endsWith(".doc") || lower.endsWith(".docx"))) {
-                Toast.makeText(requireContext(), "Only PDF, DOC, DOCX allowed", Toast.LENGTH_SHORT).show()
+            val allowed = lower.endsWith(".pdf") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
+                || lower.endsWith(".png") || lower.endsWith(".doc") || lower.endsWith(".docx")
+            if (!allowed) {
+                Toast.makeText(requireContext(), "Only Photo (JPG/PNG) or PDF allowed", Toast.LENGTH_SHORT).show()
                 return
             }
             val file = File(requireContext().cacheDir, fileName)

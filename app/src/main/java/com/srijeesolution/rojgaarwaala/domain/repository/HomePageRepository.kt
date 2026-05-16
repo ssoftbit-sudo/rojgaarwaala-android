@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.domain.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
@@ -35,8 +36,9 @@ interface HomePageRepository {
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
     fun getCategoryVideos(id: Int): Flow<ApiResult<CategoryVideosResponse>>
-    fun likeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
-    fun unlikeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
+    fun likeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
+    fun unlikeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
+    fun removeVideoReaction(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun incrementVideoView(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>

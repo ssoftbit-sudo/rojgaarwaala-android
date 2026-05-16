@@ -26,11 +26,6 @@ class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHold
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
         val video = getItem(position)
         with(holder.binding) {
-            topVideoTitle.text = video.title
-
-            // Set relative time
-            topVideoTime.text = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
-
             Glide.with(topVideoThumbnail.context)
                 .load(video.thumbnail)
                 .placeholder(R.drawable.no_image_placeholder)

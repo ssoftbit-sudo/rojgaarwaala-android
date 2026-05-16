@@ -117,6 +117,19 @@
                     android:textStyle="bold"
                     tools:text="Image title" />
 
+                <TextView
+                    android:id="@+id/videoSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/gray_light_3"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Category"
+                    tools:visibility="visible" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -137,18 +150,15 @@
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/videoDetailDescription"
+                    android:id="@+id/videoLocationLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="3"
                     android:paddingStart="16dp"
                     android:paddingTop="4dp"
                     android:paddingEnd="16dp"
                     android:textColor="@color/gray_light_3"
                     android:textSize="14sp"
-                    android:visibility="gone"
-                    tools:text="Description"
+                    tools:text="Tendua"
                     tools:visibility="visible" />
 
                 <HorizontalScrollView
@@ -166,6 +176,78 @@
                         android:orientation="horizontal"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp">
+
+                        <LinearLayout
+                            android:id="@+id/likeColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/likeButton"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_thumb_up_outline"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/likeCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="0"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/dislikeColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/dislikeButton"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_thumb_down_outline"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/dislikeCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="0"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="wrap_content"

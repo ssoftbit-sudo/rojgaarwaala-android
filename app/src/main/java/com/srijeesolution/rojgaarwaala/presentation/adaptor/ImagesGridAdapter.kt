@@ -22,12 +22,6 @@ class ImagesGridAdapter(
         
         fun bind(image: ImageData) {
             binding.apply {
-                // Set title
-                imageTitle.text = image.title ?: ""
-                
-                // Set relative time
-                imageTime.text = TimeUtils.getRelativeTimeSpanString(root.context, image.publishDate)
-                
                 // Load image using Glide with optimizations for smooth scrolling
                 val imageUrl = image.imageUrl ?: ""
                 if (imageUrl.isNotEmpty()) {

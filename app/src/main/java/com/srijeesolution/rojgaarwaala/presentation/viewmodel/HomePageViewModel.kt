@@ -43,10 +43,12 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val jobListLiveData : LiveData<ApiResult<JobListResponse>> = _jobListLiveData
     private var _categoryVideosLiveData : MutableLiveData<ApiResult<CategoryVideosResponse>> = MutableLiveData()
     val categoryVideosLiveData : LiveData<ApiResult<CategoryVideosResponse>> = _categoryVideosLiveData
-    private var _likeVideoLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
-    val likeVideoLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _likeVideoLiveData
-    private var _unlikeVideoLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
-    val unlikeVideoLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _unlikeVideoLiveData
+    private var _likeVideoLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
+    val likeVideoLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = _likeVideoLiveData
+    private var _unlikeVideoLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
+    val unlikeVideoLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = _unlikeVideoLiveData
+    private var _removeVideoReactionLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
+    val removeVideoReactionLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = _removeVideoReactionLiveData
     private var _incrementViewLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
     val incrementViewLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _incrementViewLiveData
     private var _deleteJobLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
@@ -197,6 +199,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.unlikeVideo(videoId).collectLatest{
                 _unlikeVideoLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun removeVideoReaction(videoId: Int) {
+        viewModelScope.launch {
+            homePageRepository.removeVideoReaction(videoId).collectLatest {
+                _removeVideoReactionLiveData.postValue(it)
             }
         }
     }

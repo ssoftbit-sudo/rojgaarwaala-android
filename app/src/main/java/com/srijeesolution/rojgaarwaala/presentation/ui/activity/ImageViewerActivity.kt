@@ -23,8 +23,14 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.ArrayList
+import javax.inject.Inject
+import kotlin.math.max
 
+@AndroidEntryPoint
 class ImageViewerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityImageViewerBinding
@@ -32,6 +38,13 @@ class ImageViewerActivity : AppCompatActivity() {
     private var imageList: ArrayList<ScheduledImage>? = null
     private var currentIndex: Int = 0
     private var descriptionExpanded = false
+    private var imageCategory: String? = null
+    private var imageLocation: String? = null
+    private var likeCount = 0
+    private var dislikeCount = 0
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +53,9 @@ class ImageViewerActivity : AppCompatActivity() {
 
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setupEdgeToEdge()
+
+        imageCategory = intent.getStringExtra(EXTRA_IMAGE_CATEGORY)
+        imageLocation = intent.getStringExtra(EXTRA_IMAGE_LOCATION)
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -115,31 +131,57 @@ class ImageViewerActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
+    /** Stable key for prefs — uses image id or path hash when id is missing. */
+    private fun currentImageKey(): Int {
+        val id = scheduledImage?.id
+        if (id != null && id > 0) return id
+        val path = scheduledImage?.imagePath?.trim().orEmpty()
+        if (path.isNotEmpty()) return path.hashCode()
+        return "image_$currentIndex".hashCode()
+    }
+
+    private fun loadReactionCountsFromPrefs() {
+        val key = currentImageKey()
+        likeCount = sharedPrefs.getImageLikeCount(key)
+        dislikeCount = sharedPrefs.getImageDislikeCount(key)
+    }
+
+    private fun saveReactionCountsToPrefs() {
+        val key = currentImageKey()
+        sharedPrefs.setImageLikeCount(key, likeCount)
+        sharedPrefs.setImageDislikeCount(key, dislikeCount)
+    }
+
     private fun setupImage() {
         scheduledImage?.let { image ->
             binding.videoDetailTitle.text = image.title.orEmpty()
-            val desc = image.description.orEmpty()
-            binding.videoDetailDescription.text = desc
-            val hasDesc = desc.isNotBlank()
-            binding.videoDetailDescription.visibility = if (hasDesc) View.VISIBLE else View.GONE
 
-            val descFirst =
-                desc.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }.orEmpty()
-            val titleTrim = image.title?.trim().orEmpty()
-
+            val category = imageCategory?.trim().orEmpty()
+            if (category.isNotEmpty()) {
+                binding.videoSubtitle.visibility = View.VISIBLE
+                binding.videoSubtitle.text = category
+            } else {
+                binding.videoSubtitle.visibility = View.GONE
+            }
 
             val relativeUploadTime =
                 TimeUtils.getRelativeTimeSpanString(this, image.createdAt ?: image.publishDate)
             binding.uploadTimeLabel.text =
-                if (relativeUploadTime.isNotEmpty()) {
-                    relativeUploadTime
-                } else {
-                    getString(R.string.channel_placeholder)
-                }
+                if (relativeUploadTime.isNotEmpty()) relativeUploadTime
+                else getString(R.string.channel_placeholder)
 
-            val needsExpand = hasDesc && desc.trim().lines().size > 3
-           descriptionExpanded = false
-            binding.videoDetailDescription.maxLines = 3
+            val location = imageLocation?.trim().orEmpty()
+            if (location.isNotEmpty()) {
+                binding.videoLocationLabel.visibility = View.VISIBLE
+                binding.videoLocationLabel.text = location
+            } else {
+                binding.videoLocationLabel.visibility = View.GONE
+            }
+
+            descriptionExpanded = false
+
+            loadReactionCountsFromPrefs()
+            refreshLikeDislikeUi()
 
             binding.progressBar.visibility = View.VISIBLE
             Glide.with(this)
@@ -178,6 +220,75 @@ class ImageViewerActivity : AppCompatActivity() {
         }
     }
 
+    private fun refreshLikeDislikeUi() {
+        val key = currentImageKey()
+        binding.likeCount.text = likeCount.toString()
+        binding.dislikeCount.text = dislikeCount.toString()
+        val isLiked = sharedPrefs.isImageLiked(key)
+        val isDisliked = sharedPrefs.isImageDisliked(key)
+        if (isLiked) {
+            binding.likeButton.setImageResource(R.drawable.ic_thumb_up_filled)
+            binding.likeButton.alpha = 1f
+        } else {
+            binding.likeButton.setImageResource(R.drawable.ic_thumb_up_outline)
+            binding.likeButton.alpha = 0.7f
+        }
+        if (isDisliked) {
+            binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_filled)
+            binding.dislikeButton.alpha = 1f
+        } else {
+            binding.dislikeButton.setImageResource(R.drawable.ic_thumb_down_outline)
+            binding.dislikeButton.alpha = 0.7f
+        }
+    }
+
+    private fun handleLikeAction() {
+        val key = currentImageKey()
+        if (!sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to like", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val wasLiked = sharedPrefs.isImageLiked(key)
+        val wasDisliked = sharedPrefs.isImageDisliked(key)
+        if (wasLiked) {
+            likeCount = max(0, likeCount - 1)
+            sharedPrefs.setImageLiked(key, false)
+        } else {
+            likeCount += 1
+            sharedPrefs.setImageLiked(key, true)
+            if (wasDisliked) {
+                dislikeCount = max(0, dislikeCount - 1)
+                sharedPrefs.setImageDisliked(key, false)
+            }
+        }
+        saveReactionCountsToPrefs()
+        refreshLikeDislikeUi()
+    }
+
+    private fun handleDislikeAction() {
+        val key = currentImageKey()
+        if (!sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to dislike", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val wasLiked = sharedPrefs.isImageLiked(key)
+        val wasDisliked = sharedPrefs.isImageDisliked(key)
+        if (wasDisliked) {
+            dislikeCount = max(0, dislikeCount - 1)
+            sharedPrefs.setImageDisliked(key, false)
+        } else {
+            dislikeCount += 1
+            sharedPrefs.setImageDisliked(key, true)
+            if (wasLiked) {
+                likeCount = max(0, likeCount - 1)
+                sharedPrefs.setImageLiked(key, false)
+            }
+        }
+        saveReactionCountsToPrefs()
+        refreshLikeDislikeUi()
+    }
 
     private fun openApplyForImage() {
         val id = scheduledImage?.id ?: 0
@@ -210,6 +321,8 @@ class ImageViewerActivity : AppCompatActivity() {
         binding.leftArrowButton.setOnClickListener { navigateToPrevious() }
         binding.rightArrowButton.setOnClickListener { navigateToNext() }
 
+        binding.likeColumn.setOnClickListener { handleLikeAction() }
+        binding.dislikeColumn.setOnClickListener { handleDislikeAction() }
         binding.shareButton.setOnClickListener { shareImage() }
         binding.inlineCallColumn.setOnClickListener { dialPosterPhone() }
         binding.inlineApplyColumn.setOnClickListener { openApplyForImage() }
@@ -276,5 +389,10 @@ class ImageViewerActivity : AppCompatActivity() {
             }
             startActivity(Intent.createChooser(sendIntent, "Share image via"))
         }
+    }
+
+    companion object {
+        const val EXTRA_IMAGE_CATEGORY = "extra_image_category"
+        const val EXTRA_IMAGE_LOCATION = "extra_image_location"
     }
 }

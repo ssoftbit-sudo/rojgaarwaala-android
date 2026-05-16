@@ -517,8 +517,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Update UI immediately
         updateLikeDislikeCounts()
         updateLikeDislikeUI()
-        // Make API call in background
-        viewModel.likeVideo(videoId)
+        if (wasLiked) {
+            viewModel.removeVideoReaction(videoId)
+        } else {
+            viewModel.likeVideo(videoId)
+        }
     }
     
     /**
@@ -555,8 +558,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         updateLikeDislikeCounts()
         updateLikeDislikeUI()
         
-        // Make API call in background
-        viewModel.unlikeVideo(videoId)
+        if (wasDisliked) {
+            viewModel.removeVideoReaction(videoId)
+        } else {
+            viewModel.unlikeVideo(videoId)
+        }
     }
 
     private fun updateLikeDislikeCounts() {
@@ -629,49 +635,56 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun observeLikeDislikeActions() {
-        // Observe like video action
         viewModel.likeVideoLiveData.observe(this, Observer { result ->
             when (result) {
-                is ApiResult.Success<*> -> {
-                    // API call succeeded - optimistic update was correct
-                    // No need to refresh video details, UI already updated
-                    // This prevents video from restarting
-                }
-                is ApiResult.Error -> {
-                    // Rollback optimistic update on error
-                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
-                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
-                    likeCount = previousLikeCount
-                    dislikeCount = previousDislikeCount
-                    updateLikeDislikeCounts()
-                    updateLikeDislikeUI()
-                    //Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
-                }
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
                 else -> {}
             }
         })
-
-        // Observe unlike video action
         viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
             when (result) {
-                is ApiResult.Success<*> -> {
-                    // API call succeeded - optimistic update was correct
-                    // No need to refresh video details, UI already updated
-                    // This prevents video from restarting
-                }
-                is ApiResult.Error -> {
-                    // Rollback optimistic update on error
-                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
-                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
-                    likeCount = previousLikeCount
-                    dislikeCount = previousDislikeCount
-                    updateLikeDislikeCounts()
-                    updateLikeDislikeUI()
-                    //Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
-                }
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
                 else -> {}
             }
         })
+        viewModel.removeVideoReactionLiveData.observe(this, Observer { result ->
+            when (result) {
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
+                else -> {}
+            }
+        })
+    }
+
+    private fun handleReactionError(result: ApiResult.Error<*>) {
+        rollbackReaction()
+        if (result.message?.statusCode == 401) {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false))
+            sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
+            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+    }
+
+    private fun applyReactionFromApi(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoReactionData?) {
+        data ?: return
+        data.likeCount?.let { likeCount = it }
+        data.unlikeCount?.let { dislikeCount = it }
+        data.isLiked?.let { sharedPrefs.setVideoLiked(videoId, it) }
+        data.isUnliked?.let { sharedPrefs.setVideoDisliked(videoId, it) }
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
+    }
+
+    private fun rollbackReaction() {
+        sharedPrefs.setVideoLiked(videoId, previousLikeState)
+        sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
+        likeCount = previousLikeCount
+        dislikeCount = previousDislikeCount
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
     }
 
     private fun bindVideoDetails(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData) {
@@ -721,6 +734,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                 binding.videoSubtitle.text = descFirst
             }
             else -> binding.videoSubtitle.visibility = View.GONE
+        }
+        val location = data.locationHint?.trim().orEmpty()
+        if (location.isNotEmpty()) {
+            binding.videoLocationLabel.visibility = View.VISIBLE
+            binding.videoLocationLabel.text = location
+        } else {
+            binding.videoLocationLabel.visibility = View.GONE
         }
         binding.videoDetailDescription.text = data.description.orEmpty()
         val hasDesc = !data.description.isNullOrBlank()

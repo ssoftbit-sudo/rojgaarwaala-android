@@ -164,7 +164,7 @@
             android:id="@+id/textImages"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Images"
+            android:text="@string/free_job"
             android:textColor="@color/tab_unselected"
             android:textSize="9sp"
             android:textStyle="bold"

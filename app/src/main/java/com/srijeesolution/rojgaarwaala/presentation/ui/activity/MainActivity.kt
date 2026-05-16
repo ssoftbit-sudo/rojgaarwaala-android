@@ -286,7 +286,7 @@ class MainActivity : AppCompatActivity() {
                 0 -> R.string.home
                 1 -> R.string.add_job
                 2 -> R.string.categories
-                3 -> R.string.images
+                3 -> R.string.free_job
                 4 -> R.string.stories
                 else -> R.string.app_name
             }

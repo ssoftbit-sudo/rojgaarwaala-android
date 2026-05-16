@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
@@ -79,10 +80,13 @@ interface RetrofitApiInterface {
     suspend fun getCategoryVideos(@Path("id") id: Int): Response<CategoryVideosResponse>
 
     @POST(NetworkConstants.VIDEO_LIKE)
-    suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
+    suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
 
     @POST(NetworkConstants.VIDEO_UNLIKE)
-    suspend fun unlikeVideo(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
+    suspend fun unlikeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
+
+    @POST(NetworkConstants.VIDEO_REMOVE_REACTION)
+    suspend fun removeVideoReaction(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
 
     @POST(NetworkConstants.VIDEO_INCREMENT_VIEW)
     suspend fun incrementVideoView(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>

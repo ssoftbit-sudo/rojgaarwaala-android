@@ -26,6 +26,8 @@
     <string name="add_job">Add Job</string>
     <string name="categories">Categories</string>
     <string name="images">Images</string>
+    <string name="free_job">Free Job</string>
+    <string name="resume_format_hint">(Photo/Pdf) Both Option</string>
     <string name="stories">Stories</string>
     <string name="choose_location">Choose location</string>
     <string name="search_jobs_categories_hint">Search jobs, categories…</string>

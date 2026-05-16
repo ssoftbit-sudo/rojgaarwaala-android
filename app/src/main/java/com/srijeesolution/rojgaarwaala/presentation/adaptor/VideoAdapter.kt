@@ -31,11 +31,6 @@ class VideoAdapter(
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val video = getItem(position)
         with(holder.binding) {
-            videoTitle.text = video.title
-
-            // Set relative time
-            videoTime.text = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
-
             // Load thumbnail using Glide (use videoUrl as thumbnail for now)
             Glide.with(videoThumbnail.context)
                 .load(video.thumbnail)

@@ -167,18 +167,21 @@
                             android:layout_marginTop="14dp"
                             android:layout_marginBottom="8dp" />
 
-                        <AutoCompleteTextView
+                        <TextView
                             android:id="@+id/candidateLocation"
                             android:layout_width="match_parent"
                             android:layout_height="60dp"
                             android:background="@drawable/modern_edit_text_background"
-                            android:hint="Select district"
+                            android:hint="Tap to choose location"
                             android:textColorHint="@color/gray_light_3"
                             android:textColor="@color/white"
                             android:textSize="16sp"
                             android:paddingStart="20dp"
                             android:paddingEnd="20dp"
-                            android:completionThreshold="1" />
+                            android:gravity="center_vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -213,14 +216,28 @@
                             android:background="@drawable/modern_edit_text_background"
                             android:padding="16dp">
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Candidate Resume"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                android:layout_marginEnd="12dp" />
+                                android:layout_marginEnd="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Candidate Resume"
+                                    android:textColor="@color/white"
+                                    android:textSize="14sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="@string/resume_format_hint"
+                                    android:textColor="@color/gray_light_3"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
 
                             <TextView
                                 android:id="@+id/uploadCandidateResumeBtn"

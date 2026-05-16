@@ -23,9 +23,15 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
             var requestBuilder: Request.Builder? = null
             requestBuilder = original.newBuilder()
                 .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, ""))
-                .header("fcm_token", sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "")?:"")
-                .method(original.method, original.body)
+            val authToken = sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, "").orEmpty().trim()
+            if (authToken.isNotEmpty()) {
+                requestBuilder.header("Authorization", "Bearer $authToken")
+            }
+            val fcmToken = sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "").orEmpty().trim()
+            if (fcmToken.isNotEmpty()) {
+                requestBuilder.header("fcm_token", fcmToken)
+            }
+            requestBuilder.method(original.method, original.body)
             response = chain.proceed(requestBuilder.build())
             return response
         } catch (e: Exception) {

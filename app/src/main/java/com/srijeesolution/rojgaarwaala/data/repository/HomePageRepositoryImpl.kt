@@ -157,6 +157,14 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         })
     }.flowOn(Dispatchers.IO)
 
+    override fun removeVideoReaction(videoId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["video_id"] = videoId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).removeVideoReaction(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
     override fun incrementVideoView(videoId: Int) = flow {
         val request = HashMap<String, Any>()
         request["video_id"] = videoId
