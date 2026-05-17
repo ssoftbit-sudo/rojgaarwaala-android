@@ -42,6 +42,8 @@ data class BannerList(
     val id: Int? = null,
     @SerializedName("url")
     val imageUrl: String? = null,
+    @SerializedName("position")
+    val position: Int? = null,
 )
 
 data class TopVideo(
@@ -67,6 +69,10 @@ data class TopVideo(
     val sortOrder: Int? = null,
     @SerializedName("views")
     val views: Int? = null,
+    @SerializedName("location")
+    val location: String? = null,
+    @SerializedName("location_hint")
+    val locationHint: String? = null,
 )
 
 data class Category(
@@ -144,8 +150,12 @@ data class VideoDetailsData(
     val user: UserData? = null,
     @SerializedName("category")
     val category: Category? = null,
+    @SerializedName("location")
+    val location: String? = null,
     @SerializedName("location_hint")
     val locationHint: String? = null,
+    @SerializedName("phone_number")
+    val phoneNumber: String? = null,
     @SerializedName("related_videos")
     val relatedVideos: List<TopVideo>? = null
 )
@@ -269,6 +279,8 @@ data class ImageData(
     val location: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null,
     @SerializedName("user")
     val user: UserData? = null,
     @SerializedName("phone_number")

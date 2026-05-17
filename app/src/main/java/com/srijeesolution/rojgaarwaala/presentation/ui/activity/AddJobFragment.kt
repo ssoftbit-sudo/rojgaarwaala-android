@@ -145,7 +145,6 @@ class AddJobFragment : Fragment() {
         observeJobUpdateData()
         setupCategoryDropdown()
         setupUserTypeFlow()
-        setupHeader()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
             binding.submitBtn.isEnabled = false
@@ -835,19 +834,7 @@ class AddJobFragment : Fragment() {
         return sqrt(x * x + y * y)
     }
 
-    private fun setupHeader() {
-        binding.addJobBackButton.setOnClickListener {
-            if (parentFragmentManager.backStackEntryCount > 0) {
-                parentFragmentManager.popBackStack()
-            } else {
-                (activity as? MainActivity)?.selectTabFromFragment(0)
-            }
-        }
-    }
-
     private fun updatePageTitle(title: String) {
-        binding.pageTitle.text = title
-        binding.addJobHeaderTitle.text = if (updateJobId != null) "Update Job" else "Add Job"
         activity?.title = title
     }
 } 

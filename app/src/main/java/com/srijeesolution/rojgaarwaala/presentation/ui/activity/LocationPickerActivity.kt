@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -51,6 +52,13 @@ class LocationPickerActivity : AppCompatActivity() {
         const val EXTRA_SELECTED_LOCATION = "extra_selected_location"
     }
 
+    private fun withDefaultOption(cities: List<String>): List<String> {
+        val rest = cities
+            .filter { !HomeLocationDefaults.skipsDistrictFilter(it) }
+            .distinct()
+        return listOf(HomeLocationDefaults.ALL_CHHATTISGARH) + rest
+    }
+
     private fun observeCities() {
         homePageViewModel.cityListLiveData.observe(this) { apiResponse ->
             when (apiResponse) {
@@ -63,11 +71,11 @@ class LocationPickerActivity : AppCompatActivity() {
                         .orEmpty()
                         .mapNotNull { it.name?.trim()?.takeIf { name -> name.isNotEmpty() } }
                         .distinct()
-                    locationAdapter.updateItems(if (cities.isNotEmpty()) cities else LocationSuggestions.districtList)
+                    locationAdapter.updateItems(withDefaultOption(cities))
                 }
                 is ApiResult.Error -> {
                     progressBar.visibility = View.GONE
-                    locationAdapter.updateItems(LocationSuggestions.districtList)
+                    locationAdapter.updateItems(withDefaultOption(LocationSuggestions.districtList))
                     val errorMessage = apiResponse.message?.toString() ?: "Failed to load cities"
                     Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
                 }

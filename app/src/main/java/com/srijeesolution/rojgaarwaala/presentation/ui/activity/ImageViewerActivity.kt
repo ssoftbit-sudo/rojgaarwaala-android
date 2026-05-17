@@ -22,6 +22,7 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -142,11 +143,17 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     private fun resolveImageLocation(image: ScheduledImage): String {
-        image.location?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
-        imageLocation?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+        image.location?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            return LocationDisplayUtils.formatForDisplay(it)
+        }
+        imageLocation?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            return LocationDisplayUtils.formatForDisplay(it)
+        }
         val desc = image.description.orEmpty()
         Regex("(?i)(?:location|loc\\.?)\\s*:\\s*([^\\n\\r]+)").find(desc)?.groupValues
-            ?.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+            ?.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }?.let {
+                return LocationDisplayUtils.formatForDisplay(it)
+            }
         val lower = desc.lowercase()
         for (city in LocationSuggestions.districtList) {
             if (lower.contains(city.lowercase())) return city

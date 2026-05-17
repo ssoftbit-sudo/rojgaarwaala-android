@@ -33,6 +33,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.VideoLocationFilter
 import android.util.Log
 
 @AndroidEntryPoint
@@ -88,9 +90,14 @@ class HomeFragment : Fragment() {
     private fun hasHomeListData(): Boolean =
         allCategoryList.isNotEmpty() || allTopVideos.isNotEmpty() || allCategoryVideos.isNotEmpty()
 
+    private fun districtFilterQuery(): String {
+        val loc = mainToolbarViewModel.selectedLocation.value.orEmpty().trim()
+        return if (HomeLocationDefaults.skipsDistrictFilter(loc)) "" else loc
+    }
+
     private fun applyFromToolbarState() {
         val q = mainToolbarViewModel.searchQuery.value.orEmpty().trim()
-        val loc = mainToolbarViewModel.selectedLocation.value.orEmpty().trim()
+        val loc = districtFilterQuery()
         if (q.isEmpty() && loc.isEmpty()) {
             isSearchMode = false
             showAllContent()
@@ -114,48 +121,53 @@ class HomeFragment : Fragment() {
 
     private fun filterContent(query: String, locationQuery: String = "") {
         val lowerQuery = query.lowercase()
-        val lowerLocationQuery = locationQuery.lowercase()
-        
-        // Filter categories
-        val filteredCategories = allCategoryList.filter { category ->
-            category.title?.lowercase()?.contains(lowerQuery) == true ||
-            (locationQuery.isNotEmpty() && category.title?.lowercase()?.contains(lowerLocationQuery) == true)
+        val hasSearch = query.isNotEmpty()
+        val hasLocation = locationQuery.isNotEmpty()
+
+        // Top videos: never filter by toolbar location; search text still applies
+        val filteredTopVideos = if (hasSearch) {
+            allTopVideos.filter { matchesSearch(it, lowerQuery) }
+        } else {
+            allTopVideos
         }
-        
-        // Filter top videos
-        val filteredTopVideos = allTopVideos.filter { video ->
-            (video.title?.lowercase()?.contains(lowerQuery) == true ||
-            video.description?.lowercase()?.contains(lowerQuery) == true ||
-            video.user?.name?.lowercase()?.contains(lowerQuery) == true) ||
-            (locationQuery.isNotEmpty() && (
-                video.user?.city?.lowercase()?.contains(lowerLocationQuery) == true ||
-                video.user?.state?.lowercase()?.contains(lowerLocationQuery) == true ||
-                video.user?.name?.lowercase()?.contains(lowerLocationQuery) == true
-            ))
-        }
-        
-        // Filter category videos
+
+        // Category rows: filter by location (and optional search)
         val filteredCategoryVideos = allCategoryVideos.mapNotNull { categoryVideo ->
             val filteredVideos = categoryVideo.videos?.filter { video ->
-                (video.title?.lowercase()?.contains(lowerQuery) == true ||
-                video.description?.lowercase()?.contains(lowerQuery) == true ||
-                video.user?.name?.lowercase()?.contains(lowerQuery) == true ||
-                categoryVideo.title?.lowercase()?.contains(lowerQuery) == true) ||
-                (locationQuery.isNotEmpty() && (
-                    video.user?.city?.lowercase()?.contains(lowerLocationQuery) == true ||
-                    video.user?.state?.lowercase()?.contains(lowerLocationQuery) == true ||
-                    video.user?.name?.lowercase()?.contains(lowerLocationQuery) == true ||
-                    categoryVideo.title?.lowercase()?.contains(lowerLocationQuery) == true
-                ))
+                val searchOk = !hasSearch || matchesSearch(video, lowerQuery, categoryVideo.title)
+                val locationOk = !hasLocation || VideoLocationFilter.matches(video, locationQuery)
+                searchOk && locationOk
             } ?: emptyList()
-            
+
             if (filteredVideos.isNotEmpty()) {
                 categoryVideo.copy(videos = ArrayList(filteredVideos))
-            } else null
+            } else {
+                null
+            }
         }
-        
-        // Update UI with filtered results
+
+        val filteredCategories = when {
+            hasLocation && !hasSearch -> {
+                val idsWithVideos = filteredCategoryVideos.mapNotNull { it.id }.toSet()
+                allCategoryList.filter { it.id in idsWithVideos }
+            }
+            hasSearch -> {
+                allCategoryList.filter { category ->
+                    category.title?.lowercase()?.contains(lowerQuery) == true ||
+                        category.id in filteredCategoryVideos.mapNotNull { it.id }.toSet()
+                }
+            }
+            else -> allCategoryList
+        }
+
         updateUIWithFilteredContent(filteredCategories, filteredTopVideos, filteredCategoryVideos)
+    }
+
+    private fun matchesSearch(video: TopVideo, lowerQuery: String, categoryTitle: String? = null): Boolean {
+        return video.title?.lowercase()?.contains(lowerQuery) == true ||
+            video.description?.lowercase()?.contains(lowerQuery) == true ||
+            video.user?.name?.lowercase()?.contains(lowerQuery) == true ||
+            categoryTitle?.lowercase()?.contains(lowerQuery) == true
     }
 
     private fun showAllContent() {
@@ -307,7 +319,7 @@ class HomeFragment : Fragment() {
                     binding.categorySectionsContainer.visibility = View.VISIBLE
                     
                     val data = apiResponse.data?.dataObj
-                    bannerList = data?.bannerList ?: emptyList()
+                    bannerList = orderBanners(data?.bannerList ?: emptyList())
                     setupBannerSlider()
                     
                     // Store all data for search functionality
@@ -344,7 +356,23 @@ class HomeFragment : Fragment() {
         )
     }
 
+    private fun orderBanners(banners: List<BannerList>): List<BannerList> {
+        return banners.sortedWith(
+            compareBy<BannerList> { it.position ?: Int.MAX_VALUE }
+                .thenBy { it.id ?: Int.MAX_VALUE }
+        )
+    }
+
     private fun setupBannerSlider() {
+        currentBannerPage = 0
+        if (bannerList.isEmpty()) {
+            binding.bannerViewPager.visibility = View.GONE
+            binding.bannerIndicator.visibility = View.GONE
+            bannerHandler?.removeCallbacksAndMessages(null)
+            return
+        }
+        binding.bannerViewPager.visibility = View.VISIBLE
+        binding.bannerIndicator.visibility = View.VISIBLE
         val bannerAdapter = ImagePagerAdapter(ArrayList(bannerList))
         binding.bannerViewPager.adapter = bannerAdapter
         setupBannerIndicator()

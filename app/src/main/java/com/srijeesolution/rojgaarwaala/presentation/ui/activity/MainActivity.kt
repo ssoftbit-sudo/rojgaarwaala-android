@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,8 +85,9 @@ class MainActivity : AppCompatActivity() {
             val location =
                 result.data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
             if (location.isNotBlank()) {
-                mainToolbarViewModel.setSelectedLocation(location)
-                sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.HOME_SELECTED_LOCATION, location))
+                val normalized = HomeLocationDefaults.normalize(location)
+                mainToolbarViewModel.setSelectedLocation(normalized)
+                sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.HOME_SELECTED_LOCATION, normalized))
                 Toast.makeText(this, location, Toast.LENGTH_SHORT).show()
             }
         }
@@ -157,10 +159,12 @@ class MainActivity : AppCompatActivity() {
     private fun restoreToolbarState() {
         val savedLocation = sharedPrefs.getPrefs(
             SharedPrefsConstant.HOME_SELECTED_LOCATION,
-            ""
+            "",
         ).orEmpty()
-        if (savedLocation.isNotBlank()) {
-            mainToolbarViewModel.setSelectedLocation(savedLocation)
+        val location = HomeLocationDefaults.normalize(savedLocation)
+        mainToolbarViewModel.setSelectedLocation(location)
+        if (savedLocation.isBlank()) {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.HOME_SELECTED_LOCATION, location))
         }
 
         mainToolbarViewModel.searchQuery.observe(this) { query ->
@@ -209,16 +213,13 @@ class MainActivity : AppCompatActivity() {
         val popup = PopupMenu(this, toolbarOverflow)
         popup.menu.add(0, MENU_PROFILE, 0, getString(R.string.profile))
 
-        val hasLocation = mainToolbarViewModel.selectedLocation.value.orEmpty().isNotBlank()
-        val locationTitle = if (hasLocation) {
-            getString(R.string.change_location)
-        } else {
-            getString(R.string.search_location)
-        }
-        popup.menu.add(0, MENU_LOCATION, 1, locationTitle)
+        popup.menu.add(0, MENU_LOCATION, 1, getString(R.string.change_location))
 
-        if (hasLocation) {
-            popup.menu.add(0, MENU_CLEAR_LOCATION, 2, getString(R.string.clear_location))
+        val isDefaultLocation = HomeLocationDefaults.skipsDistrictFilter(
+            mainToolbarViewModel.selectedLocation.value,
+        )
+        if (!isDefaultLocation) {
+            popup.menu.add(0, MENU_CLEAR_LOCATION, 2, getString(R.string.reset_all_chhattisgarh))
         }
 
         popup.setOnMenuItemClickListener { item ->
@@ -251,9 +252,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearSelectedLocation() {
-        mainToolbarViewModel.setSelectedLocation("")
-        sharedPrefs.removeSharedPrefs(SharedPrefsConstant.HOME_SELECTED_LOCATION)
-        Toast.makeText(this, R.string.location_cleared, Toast.LENGTH_SHORT).show()
+        val defaultLocation = HomeLocationDefaults.ALL_CHHATTISGARH
+        mainToolbarViewModel.setSelectedLocation(defaultLocation)
+        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.HOME_SELECTED_LOCATION, defaultLocation))
+        Toast.makeText(this, R.string.location_reset_all_cg, Toast.LENGTH_SHORT).show()
     }
 
     private fun updateSelectedLocationUi(location: String) {

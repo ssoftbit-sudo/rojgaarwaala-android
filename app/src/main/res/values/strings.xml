@@ -38,6 +38,8 @@
     <string name="search_location">Search location</string>
     <string name="change_location">Change location</string>
     <string name="clear_location">Clear location</string>
+    <string name="reset_all_chhattisgarh">All Chhattisgarh</string>
+    <string name="location_reset_all_cg">Showing all Chhattisgarh</string>
     <string name="clear_search">Clear search</string>
     <string name="location_cleared">Location cleared</string>
 

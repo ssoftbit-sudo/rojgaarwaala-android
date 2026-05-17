@@ -15,6 +15,7 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -735,7 +736,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             else -> binding.videoSubtitle.visibility = View.GONE
         }
-        val location = data.locationHint?.trim().orEmpty()
+        val location = LocationDisplayUtils.formatForDisplay(
+            data.location?.takeIf { it.isNotBlank() } ?: data.locationHint
+        )
         if (location.isNotEmpty()) {
             binding.videoLocationLabel.visibility = View.VISIBLE
             binding.videoLocationLabel.text = location
@@ -776,7 +779,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         currentVideoTitle = data.title
         currentVideoUrl = data.stream_url?:data.videoUrl
         currentVideoThumbnail = data.thumbnail
-        currentContactNumber = data.user?.mobile
+        currentContactNumber = data.phoneNumber?.takeIf { it.isNotBlank() }
     }
 
     /**
@@ -1028,8 +1031,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.totalTimeText.visibility = View.VISIBLE
         binding.playerControlsOverlay.visibility = View.VISIBLE
 
-        binding.fullscreenActionControls.visibility = View.VISIBLE
-        
+        // Hide side action buttons in fullscreen for now (like, dislike, apply, call)
+        binding.fullscreenActionControls.visibility = View.GONE
+
         // Make video player frame take full screen
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
         frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT

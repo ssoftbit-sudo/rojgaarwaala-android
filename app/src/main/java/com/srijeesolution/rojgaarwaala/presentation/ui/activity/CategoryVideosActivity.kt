@@ -14,13 +14,19 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityCategoryVideosBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.GridVideosListAdapter
+import com.srijeesolution.rojgaarwaala.utils.VideoLocationFilter
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class CategoryVideosActivity : ComponentActivity() {
     private lateinit var binding: ActivityCategoryVideosBinding
     private val viewModel: HomePageViewModel by viewModels()
+    @Inject lateinit var sharedPrefs: SharedPrefs
     private lateinit var videosAdapter: GridVideosListAdapter
+    private var isTopVideosScreen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,9 +65,10 @@ class CategoryVideosActivity : ComponentActivity() {
         videosAdapter = GridVideosListAdapter()
         binding.videosRecyclerView.adapter = videosAdapter
 
-        if (finalCategoryId == -1 && categoryTitle == "Top Videos") {
-            // Handle top videos case
-            viewModel.getHomePageData("") // Get all home page data to extract top videos
+        isTopVideosScreen = finalCategoryId == -1 && categoryTitle == "Top Videos"
+
+        if (isTopVideosScreen) {
+            viewModel.getHomePageData("")
         } else if (finalCategoryId != -1) {
             viewModel.getCategoryVideos(finalCategoryId)
         } else {
@@ -122,7 +129,14 @@ class CategoryVideosActivity : ComponentActivity() {
                     }
                     is ApiResult.Success -> {
                         binding.progressBar.visibility = View.GONE
-                        val videos = result.data?.data?.videos ?: emptyList()
+                        val location = sharedPrefs.getPrefs(
+                            SharedPrefsConstant.HOME_SELECTED_LOCATION,
+                            "",
+                        ).orEmpty().trim()
+                        val videos = VideoLocationFilter.filterVideos(
+                            result.data?.data?.videos ?: emptyList(),
+                            location,
+                        )
                         if (videos.isEmpty()) {
                             binding.noVideosText.visibility = View.VISIBLE
                             binding.videosRecyclerView.visibility = View.GONE
