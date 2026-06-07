@@ -8,6 +8,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -117,5 +119,32 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.SECTION_STORIES_GROUPED)
     suspend fun getSectionStoriesGrouped(): Response<StoriesResponse>
+
+    @Multipart
+    @POST(NetworkConstants.JOB_APPLICATIONS)
+    suspend fun submitJobApplication(
+        @Part("full_name") fullName: RequestBody,
+        @Part("phone") phone: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("video_id") videoId: RequestBody? = null,
+        @Part("scheduled_image_id") scheduledImageId: RequestBody? = null,
+        @Part("job_title") jobTitle: RequestBody? = null,
+        @Part resume: MultipartBody.Part,
+    ): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_ORDER)
+    suspend fun createJobApplicationOrder(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_CONFIRM)
+    suspend fun confirmJobApplicationPayment(
+        @Path("id") id: Int,
+        @Body request: ConfirmPaymentRequest,
+    ): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_FAILED)
+    suspend fun markJobApplicationPaymentFailed(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @GET(NetworkConstants.JOB_APPLICATION_DETAIL)
+    suspend fun getJobApplication(@Path("id") id: Int): Response<JobApplicationApiResponse>
 
 }

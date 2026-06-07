@@ -55,7 +55,7 @@ class ApplicationStatusActivity : AppCompatActivity() {
             updateStatusDisplay(statusOverride)
             return
         }
-        if (applicationId.isNotEmpty() && !applicationId.startsWith("local_")) {
+        if (applicationId.isNotEmpty()) {
             viewModel.getApplicationStatus(applicationId)
         }
     }
@@ -73,13 +73,14 @@ class ApplicationStatusActivity : AppCompatActivity() {
 
     private fun updateStatusDisplay(status: String) {
         val (statusText, statusColor) = when (status.lowercase()) {
-            "pending" -> "Resume HR ko forward kar diya gaya hai" to android.R.color.holo_blue_dark
-            "forwarded_to_hr" -> "Resume HR ko forward kar diya gaya hai" to android.R.color.holo_blue_dark
-            "selected" -> "Selected" to android.R.color.holo_green_dark
-            "rejected" -> "Rejected" to android.R.color.holo_red_dark
-            "payment_failed" -> "Payment failed. Please retry application payment." to android.R.color.holo_red_dark
-            "paid" -> "Payment completed. Application under review." to android.R.color.holo_blue_dark
-            else -> "Status: $status" to android.R.color.darker_gray
+            "applied" -> "Application submitted. HR team will review your resume." to android.R.color.holo_blue_dark
+            "under_review" -> "Your application is under review." to android.R.color.holo_blue_dark
+            "interview_scheduled" -> "Interview scheduled. HR will contact you." to android.R.color.holo_orange_dark
+            "selected" -> "Congratulations! You are selected." to android.R.color.holo_green_dark
+            "rejected" -> "Application not selected this time." to android.R.color.holo_red_dark
+            "pending_payment" -> "Payment pending. Please complete payment." to android.R.color.holo_orange_dark
+            "failed" -> "Payment failed. Please retry from apply flow." to android.R.color.holo_red_dark
+            else -> "Status: ${status.replace('_', ' ')}" to android.R.color.darker_gray
         }
 
         binding.statusText.text = statusText

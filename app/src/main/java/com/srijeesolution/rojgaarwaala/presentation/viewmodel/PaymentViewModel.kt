@@ -4,62 +4,93 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
+import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
-class PaymentViewModel @Inject constructor() : ViewModel() {
+class PaymentViewModel @Inject constructor(
+  private val repository: JobApplicationRepository,
+) : ViewModel() {
 
-    private val _updateResult = MutableLiveData<Boolean>()
-    val updateResult: LiveData<Boolean> = _updateResult
+  private val _updateResult = MutableLiveData<Boolean>()
+  val updateResult: LiveData<Boolean> = _updateResult
 
-    private val firestore = FirebaseFirestore.getInstance()
+  private val _orderReady = MutableLiveData<PaymentOrderState?>()
+  val orderReady: LiveData<PaymentOrderState?> = _orderReady
 
-    fun updateApplicationAfterPayment(applicationId: String, paymentId: String?) {
-        viewModelScope.launch {
-            try {
-                val updateData = hashMapOf<String, Any>(
-                    // After successful payment, resume can be treated as forwarded to HR queue.
-                    "status" to "pending",
-                    "paymentStatus" to "paid",
-                    "paymentId" to (paymentId ?: ""),
-                    "paidAt" to System.currentTimeMillis(),
-                    "hrForwardedAt" to System.currentTimeMillis()
-                )
+  private val _isLoading = MutableLiveData<Boolean>()
+  val isLoading: LiveData<Boolean> = _isLoading
 
-                firestore.collection("applications")
-                    .document(applicationId)
-                    .update(updateData)
-                    .await()
+  private val _errorMessage = MutableLiveData<String>()
+  val errorMessage: LiveData<String> = _errorMessage
 
-                _updateResult.value = true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _updateResult.value = false
+  fun createRazorpayOrder(applicationId: Int) {
+    _isLoading.value = true
+    viewModelScope.launch {
+      repository.createRazorpayOrder(applicationId).collectLatest { result ->
+        when (result) {
+          is ApiResult.Success -> {
+            val data = result.data?.data
+            if (result.data?.status == true && !data?.orderId.isNullOrBlank()) {
+              _orderReady.value = PaymentOrderState(
+                orderId = data?.orderId.orEmpty(),
+                razorpayKeyId = data?.razorpayKeyId.orEmpty(),
+                amountPaise = data?.amountPaise ?: 10000,
+              )
+            } else {
+              _errorMessage.value = result.data?.message ?: "Could not start payment."
+              _orderReady.value = null
             }
+          }
+          is ApiResult.Error -> {
+            _errorMessage.value = "Could not create payment order."
+            _orderReady.value = null
+          }
         }
+        _isLoading.value = false
+      }
+    }
+  }
+
+  fun updateApplicationAfterPayment(
+    applicationId: Int,
+    paymentId: String?,
+    orderId: String?,
+  ) {
+    if (paymentId.isNullOrBlank()) {
+      _updateResult.value = false
+      return
     }
 
-    fun updatePaymentFailure(applicationId: String) {
-        if (applicationId.isBlank()) return
-        viewModelScope.launch {
-            try {
-                firestore.collection("applications")
-                    .document(applicationId)
-                    .update(
-                        mapOf(
-                            "paymentStatus" to "failed",
-                            "status" to "payment_failed",
-                            "updatedAt" to System.currentTimeMillis()
-                        )
-                    )
-                    .await()
-            } catch (_: Exception) {
-                // Best-effort update; do not block UI flow on failure.
-            }
-        }
+    _isLoading.value = true
+    viewModelScope.launch {
+      repository.confirmPayment(
+        applicationId,
+        ConfirmPaymentRequest(
+          razorpayPaymentId = paymentId,
+          razorpayOrderId = orderId,
+        ),
+      ).collectLatest { result ->
+        _updateResult.value = result is ApiResult.Success && result.data?.status == true
+        _isLoading.value = false
+      }
     }
+  }
+
+  fun updatePaymentFailure(applicationId: Int) {
+    viewModelScope.launch {
+      repository.markPaymentFailed(applicationId).collectLatest { }
+    }
+  }
+
+  data class PaymentOrderState(
+    val orderId: String,
+    val razorpayKeyId: String,
+    val amountPaise: Int,
+  )
 }

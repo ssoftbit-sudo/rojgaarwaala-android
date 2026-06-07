@@ -2,7 +2,9 @@ package com.srijeesolution.rojgaarwaala.di
 
 import android.content.Context
 import com.srijeesolution.rojgaarwaala.data.repository.HomePageRepositoryImpl
+import com.srijeesolution.rojgaarwaala.data.repository.JobApplicationRepositoryImpl
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
+import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.Module
 import dagger.Provides
@@ -23,5 +25,11 @@ object RepositoryModule {
     fun provideHomePageRepository(
         homePageRepositoryImpl: HomePageRepositoryImpl
     ): HomePageRepository = homePageRepositoryImpl
+
+    @Singleton
+    @Provides
+    fun provideJobApplicationRepository(
+        jobApplicationRepositoryImpl: JobApplicationRepositoryImpl
+    ): JobApplicationRepository = jobApplicationRepositoryImpl
 
 }

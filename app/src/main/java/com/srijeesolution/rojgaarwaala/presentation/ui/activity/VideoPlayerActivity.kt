@@ -72,6 +72,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var hasIncrementedView = false
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
+    private var pendingPlaybackFallbackUrl: String? = null
+    private var currentPlayingUrl: String? = null
     private var currentVideoThumbnail: String? = null
     private var currentContactNumber: String? = null
     private var isFullscreen = false
@@ -249,6 +251,15 @@ class VideoPlayerActivity : AppCompatActivity() {
             
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 Log.e("VideoPlayerActivity", "Player error: ${error.message}")
+                val fallback = pendingPlaybackFallbackUrl?.takeIf {
+                    it.isNotBlank() && it != currentPlayingUrl
+                }
+                if (fallback != null) {
+                    pendingPlaybackFallbackUrl = null
+                    Log.w("VideoPlayerActivity", "Retrying playback with fallback URL")
+                    startVideoWithCacheCheck(fallback)
+                    return
+                }
                 binding.progressBar.visibility = View.GONE
                 Toast.makeText(this@VideoPlayerActivity, "Error playing video. Please try again.", Toast.LENGTH_SHORT).show()
             }
@@ -700,11 +711,16 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             binding.videoThumbnailOverlay.visibility = View.GONE
         }
-        // Play video (decoder-safe mode: disable extra preload players to avoid NO_MEMORY on some devices).
-        if (data.videoUrl != null) {
-            // Reset view count flag for new video
+        val playbackUrl = preferredPlaybackUrl(data)
+        if (playbackUrl != null) {
             hasIncrementedView = false
-            startVideoWithCacheCheck(data.videoUrl)
+            val stream = data.stream_url?.trim().orEmpty()
+            val direct = data.videoUrl?.trim().orEmpty()
+            pendingPlaybackFallbackUrl = when (playbackUrl) {
+                stream -> direct.takeIf { it.isNotEmpty() && it != stream }
+                else -> stream.takeIf { it.isNotEmpty() && it != direct }
+            }
+            startVideoWithCacheCheck(playbackUrl)
         }
         // Like/Dislike/Share/Views
         likeCount = data.likes ?: 0
@@ -777,7 +793,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             Log.d("VideoPlayerActivity", "No related videos available - showing empty list")
         }
         currentVideoTitle = data.title
-        currentVideoUrl = data.stream_url?:data.videoUrl
+        currentVideoUrl = data.videoUrl?.takeIf { it.isNotBlank() } ?: data.stream_url
         currentVideoThumbnail = data.thumbnail
         currentContactNumber = data.phoneNumber?.takeIf { it.isNotBlank() }
     }
@@ -1278,9 +1294,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     /**
      * Start video with cache status check
      */
+    private fun preferredPlaybackUrl(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData): String? {
+        val stream = data.stream_url?.trim().orEmpty()
+        val direct = data.videoUrl?.trim().orEmpty()
+        return stream.takeIf { it.isNotEmpty() } ?: direct.takeIf { it.isNotEmpty() }
+    }
+
     private fun startVideoWithCacheCheck(videoUrl: String) {
         try {
             stopCurrentVideo()
+            currentPlayingUrl = videoUrl
             
             // Check if video is cached
             val isCached = VideoCacheManager.isVideoCached(videoUrl)

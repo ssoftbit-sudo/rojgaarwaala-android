@@ -10,6 +10,8 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityImagesListBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesGridAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.ImageLocationFilter
 import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.ArrayList
@@ -22,6 +24,7 @@ class ImagesListActivity : AppCompatActivity() {
     private var imagesAdapter: ImagesGridAdapter? = null
     private var categoryId: Int? = null
     private var categoryTitle: String? = null
+    private var filterLocation: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +34,7 @@ class ImagesListActivity : AppCompatActivity() {
         // Get category info from intent
         categoryId = intent.getIntExtra("category_id", -1)
         categoryTitle = intent.getStringExtra("category_title")
+        filterLocation = intent.getStringExtra("filter_location").orEmpty().trim()
         
         viewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
         
@@ -108,8 +112,14 @@ class ImagesListActivity : AppCompatActivity() {
             }
         }
         
-        // Store the list for navigation
-        allImagesList = allImages.sortedWith(
+        val locationQuery = if (HomeLocationDefaults.skipsDistrictFilter(filterLocation)) "" else filterLocation
+        val locationFiltered = if (locationQuery.isEmpty()) {
+            allImages
+        } else {
+            allImages.filter { ImageLocationFilter.matches(it, locationQuery) }
+        }
+
+        allImagesList = locationFiltered.sortedWith(
             compareBy<ImageData> { it.sortOrder ?: Int.MAX_VALUE }
                 .thenByDescending { it.publishDate.orEmpty() }
         )

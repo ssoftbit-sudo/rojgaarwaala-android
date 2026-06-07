@@ -318,7 +318,7 @@ class ImageViewerActivity : AppCompatActivity() {
         }
         startActivity(
             Intent(this, ApplyFormActivity::class.java).apply {
-                putExtra("video_id", id)
+                putExtra("scheduled_image_id", id)
                 putExtra("video_title", scheduledImage?.title ?: "Job Opportunity")
             }
         )

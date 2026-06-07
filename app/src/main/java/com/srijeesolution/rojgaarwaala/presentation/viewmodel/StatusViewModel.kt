@@ -4,42 +4,44 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
+import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
-class StatusViewModel @Inject constructor() : ViewModel() {
+class StatusViewModel @Inject constructor(
+  private val repository: JobApplicationRepository,
+) : ViewModel() {
 
-    private val _applicationStatus = MutableLiveData<String>()
-    val applicationStatus: LiveData<String> = _applicationStatus
+  private val _applicationStatus = MutableLiveData<String>()
+  val applicationStatus: LiveData<String> = _applicationStatus
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+  private val _isLoading = MutableLiveData<Boolean>()
+  val isLoading: LiveData<Boolean> = _isLoading
 
-    private val firestore = FirebaseFirestore.getInstance()
-
-    fun getApplicationStatus(applicationId: String) {
-        _isLoading.value = true
-
-        viewModelScope.launch {
-            try {
-                val doc = firestore.collection("applications")
-                    .document(applicationId)
-                    .get()
-                    .await()
-
-                val status = doc.getString("status") ?: "unknown"
-                _applicationStatus.value = status
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _applicationStatus.value = "error"
-            } finally {
-                _isLoading.value = false
-            }
-        }
+  fun getApplicationStatus(applicationId: String) {
+    val id = applicationId.toIntOrNull()
+    if (id == null || id <= 0) {
+      _applicationStatus.value = "error"
+      return
     }
+
+    _isLoading.value = true
+    viewModelScope.launch {
+      repository.getApplication(id).collectLatest { result ->
+        when (result) {
+          is ApiResult.Success -> {
+            _applicationStatus.value = result.data?.data?.application?.status ?: "unknown"
+          }
+          is ApiResult.Error -> {
+            _applicationStatus.value = "error"
+          }
+        }
+        _isLoading.value = false
+      }
+    }
+  }
 }

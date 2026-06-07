@@ -1,114 +1,126 @@
 package com.srijeesolution.rojgaarwaala.presentation.viewmodel
 
+import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
+import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 @HiltViewModel
-class ApplyViewModel @Inject constructor() : ViewModel() {
-    companion object {
-        // Temporary demo switch: when true, skips Firestore write and directly continues payment flow.
-        private const val BYPASS_APPLICATION_SAVE = true
+class ApplyViewModel @Inject constructor(
+  @ApplicationContext private val appContext: Context,
+  private val repository: JobApplicationRepository,
+) : ViewModel() {
+
+  private val _submitResult = MutableLiveData<Boolean>()
+  val submitResult: LiveData<Boolean> = _submitResult
+
+  private val _isLoading = MutableLiveData<Boolean>()
+  val isLoading: LiveData<Boolean> = _isLoading
+
+  private val _applicationId = MutableLiveData<String>()
+  val applicationId: LiveData<String> = _applicationId
+
+  private val _razorpayKeyId = MutableLiveData<String>()
+  val razorpayKeyId: LiveData<String> = _razorpayKeyId
+
+  private val _amountPaise = MutableLiveData<Int>()
+  val amountPaise: LiveData<Int> = _amountPaise
+
+  private val _errorMessage = MutableLiveData<String>()
+  val errorMessage: LiveData<String> = _errorMessage
+
+  fun submitApplication(
+    videoId: Int?,
+    scheduledImageId: Int?,
+    jobTitle: String?,
+    name: String,
+    phone: String,
+    email: String,
+    resumeUri: Uri?,
+  ) {
+    if (resumeUri == null) {
+      _errorMessage.value = "Please select your resume."
+      _submitResult.value = false
+      return
     }
 
-    private val _submitResult = MutableLiveData<Boolean>()
-    val submitResult: LiveData<Boolean> = _submitResult
+    _isLoading.value = true
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    viewModelScope.launch {
+      try {
+        val resumePart = uriToResumePart(resumeUri)
+        val fullName = name.toRequestBody("text/plain".toMediaTypeOrNull())
+        val phoneBody = phone.toRequestBody("text/plain".toMediaTypeOrNull())
+        val emailBody = email.toRequestBody("text/plain".toMediaTypeOrNull())
+        val videoBody = videoId?.takeIf { it > 0 }?.toString()
+          ?.toRequestBody("text/plain".toMediaTypeOrNull())
+        val imageBody = scheduledImageId?.takeIf { it > 0 }?.toString()
+          ?.toRequestBody("text/plain".toMediaTypeOrNull())
+        val titleBody = jobTitle?.takeIf { it.isNotBlank() }
+          ?.toRequestBody("text/plain".toMediaTypeOrNull())
 
-    private val _applicationId = MutableLiveData<String>()
-    val applicationId: LiveData<String> = _applicationId
-
-    private val firestore = FirebaseFirestore.getInstance()
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> = _errorMessage
-
-    fun submitApplication(videoId: Int, name: String, phone: String, email: String, resumeUri: Uri?) {
-        _isLoading.value = true
-
-        viewModelScope.launch {
-            try {
-                val bypassedResume = bypassedResumeUpload(resumeUri)
-
-                if (BYPASS_APPLICATION_SAVE) {
-                    _applicationId.value = "local_${System.currentTimeMillis()}"
-                    _submitResult.value = true
-                    return@launch
-                }
-
-                // Create application document
-                val application = hashMapOf(
-                    "videoId" to videoId,
-                    "name" to name,
-                    "phone" to phone,
-                    "email" to email,
-                    "resumeUrl" to bypassedResume.resumeUrl,
-                    "resumeUploadBypassed" to bypassedResume.resumeUploadBypassed,
-                    "resumeProvided" to bypassedResume.resumeProvided,
-                    "status" to "pending",
-                    "createdAt" to System.currentTimeMillis()
-                )
-
-                val docRef = try {
-                    firestore.collection("applications").add(application).await()
-                } catch (firestoreException: Exception) {
-                    Log.e(
-                        "ApplyViewModel",
-                        "Firestore write failed for application payload=$application",
-                        firestoreException
-                    )
-                    null
-                }
-                _applicationId.value = docRef?.id ?: "local_${System.currentTimeMillis()}"
-                _submitResult.value = true
-
-            } catch (e: Exception) {
-                Log.e("ApplyViewModel", "submitApplication failed", e)
-                _errorMessage.value = mapErrorMessage(e)
+        repository.submitApplication(
+          fullName = fullName,
+          phone = phoneBody,
+          email = emailBody,
+          videoId = videoBody,
+          scheduledImageId = imageBody,
+          jobTitle = titleBody,
+          resume = resumePart,
+        ).collectLatest { result ->
+          when (result) {
+            is ApiResult.Success -> {
+              val data = result.data?.data
+              val appId = data?.application?.id ?: data?.applicationId
+              if (appId == null || result.data?.status != true) {
+                _errorMessage.value = result.data?.message ?: "Could not save application."
                 _submitResult.value = false
-            } finally {
-                _isLoading.value = false
+              } else {
+                _applicationId.value = appId.toString()
+                _razorpayKeyId.value = data.razorpayKeyId.orEmpty()
+                _amountPaise.value = data.amountPaise ?: data.application?.amountPaise ?: 10000
+                _submitResult.value = true
+              }
             }
+            is ApiResult.Error -> {
+              _errorMessage.value = "Application submit failed. Please try again."
+              _submitResult.value = false
+            }
+          }
+          _isLoading.value = false
         }
+      } catch (e: Exception) {
+        Log.e("ApplyViewModel", "submitApplication failed", e)
+        _errorMessage.value = "Application submit failed. Please try again."
+        _submitResult.value = false
+        _isLoading.value = false
+      }
     }
+  }
 
-    private fun bypassedResumeUpload(resumeUri: Uri?): BypassedResumeUploadResult {
-        // Temporary bypass hook: keep resume metadata, skip actual storage upload.
-        return BypassedResumeUploadResult(
-            resumeUrl = "",
-            resumeUploadBypassed = true,
-            resumeProvided = resumeUri != null
-        )
-    }
-
-    private data class BypassedResumeUploadResult(
-        val resumeUrl: String,
-        val resumeUploadBypassed: Boolean,
-        val resumeProvided: Boolean
-    )
-
-    private fun mapErrorMessage(e: Exception): String {
-        val firestoreCode = (e as? FirebaseFirestoreException)?.code
-        return when (firestoreCode) {
-            FirebaseFirestoreException.Code.PERMISSION_DENIED ->
-                "Application save blocked by Firestore rules. 'applications' collection write allow kijiye."
-            FirebaseFirestoreException.Code.UNAUTHENTICATED ->
-                "Application save failed: Firebase authentication missing."
-            FirebaseFirestoreException.Code.UNAVAILABLE ->
-                "Firestore unavailable. Internet check karke dubara try karein."
-            FirebaseFirestoreException.Code.DEADLINE_EXCEEDED ->
-                "Firestore timeout. Please try again."
-            else -> "Application submit failed. Firestore configuration check karein aur dubara try karein."
-        }
-    }
+  private fun uriToResumePart(uri: Uri): MultipartBody.Part {
+    val resolver = appContext.contentResolver
+    val mime = resolver.getType(uri) ?: "application/octet-stream"
+    val bytes = resolver.openInputStream(uri)!!.use { it.readBytes() }
+    val fileName = resolver.query(uri, null, null, null, null)?.use { cursor ->
+      val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+      if (cursor.moveToFirst() && index >= 0) cursor.getString(index) else null
+    } ?: "resume"
+    val body = bytes.toRequestBody(mime.toMediaTypeOrNull())
+    return MultipartBody.Part.createFormData("resume", fileName, body)
+  }
 }

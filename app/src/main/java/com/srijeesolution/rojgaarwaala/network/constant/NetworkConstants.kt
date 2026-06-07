@@ -28,5 +28,10 @@ class NetworkConstants {
             const val SCHEDULED_IMAGES_GROUPED = "scheduled-images/grouped"
     const val SCHEDULED_IMAGES = "scheduled-images"
     const val SECTION_STORIES_GROUPED = "section-stories/grouped-by-time"
+        const val JOB_APPLICATIONS = "job-applications"
+        const val JOB_APPLICATION_DETAIL = "job-applications/{id}"
+        const val JOB_APPLICATION_ORDER = "job-applications/{id}/razorpay-order"
+        const val JOB_APPLICATION_CONFIRM = "job-applications/{id}/confirm-payment"
+        const val JOB_APPLICATION_FAILED = "job-applications/{id}/payment-failed"
     }
 }
