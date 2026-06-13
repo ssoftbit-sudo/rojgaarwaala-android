@@ -321,8 +321,14 @@ data class Story(
     val title: String? = null,
     @SerializedName("description")
     val description: String? = null,
+    @SerializedName("media_type")
+    val mediaType: String? = null,
     @SerializedName("image_url")
     val imageUrl: String? = null,
+    @SerializedName("video_url")
+    val videoUrl: String? = null,
+    @SerializedName("link_url")
+    val linkUrl: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
     @SerializedName("position")

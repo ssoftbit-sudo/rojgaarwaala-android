@@ -47,6 +47,7 @@ class PaymentViewModel @Inject constructor(
               _orderReady.value = null
             }
           }
+          is ApiResult.Loading -> Unit
           is ApiResult.Error -> {
             _errorMessage.value = "Could not create payment order."
             _orderReady.value = null

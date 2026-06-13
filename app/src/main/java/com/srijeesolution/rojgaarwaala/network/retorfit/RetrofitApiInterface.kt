@@ -8,6 +8,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
@@ -17,6 +18,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Path
+import retrofit2.http.Header
 import retrofit2.http.DELETE
 import retrofit2.http.Multipart
 import retrofit2.http.Part
@@ -119,6 +121,15 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.SECTION_STORIES_GROUPED)
     suspend fun getSectionStoriesGrouped(): Response<StoriesResponse>
+
+    @GET(NetworkConstants.STORIES_ACTIVE)
+    suspend fun getActiveStories(@Header("X-Device-Key") deviceKey: String): Response<ActiveStoriesResponse>
+
+    @POST(NetworkConstants.STORIES_VIEW)
+    suspend fun markStoryViewed(
+        @Path("id") id: Int,
+        @Header("X-Device-Key") deviceKey: String
+    ): Response<StoriesResponse>
 
     @Multipart
     @POST(NetworkConstants.JOB_APPLICATIONS)

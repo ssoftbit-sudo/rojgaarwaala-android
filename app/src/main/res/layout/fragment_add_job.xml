@@ -610,29 +610,6 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="16dp" />
 
-                    <!-- View All Jobs Button -->
-                    <TextView
-                        android:id="@+id/viewAllJobsBtn"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_theme_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:minHeight="52dp"
-                        android:paddingStart="16dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="16dp"
-                        android:paddingBottom="10dp"
-                        android:text="View All Jobs"
-                        android:textAllCaps="false"
-                        android:textColor="@color/accent"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="24dp" />
-
                 </LinearLayout>
 
             </ScrollView>

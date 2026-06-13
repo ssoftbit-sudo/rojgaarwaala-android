@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.HomePageRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +62,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val imageListLiveData : LiveData<ApiResult<ImageListResponse>> = _imageListLiveData
     private var _storiesLiveData : MutableLiveData<ApiResult<StoriesResponse>> = MutableLiveData()
     val storiesLiveData : LiveData<ApiResult<StoriesResponse>> = _storiesLiveData
+    private var _activeStoriesLiveData : MutableLiveData<ApiResult<ActiveStoriesResponse>> = MutableLiveData()
+    val activeStoriesLiveData : LiveData<ApiResult<ActiveStoriesResponse>> = _activeStoriesLiveData
     
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
@@ -256,6 +259,20 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
             homePageRepository.getSectionStoriesGrouped().collectLatest{
                 _storiesLiveData.postValue(it)
             }
+        }
+    }
+
+    fun getActiveStories(deviceKey: String) {
+        viewModelScope.launch {
+            homePageRepository.getActiveStories(deviceKey).collectLatest {
+                _activeStoriesLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun markStoryViewed(storyId: Int, deviceKey: String) {
+        viewModelScope.launch {
+            homePageRepository.markStoryViewed(storyId, deviceKey).collectLatest { }
         }
     }
 

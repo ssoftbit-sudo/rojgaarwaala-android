@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@color/app_background">
 
-
     <!-- Search Bar -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -77,6 +76,19 @@
         android:background="@color/gray_light_3"
         android:alpha="0.4" />
 
+    <!-- 24h Story Circles -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/storyCirclesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone" />
+
     <!-- Content Area -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/storiesRecyclerView"
@@ -127,4 +139,4 @@
 
     </LinearLayout>
 
-</LinearLayout> 
+</LinearLayout>

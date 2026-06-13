@@ -91,11 +91,12 @@ class ApplyViewModel @Inject constructor(
                 _submitResult.value = false
               } else {
                 _applicationId.value = appId.toString()
-                _razorpayKeyId.value = data.razorpayKeyId.orEmpty()
-                _amountPaise.value = data.amountPaise ?: data.application?.amountPaise ?: 10000
+                _razorpayKeyId.value = data?.razorpayKeyId.orEmpty()
+                _amountPaise.value = data?.amountPaise ?: data?.application?.amountPaise ?: 10000
                 _submitResult.value = true
               }
             }
+            is ApiResult.Loading -> Unit
             is ApiResult.Error -> {
               _errorMessage.value = "Application submit failed. Please try again."
               _submitResult.value = false

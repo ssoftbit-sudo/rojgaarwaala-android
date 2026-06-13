@@ -228,4 +228,16 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).getSectionStoriesGrouped()
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun getActiveStories(deviceKey: String) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getActiveStories(deviceKey)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun markStoryViewed(storyId: Int, deviceKey: String) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).markStoryViewed(storyId, deviceKey)
+        })
+    }.flowOn(Dispatchers.IO)
 }

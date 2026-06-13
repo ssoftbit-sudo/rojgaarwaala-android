@@ -10,4 +10,6 @@ object SharedPrefsConstant {
     const val NOTIFICATION_BADGE_PENDING = "notification_badge_pending"
     /** Persisted district / location label for home filters. */
     const val HOME_SELECTED_LOCATION = "home_selected_location"
+    /** Anonymous device id for story seen state. */
+    const val DEVICE_KEY = "device_key"
 }

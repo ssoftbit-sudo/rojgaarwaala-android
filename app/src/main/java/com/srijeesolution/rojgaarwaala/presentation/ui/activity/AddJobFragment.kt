@@ -151,13 +151,6 @@ class AddJobFragment : Fragment() {
             binding.submitBtn.text = if (updateJobId != null) "Updating..." else "Submitting..."
             validateLogin()
         }
-        binding.viewAllJobsBtn.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.rootLayout, ViewAllJobsFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-        
         // Set up file upload button click listeners
         setupFileUploadListeners()
     }

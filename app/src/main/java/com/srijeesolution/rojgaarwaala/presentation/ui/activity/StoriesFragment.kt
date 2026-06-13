@@ -11,15 +11,20 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.srijeesolution.rojgaarwaala.R
+import com.srijeesolution.rojgaarwaala.data.remote.model.CircleStory
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
-import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.Story
 import com.srijeesolution.rojgaarwaala.data.remote.model.TimeGroup
+import com.srijeesolution.rojgaarwaala.data.remote.model.toCircleStory
 import com.srijeesolution.rojgaarwaala.databinding.FragmentStoriesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesCategoryAdapter
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesCircleAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class StoriesFragment : Fragment() {
@@ -28,8 +33,12 @@ class StoriesFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: HomePageViewModel
     private var storiesAdapter: StoriesCategoryAdapter? = null
-    
-    // Search related variables
+    private var circleAdapter: StoriesCircleAdapter? = null
+    private var activeCircleStories: List<CircleStory> = emptyList()
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
+
     private var allTimeGroups: List<TimeGroup> = emptyList()
     private var isSearchMode = false
 
@@ -44,9 +53,9 @@ class StoriesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         viewModel = ViewModelProvider(requireActivity())[HomePageViewModel::class.java]
-        
+
         setupViews()
         setupSearch()
         setupObservers()
@@ -54,45 +63,43 @@ class StoriesFragment : Fragment() {
     }
 
     private fun setupViews() {
-        // Setup RecyclerView with LinearLayoutManager for time groups
         binding.storiesRecyclerView.layoutManager = LinearLayoutManager(context)
-        
-        // Optimize for smooth scrolling
         binding.storiesRecyclerView.setHasFixedSize(true)
         binding.storiesRecyclerView.setItemViewCacheSize(20)
-        
-        // Initialize adapter
+
         storiesAdapter = StoriesCategoryAdapter(
             emptyList(),
             onStoryClick = { story -> onStoryClick(story) },
             onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
         )
         binding.storiesRecyclerView.adapter = storiesAdapter
+
+        binding.storyCirclesRecyclerView.layoutManager =
+            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        circleAdapter = StoriesCircleAdapter(emptyList()) { story, index ->
+            openCircleStoryViewer(index)
+        }
+        binding.storyCirclesRecyclerView.adapter = circleAdapter
     }
 
     private fun setupSearch() {
         binding.searchBar.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString()?.trim() ?: ""
                 if (query.isEmpty()) {
-                    // Show all content when search is empty
                     isSearchMode = false
                     binding.clearSearchButton.visibility = View.GONE
                     showAllContent()
                 } else {
-                    // Filter content based on search query
                     isSearchMode = true
                     binding.clearSearchButton.visibility = View.VISIBLE
                     filterContent(query)
                 }
             }
         })
-        
-        // Clear search button click listener
+
         binding.clearSearchButton.setOnClickListener {
             binding.searchBar.setText("")
             binding.searchBar.clearFocus()
@@ -102,45 +109,81 @@ class StoriesFragment : Fragment() {
     private fun setupObservers() {
         viewModel.storiesLiveData.observe(viewLifecycleOwner, Observer { result ->
             when (result) {
-                is ApiResult.Loading -> {
-                    // Show loading state if needed
-                }
+                is ApiResult.Loading -> Unit
                 is ApiResult.Success -> {
                     val data = result.data
                     if (data?.status == true && !data.data?.timeGroups.isNullOrEmpty()) {
                         displayStories(data.data?.timeGroups ?: emptyList())
-                    } else {
+                    } else if (activeCircleStories.isEmpty()) {
                         showEmptyState()
                     }
                 }
                 is ApiResult.Error -> {
-                    showError("Failed to load stories")
+                    if (activeCircleStories.isEmpty()) {
+                        showError("Failed to load stories")
+                    }
                 }
+            }
+        })
+
+        viewModel.activeStoriesLiveData.observe(viewLifecycleOwner, Observer { result ->
+            when (result) {
+                is ApiResult.Success -> {
+                    val stories = result.data?.data?.stories ?: emptyList()
+                    displayCircleStories(stories)
+                }
+                is ApiResult.Error -> {
+                    if (activeCircleStories.isEmpty()) {
+                        binding.storyCirclesRecyclerView.visibility = View.GONE
+                    }
+                }
+                is ApiResult.Loading -> Unit
             }
         })
     }
 
     private fun loadStories() {
+        val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+        viewModel.getActiveStories(deviceKey)
         viewModel.getSectionStoriesGrouped()
+    }
+
+    private fun displayCircleStories(stories: List<CircleStory>) {
+        activeCircleStories = stories
+        if (stories.isEmpty()) {
+            binding.storyCirclesRecyclerView.visibility = View.GONE
+            return
+        }
+
+        binding.storyCirclesRecyclerView.visibility = View.VISIBLE
+        circleAdapter?.updateStories(stories)
+    }
+
+    private fun openCircleStoryViewer(startIndex: Int) {
+        val intent = Intent(context, StoryViewerActivity::class.java)
+        intent.putParcelableArrayListExtra(
+            StoryViewerActivity.EXTRA_STORIES,
+            ArrayList(activeCircleStories)
+        )
+        intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, startIndex)
+        startActivity(intent)
     }
 
     private fun filterContent(query: String) {
         val lowerQuery = query.lowercase()
-        
-        // Filter time groups and their stories
+
         val filteredTimeGroups = allTimeGroups.mapNotNull { timeGroup ->
             val filteredStories = timeGroup.stories?.filter { story ->
                 story.title?.lowercase()?.contains(lowerQuery) == true ||
-                story.description?.lowercase()?.contains(lowerQuery) == true ||
-                timeGroup.title?.lowercase()?.contains(lowerQuery) == true
+                    story.description?.lowercase()?.contains(lowerQuery) == true ||
+                    timeGroup.title?.lowercase()?.contains(lowerQuery) == true
             } ?: emptyList()
-            
+
             if (filteredStories.isNotEmpty()) {
                 timeGroup.copy(stories = filteredStories)
             } else null
         }
-        
-        // Update UI with filtered results
+
         updateUIWithFilteredContent(filteredTimeGroups)
     }
 
@@ -149,11 +192,9 @@ class StoriesFragment : Fragment() {
     }
 
     private fun updateUIWithFilteredContent(timeGroups: List<TimeGroup>) {
-        // Check if we have any results
         val hasResults = timeGroups.isNotEmpty()
-        
+
         if (isSearchMode && !hasResults) {
-            // Show no results message
             binding.noResultsLayout.visibility = View.VISIBLE
             binding.searchResultsCount.visibility = View.GONE
             binding.storiesRecyclerView.visibility = View.GONE
@@ -161,17 +202,16 @@ class StoriesFragment : Fragment() {
         } else {
             binding.noResultsLayout.visibility = View.GONE
         }
-        
-        // Show search results count
+
         if (isSearchMode) {
             val totalResults = timeGroups.sumOf { it.stories?.size ?: 0 }
-            binding.searchResultsCount.text = "$totalResults result${if (totalResults != 1) "s" else ""} found"
+            binding.searchResultsCount.text =
+                "$totalResults result${if (totalResults != 1) "s" else ""} found"
             binding.searchResultsCount.visibility = View.VISIBLE
         } else {
             binding.searchResultsCount.visibility = View.GONE
         }
-        
-        // Update RecyclerView with filtered time groups
+
         if (timeGroups.isNotEmpty()) {
             binding.storiesRecyclerView.visibility = View.VISIBLE
             storiesAdapter = StoriesCategoryAdapter(
@@ -180,18 +220,15 @@ class StoriesFragment : Fragment() {
                 onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
             )
             binding.storiesRecyclerView.adapter = storiesAdapter
-        } else {
+        } else if (activeCircleStories.isEmpty()) {
             binding.storiesRecyclerView.visibility = View.GONE
         }
     }
 
     private fun displayStories(timeGroups: List<TimeGroup>) {
-        // Filter time groups that have stories
         val timeGroupsWithStories = timeGroups.filter { it.stories?.isNotEmpty() == true }
-        
-        // Store all time groups for search functionality
         allTimeGroups = timeGroupsWithStories
-        
+
         if (timeGroupsWithStories.isNotEmpty()) {
             storiesAdapter = StoriesCategoryAdapter(
                 timeGroupsWithStories,
@@ -199,36 +236,50 @@ class StoriesFragment : Fragment() {
                 onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
             )
             binding.storiesRecyclerView.adapter = storiesAdapter
-        } else {
+            binding.storiesRecyclerView.visibility = View.VISIBLE
+        } else if (activeCircleStories.isEmpty()) {
             showEmptyState()
         }
     }
 
-    private fun onStoryClick(story: com.srijeesolution.rojgaarwaala.data.remote.model.Story) {
-        // Launch ImageViewerActivity to show the story image
-        if (!story.imageUrl.isNullOrEmpty()) {
-            val intent = Intent(context, ImageViewerActivity::class.java)
-            // Convert Story to ScheduledImage for compatibility with ImageViewerActivity
-            val scheduledImage = ScheduledImage(
-                id = story.id,
-                title = story.title,
-                description = story.description,
-                imagePath = story.imageUrl,
-                publishDate = story.publishDate,
-                status = null,
-                createdAt = story.createdAt,
-                updatedAt = null
-            )
-            intent.putExtra("scheduled_image", scheduledImage)
-            startActivity(intent)
-        } else {
-            // Show toast if no image available
-            android.widget.Toast.makeText(context, "No image available for this story", android.widget.Toast.LENGTH_SHORT).show()
+    private fun onStoryClick(story: Story) {
+        when (story.mediaType) {
+            "video", "link" -> {
+                val intent = Intent(context, StoryViewerActivity::class.java)
+                intent.putParcelableArrayListExtra(
+                    StoryViewerActivity.EXTRA_STORIES,
+                    arrayListOf(story.toCircleStory())
+                )
+                intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, 0)
+                startActivity(intent)
+            }
+            else -> {
+                if (!story.imageUrl.isNullOrEmpty()) {
+                    val intent = Intent(context, ImageViewerActivity::class.java)
+                    val scheduledImage = ScheduledImage(
+                        id = story.id,
+                        title = story.title,
+                        description = story.description,
+                        imagePath = story.imageUrl,
+                        publishDate = story.publishDate,
+                        status = null,
+                        createdAt = story.createdAt,
+                        updatedAt = null
+                    )
+                    intent.putExtra("scheduled_image", scheduledImage)
+                    startActivity(intent)
+                } else {
+                    android.widget.Toast.makeText(
+                        context,
+                        "No image available for this story",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
     private fun onViewAllClick(timeGroup: TimeGroup) {
-        // Launch StoriesListActivity to show all stories from this time group
         val intent = Intent(context, StoriesListActivity::class.java)
         intent.putExtra("time_group_id", timeGroup.id)
         intent.putExtra("time_group_title", timeGroup.title)
@@ -236,18 +287,20 @@ class StoriesFragment : Fragment() {
     }
 
     private fun showEmptyState() {
-        // Handle empty state
         binding.storiesRecyclerView.visibility = View.GONE
-        // You can add a TextView to show "No stories found" message
     }
 
     private fun showError(message: String) {
-        // Handle error state
         android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadStories()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-} 
+}

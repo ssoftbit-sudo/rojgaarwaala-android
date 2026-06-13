@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="video_player_min_height">200dp</dimen>
+    <!-- Caps detail panel height so the image region can use remaining space (full-bleed below toolbar). -->
+    <dimen name="image_viewer_detail_max_height">380dp</dimen>
+</resources>

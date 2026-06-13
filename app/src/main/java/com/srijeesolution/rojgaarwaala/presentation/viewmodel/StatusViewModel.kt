@@ -36,6 +36,7 @@ class StatusViewModel @Inject constructor(
           is ApiResult.Success -> {
             _applicationStatus.value = result.data?.data?.application?.status ?: "unknown"
           }
+          is ApiResult.Loading -> Unit
           is ApiResult.Error -> {
             _applicationStatus.value = "error"
           }
