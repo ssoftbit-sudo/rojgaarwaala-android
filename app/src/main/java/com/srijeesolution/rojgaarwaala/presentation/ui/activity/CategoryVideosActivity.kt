@@ -68,7 +68,7 @@ class CategoryVideosActivity : ComponentActivity() {
         isTopVideosScreen = finalCategoryId == -1 && categoryTitle == "Top Videos"
 
         if (isTopVideosScreen) {
-            viewModel.getTopVideos()
+            viewModel.getHomePageData("")
         } else if (finalCategoryId != -1) {
             viewModel.getCategoryVideos(finalCategoryId)
         } else {
@@ -96,7 +96,8 @@ class CategoryVideosActivity : ComponentActivity() {
         }
         
         if (finalCategoryId == -1 && categoryTitle == "Top Videos") {
-            viewModel.topVideosLiveData.observe(this) { result ->
+            // Observe home page data for top videos
+            viewModel.homepageLiveData.observe(this) { result ->
                 when (result) {
                     is ApiResult.Loading -> {
                         binding.progressBar.visibility = View.VISIBLE

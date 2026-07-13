@@ -37,7 +37,6 @@ interface HomePageRepository {
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
     fun getCategoryVideos(id: Int): Flow<ApiResult<CategoryVideosResponse>>
-    fun getTopVideos(): Flow<ApiResult<HomePagBaseApiModel>>
     fun likeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun unlikeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun removeVideoReaction(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>

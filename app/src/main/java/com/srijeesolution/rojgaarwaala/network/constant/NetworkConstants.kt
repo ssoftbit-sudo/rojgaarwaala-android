@@ -19,7 +19,6 @@ class NetworkConstants {
         const val VIDEO_DETAILS = "video/{id}"
         const val JOB_LIST = "job/list"
         const val CATEGORY_VIDEOS = "category/{id}/videos"
-        const val TOP_VIDEOS = "top-videos"
         const val VIDEO_LIKE = "video/like"
         const val VIDEO_UNLIKE = "video/unlike"
         const val VIDEO_REMOVE_REACTION = "video/remove-reaction"
