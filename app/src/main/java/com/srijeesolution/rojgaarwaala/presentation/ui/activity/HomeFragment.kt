@@ -39,6 +39,10 @@ import android.util.Log
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
+    companion object {
+        private const val HOME_VIDEO_PREVIEW_LIMIT = 10
+    }
+
     private lateinit var homePageViewModel: HomePageViewModel
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -236,7 +240,7 @@ class HomeFragment : Fragment() {
             binding.topVideosViewAll.visibility = View.VISIBLE
             binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             binding.topVideosRecyclerView.adapter = topVideosAdapter
-            topVideosAdapter.submitList(orderVideos(topVideos))
+            topVideosAdapter.submitList(orderVideos(topVideos.take(HOME_VIDEO_PREVIEW_LIMIT)))
         } else {
             binding.topVideosLabel.visibility = View.GONE
             binding.topVideosRecyclerView.visibility = View.GONE
@@ -273,7 +277,7 @@ class HomeFragment : Fragment() {
                     sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
                     val adapter = VideoAdapter()
                     sectionRecycler.adapter = adapter
-                    adapter.submitList(orderVideos(cat.videos ?: emptyList()))
+                    adapter.submitList(orderVideos((cat.videos ?: emptyList()).take(HOME_VIDEO_PREVIEW_LIMIT)))
                     binding.categorySectionsContainer.addView(sectionView)
                 }
             }
@@ -436,9 +440,9 @@ class HomeFragment : Fragment() {
                 }
             }
             
-            // Add category videos (limit to first 10 videos per category to avoid overwhelming)
+            // Add category videos (limit preview count to avoid overwhelming)
             allCategoryVideos.forEach { categoryVideo ->
-                categoryVideo.videos?.take(10)?.forEach { video ->
+                categoryVideo.videos?.take(HOME_VIDEO_PREVIEW_LIMIT)?.forEach { video ->
                     video.videoUrl?.let { url ->
                         if (url.isNotEmpty()) {
                             videoUrls.add(url)

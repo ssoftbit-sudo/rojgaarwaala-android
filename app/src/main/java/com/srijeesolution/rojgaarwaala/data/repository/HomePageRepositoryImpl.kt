@@ -141,6 +141,12 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         })
     }.flowOn(Dispatchers.IO)
 
+    override fun getTopVideos() = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getTopVideos()
+        })
+    }.flowOn(Dispatchers.IO)
+
     override fun likeVideo(videoId: Int) = flow {
         val request = HashMap<String, Any>()
         request["video_id"] = videoId

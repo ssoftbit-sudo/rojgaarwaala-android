@@ -44,6 +44,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val jobListLiveData : LiveData<ApiResult<JobListResponse>> = _jobListLiveData
     private var _categoryVideosLiveData : MutableLiveData<ApiResult<CategoryVideosResponse>> = MutableLiveData()
     val categoryVideosLiveData : LiveData<ApiResult<CategoryVideosResponse>> = _categoryVideosLiveData
+    private var _topVideosLiveData : MutableLiveData<ApiResult<HomePagBaseApiModel>> = MutableLiveData()
+    val topVideosLiveData : LiveData<ApiResult<HomePagBaseApiModel>> = _topVideosLiveData
     private var _likeVideoLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
     val likeVideoLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = _likeVideoLiveData
     private var _unlikeVideoLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
@@ -186,6 +188,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getCategoryVideos(id).collectLatest{
                 _categoryVideosLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getTopVideos() {
+        viewModelScope.launch {
+            homePageRepository.getTopVideos().collectLatest {
+                _topVideosLiveData.postValue(it)
             }
         }
     }

@@ -83,6 +83,9 @@ interface RetrofitApiInterface {
     @GET(NetworkConstants.CATEGORY_VIDEOS)
     suspend fun getCategoryVideos(@Path("id") id: Int): Response<CategoryVideosResponse>
 
+    @GET(NetworkConstants.TOP_VIDEOS)
+    suspend fun getTopVideos(): Response<HomePagBaseApiModel>
+
     @POST(NetworkConstants.VIDEO_LIKE)
     suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
 
