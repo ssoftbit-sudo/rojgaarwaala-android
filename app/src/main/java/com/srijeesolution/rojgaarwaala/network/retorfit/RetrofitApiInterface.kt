@@ -12,6 +12,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskConfigResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskTutorialsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EnquirySubmitResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
@@ -160,10 +162,29 @@ interface RetrofitApiInterface {
     @GET(NetworkConstants.JOB_APPLICATION_DETAIL)
     suspend fun getJobApplication(@Path("id") id: Int): Response<JobApplicationApiResponse>
 
-    @GET(NetworkConstants.HELP_DESK_FAQS)
-    suspend fun getHelpDeskFaqs(): Response<HelpDeskFaqsResponse>
+    @GET(NetworkConstants.HELP_DESK_CONFIG)
+    suspend fun getHelpDeskConfig(): Response<HelpDeskConfigResponse>
 
+    @GET(NetworkConstants.HELP_DESK_FAQS)
+    suspend fun getHelpDeskFaqs(
+        @Query("issue_type") issueType: String?,
+        @Query("search") search: String?,
+    ): Response<HelpDeskFaqsResponse>
+
+    @GET(NetworkConstants.HELP_DESK_TUTORIALS)
+    suspend fun getHelpDeskTutorials(@Query("issue_type") issueType: String): Response<HelpDeskTutorialsResponse>
+
+    @Multipart
     @POST(NetworkConstants.ENQUIRY_SUBMIT)
-    suspend fun submitEnquiry(@Body payload: HashMap<String, String>): Response<EnquirySubmitResponse>
+    suspend fun submitEnquiryWithPhoto(
+        @Part("name") name: RequestBody,
+        @Part("subject") subject: RequestBody,
+        @Part("message") message: RequestBody,
+        @Part("issue_type") issueType: RequestBody,
+        @Part("problem") problem: RequestBody? = null,
+        @Part("email") email: RequestBody? = null,
+        @Part("mobile") mobile: RequestBody? = null,
+        @Part photo: MultipartBody.Part? = null,
+    ): Response<EnquirySubmitResponse>
 
 }

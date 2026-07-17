@@ -54,5 +54,24 @@
     <string name="enquiry_submitted">Your query has been submitted. We will contact you soon.</string>
     <string name="required_field">Required</string>
     <string name="invalid_mobile">Enter a valid 10-digit mobile number</string>
+    <string name="quick_support">Quick Support</string>
+    <string name="whatsapp_now">WhatsApp Now</string>
+    <string name="select_issue_category">Select issue category</string>
+    <string name="search_faq_hint">Search question or keyword</string>
+    <string name="suggested_answers">Suggested answers</string>
+    <string name="watch_tutorials">Tutorial videos</string>
+    <string name="watch_tutorial">Watch video</string>
+    <string name="listen_audio">Listen audio</string>
+    <string name="no_tutorials">No tutorials available yet.</string>
+    <string name="upload_screenshot">Upload screenshot</string>
+    <string name="photo_selected">Photo selected</string>
+
+    <string-array name="help_desk_problems">
+        <item>Fake job / scam</item>
+        <item>Payment issue</item>
+        <item>App bug / crash</item>
+        <item>Account / login issue</item>
+        <item>Other complaint</item>
+    </string-array>
 
 </resources>
