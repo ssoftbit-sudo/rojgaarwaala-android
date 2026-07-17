@@ -72,6 +72,10 @@
             android:name=".presentation.ui.activity.ProfileActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.HelpDeskActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
 
         <activity
             android:name=".presentation.ui.activity.VideoPlayerActivity"

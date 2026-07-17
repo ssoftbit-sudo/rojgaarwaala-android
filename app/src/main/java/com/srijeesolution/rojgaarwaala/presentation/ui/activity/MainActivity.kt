@@ -216,20 +216,25 @@ class MainActivity : AppCompatActivity() {
     private fun showOverflowMenu() {
         val popup = PopupMenu(this, toolbarOverflow)
         popup.menu.add(0, MENU_PROFILE, 0, getString(R.string.profile))
+        popup.menu.add(0, MENU_HELP_DESK, 1, getString(R.string.help_desk))
 
-        popup.menu.add(0, MENU_LOCATION, 1, getString(R.string.change_location))
+        popup.menu.add(0, MENU_LOCATION, 2, getString(R.string.change_location))
 
         val isDefaultLocation = HomeLocationDefaults.skipsDistrictFilter(
             mainToolbarViewModel.selectedLocation.value,
         )
         if (!isDefaultLocation) {
-            popup.menu.add(0, MENU_CLEAR_LOCATION, 2, getString(R.string.reset_all_chhattisgarh))
+            popup.menu.add(0, MENU_CLEAR_LOCATION, 3, getString(R.string.reset_all_chhattisgarh))
         }
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_PROFILE -> {
                     openProfileSection()
+                    true
+                }
+                MENU_HELP_DESK -> {
+                    startActivity(Intent(this, HelpDeskActivity::class.java))
                     true
                 }
                 MENU_LOCATION -> {
@@ -509,6 +514,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val MENU_PROFILE = 1
+        private const val MENU_HELP_DESK = 4
         private const val MENU_LOCATION = 2
         private const val MENU_CLEAR_LOCATION = 3
     }

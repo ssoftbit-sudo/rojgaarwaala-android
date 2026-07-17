@@ -42,5 +42,17 @@
     <string name="location_reset_all_cg">Showing all Chhattisgarh</string>
     <string name="clear_search">Clear search</string>
     <string name="location_cleared">Location cleared</string>
+    <string name="help_desk">Help Desk</string>
+    <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="submit_query">Submit Query</string>
+    <string name="your_name">Your name</string>
+    <string name="your_email">Your email</string>
+    <string name="your_mobile">Mobile number</string>
+    <string name="subject">Subject</string>
+    <string name="your_message">Describe your issue</string>
+    <string name="help_desk_empty">No FAQs available right now.</string>
+    <string name="enquiry_submitted">Your query has been submitted. We will contact you soon.</string>
+    <string name="required_field">Required</string>
+    <string name="invalid_mobile">Enter a valid 10-digit mobile number</string>
 
 </resources>

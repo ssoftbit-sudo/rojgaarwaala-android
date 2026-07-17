@@ -11,6 +11,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EnquirySubmitResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -157,5 +159,11 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.JOB_APPLICATION_DETAIL)
     suspend fun getJobApplication(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @GET(NetworkConstants.HELP_DESK_FAQS)
+    suspend fun getHelpDeskFaqs(): Response<HelpDeskFaqsResponse>
+
+    @POST(NetworkConstants.ENQUIRY_SUBMIT)
+    suspend fun submitEnquiry(@Body payload: HashMap<String, String>): Response<EnquirySubmitResponse>
 
 }
