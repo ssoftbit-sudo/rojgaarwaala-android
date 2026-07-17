@@ -96,8 +96,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
     private val autoHideHandler = Handler(Looper.getMainLooper())
+    private var controlsVisible = true
     private val autoHideRunnable = Runnable {
-        binding.playPauseButton.visibility = View.GONE
+        if (exoPlayer?.isPlaying == true) {
+            hidePlayerControls()
+        }
     }
     
     // ExoPlayer components
@@ -233,6 +236,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                             viewModel.incrementVideoView(videoId)
                             hasIncrementedView = true
                         }
+
+                        showPlayerControls()
+                        startAutoHideTimer()
                     }
                     Player.STATE_BUFFERING -> {
                         binding.progressBar.visibility = View.VISIBLE
@@ -241,6 +247,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         isPlaying = false
                         progressHandler.removeCallbacks(progressRunnable)
                         autoHideHandler.removeCallbacks(autoHideRunnable)
+                        showPlayerControls()
                         updatePlayPauseIcon()
                     }
                     Player.STATE_IDLE -> {
@@ -269,8 +276,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                 updatePlayPauseIcon()
                 if (isPlaying) {
                     progressHandler.post(progressRunnable)
+                    startAutoHideTimer()
                 } else {
                     progressHandler.removeCallbacks(progressRunnable)
+                    autoHideHandler.removeCallbacks(autoHideRunnable)
+                    showPlayerControls()
                 }
             }
         })
@@ -332,6 +342,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val t = (it.currentPosition - 10_000L).coerceAtLeast(0L)
                 it.seekTo(t)
             }
+            showPlayerControls()
+            startAutoHideTimer()
         }
         binding.skipForwardButton.setOnClickListener {
             exoPlayer?.let {
@@ -340,6 +352,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val end = if (d > 0 && d != C.TIME_UNSET) d else t
                 it.seekTo(t.coerceAtMost(end))
             }
+            showPlayerControls()
+            startAutoHideTimer()
         }
         binding.videoSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -354,6 +368,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 isSeekingOverlay = true
+                autoHideHandler.removeCallbacks(autoHideRunnable)
+                showPlayerControls()
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -363,6 +379,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     val pos = (binding.videoSeekBar.progress / 1000.0 * dur).toLong()
                     exoPlayer?.seekTo(pos)
                 }
+                startAutoHideTimer()
             }
         })
     }
@@ -929,20 +946,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Setup fullscreen button for custom fullscreen handling
         fullscreenButton.setOnClickListener {
             toggleFullscreen()
+            showPlayerControls()
+            startAutoHideTimer()
         }
 
-        // Smart touch handling for video area with gesture detection
+        binding.playerControlsOverlay.setOnClickListener {
+            onVideoAreaTapped()
+        }
+
         binding.customVideoView.setOnTouchListener { _, event ->
-            // Handle gestures for fullscreen
-            val gestureHandled = gestureDetector.onTouchEvent(event)
-            
-            // Always return false to let ExoPlayer handle regular taps
-            // Only consume events if a specific gesture was detected
-            if (gestureHandled) {
-                true // Consume the event only if gesture was handled
-            } else {
-                false // Let the event pass through to ExoPlayer for tap-to-show controls
-            }
+            gestureDetector.onTouchEvent(event)
+            true
         }
     }
 
@@ -951,7 +965,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             override fun onDown(e: MotionEvent): Boolean {
                 initialY = e.y
                 isGestureInProgress = false
-                return false // Don't consume the down event
+                return true
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (!isGestureInProgress) {
+                    onVideoAreaTapped()
+                }
+                return true
             }
 
             override fun onScroll(
@@ -1246,9 +1267,30 @@ class VideoPlayerActivity : AppCompatActivity() {
         // It will be automatically cleaned up when the app is killed
     }
 
+    private fun showPlayerControls() {
+        binding.playerControlsOverlay.visibility = View.VISIBLE
+        controlsVisible = true
+    }
+
+    private fun hidePlayerControls() {
+        binding.playerControlsOverlay.visibility = View.GONE
+        controlsVisible = false
+    }
+
+    private fun onVideoAreaTapped() {
+        if (controlsVisible) {
+            startAutoHideTimer()
+        } else {
+            showPlayerControls()
+            startAutoHideTimer()
+        }
+    }
+
     private fun startAutoHideTimer() {
         autoHideHandler.removeCallbacks(autoHideRunnable)
-        autoHideHandler.postDelayed(autoHideRunnable, 3000) // Auto-hide after 3 seconds
+        if (exoPlayer?.isPlaying == true) {
+            autoHideHandler.postDelayed(autoHideRunnable, 3000)
+        }
     }
 
     /**

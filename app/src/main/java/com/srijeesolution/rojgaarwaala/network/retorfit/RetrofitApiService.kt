@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
+import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.utils.RojgaarwalaApplication
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import okhttp3.OkHttpClient
@@ -12,9 +13,13 @@ object RetrofitApiService {
     fun create(baseUrl: String): RetrofitApiInterface {
         val httpClient = OkHttpClient.Builder()
             .addInterceptor(HeaderInterceptor(SharedPrefs(RojgaarwalaApplication.getAppContext())))
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    })
+                }
+            }
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
