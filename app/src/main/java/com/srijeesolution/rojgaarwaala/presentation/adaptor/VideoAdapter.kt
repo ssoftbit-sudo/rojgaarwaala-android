@@ -15,6 +15,8 @@ import com.srijeesolution.rojgaarwaala.databinding.ItemVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.ApplyFormActivity
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
 class VideoAdapter(
     private val onVideoClick: ((Int) -> Unit)? = null
@@ -30,6 +32,7 @@ class VideoAdapter(
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val video = getItem(position)
+        val sharedPrefs = SharedPrefs(holder.binding.root.context)
         with(holder.binding) {
             // Load thumbnail using Glide (use videoUrl as thumbnail for now)
             Glide.with(videoThumbnail.context)
@@ -37,6 +40,8 @@ class VideoAdapter(
                 .placeholder(R.drawable.thumbnail_background)
                 .centerCrop()
                 .into(videoThumbnail)
+
+            VideoNewTagUtils.bindNewTagBadge(videoNewTag, video, sharedPrefs)
 
             root.setOnClickListener {
                 Log.d("MANISH_JAIN","YES="+video.id+"NO ="+video.videoUrl)

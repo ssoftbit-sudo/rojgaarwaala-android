@@ -42,6 +42,7 @@ import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.VideoOptimizationUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
 
 // ExoPlayer imports
 import androidx.media3.common.MediaItem
@@ -234,6 +235,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         // Increment view count
                         if (!hasIncrementedView) {
                             viewModel.incrementVideoView(videoId)
+                            VideoNewTagUtils.markViewed(sharedPrefs, videoId)
                             hasIncrementedView = true
                         }
 

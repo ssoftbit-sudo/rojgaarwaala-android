@@ -13,6 +13,8 @@ import com.srijeesolution.rojgaarwaala.databinding.ItemVerticalVideoBinding
 import com.srijeesolution.rojgaarwaala.databinding.ItemVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
 class VideoVerticalAdapter(
     private val videos: List<TopVideo>,
@@ -29,6 +31,7 @@ class VideoVerticalAdapter(
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val video = videos[position]
+        val sharedPrefs = SharedPrefs(holder.binding.root.context)
         with(holder.binding) {
             // Set video title
             videoTitle.text = video.title ?: "Video Title"
@@ -46,6 +49,8 @@ class VideoVerticalAdapter(
                 .placeholder(R.drawable.thumbnail_background)
                 .centerCrop()
                 .into(videoThumbnail)
+
+            VideoNewTagUtils.bindNewTagBadge(videoNewTag, video, sharedPrefs)
 
             root.setOnClickListener {
                 Log.d("MANISH_JAIN","YES="+video.id+"NO ="+video.videoUrl)

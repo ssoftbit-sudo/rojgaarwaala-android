@@ -14,6 +14,8 @@ import com.srijeesolution.rojgaarwaala.databinding.ItemTopVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.ApplyFormActivity
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
 class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHolder>(DIFF_CALLBACK) {
     class TopVideoViewHolder(val binding: ItemTopVideoBinding) : RecyclerView.ViewHolder(binding.root)
@@ -25,11 +27,14 @@ class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHold
 
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
         val video = getItem(position)
+        val sharedPrefs = SharedPrefs(holder.binding.root.context)
         with(holder.binding) {
             Glide.with(topVideoThumbnail.context)
                 .load(video.thumbnail)
                 .placeholder(R.drawable.no_image_placeholder)
                 .into(topVideoThumbnail)
+
+            VideoNewTagUtils.bindNewTagBadge(videoNewTag, video, sharedPrefs)
 
             // Video thumbnail click
             root.setOnClickListener {

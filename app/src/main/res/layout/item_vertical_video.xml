@@ -31,6 +31,24 @@
                 android:scaleType="centerCrop"
                 android:background="@color/gray_light_3" />
 
+            <TextView
+                android:id="@+id/videoNewTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_margin="6dp"
+                android:background="@drawable/bg_video_new_tag"
+                android:paddingStart="5dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="5dp"
+                android:paddingBottom="2dp"
+                android:text="NEW"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <!-- Play Icon Overlay -->
             <ImageView
                 android:layout_width="36dp"

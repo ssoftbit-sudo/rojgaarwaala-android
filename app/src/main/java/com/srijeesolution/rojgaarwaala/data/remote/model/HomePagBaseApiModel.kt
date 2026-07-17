@@ -73,6 +73,8 @@ data class TopVideo(
     val location: String? = null,
     @SerializedName("location_hint")
     val locationHint: String? = null,
+    @SerializedName("show_new")
+    val showNew: Boolean? = null,
 )
 
 data class Category(

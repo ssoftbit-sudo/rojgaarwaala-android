@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala.network.retorfit
 import android.util.Log
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -31,6 +32,8 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
             if (fcmToken.isNotEmpty()) {
                 requestBuilder.header("fcm_token", fcmToken)
             }
+            val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+            requestBuilder.header("X-Device-Key", deviceKey)
             requestBuilder.method(original.method, original.body)
             response = chain.proceed(requestBuilder.build())
             return response

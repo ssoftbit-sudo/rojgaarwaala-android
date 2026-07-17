@@ -12,4 +12,6 @@ object SharedPrefsConstant {
     const val HOME_SELECTED_LOCATION = "home_selected_location"
     /** Anonymous device id for story seen state. */
     const val DEVICE_KEY = "device_key"
+    /** Locally played videos — hide NEW tag immediately after playback. */
+    const val VIEWED_VIDEO_IDS = "viewed_video_ids_for_new_tag"
 }
