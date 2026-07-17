@@ -46,9 +46,9 @@ class HelpDeskViewModel @Inject constructor(
         }
     }
 
-    fun loadFaqs(issueType: String, search: String? = null) {
+    fun loadFaqs(category: String?, issueType: String? = null, search: String? = null) {
         viewModelScope.launch {
-            helpDeskRepository.getFaqs(issueType, search).collectLatest { _faqsLiveData.postValue(it) }
+            helpDeskRepository.getFaqs(category, issueType, search).collectLatest { _faqsLiveData.postValue(it) }
         }
     }
 

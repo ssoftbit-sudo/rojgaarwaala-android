@@ -167,6 +167,7 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.HELP_DESK_FAQS)
     suspend fun getHelpDeskFaqs(
+        @Query("category") category: String?,
         @Query("issue_type") issueType: String?,
         @Query("search") search: String?,
     ): Response<HelpDeskFaqsResponse>

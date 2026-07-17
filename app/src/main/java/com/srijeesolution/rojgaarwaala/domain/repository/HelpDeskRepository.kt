@@ -12,7 +12,7 @@ import okhttp3.RequestBody
 interface HelpDeskRepository {
     fun getConfig(): Flow<ApiResult<HelpDeskConfigResponse>>
 
-    fun getFaqs(issueType: String?, search: String?): Flow<ApiResult<HelpDeskFaqsResponse>>
+    fun getFaqs(category: String?, issueType: String?, search: String?): Flow<ApiResult<HelpDeskFaqsResponse>>
 
     fun getTutorials(issueType: String): Flow<ApiResult<HelpDeskTutorialsResponse>>
 

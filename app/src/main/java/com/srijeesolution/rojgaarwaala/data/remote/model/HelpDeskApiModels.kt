@@ -21,6 +21,7 @@ data class HelpDeskSupport(
 data class HelpDeskIssueCategory(
     @SerializedName("key") val key: String? = null,
     @SerializedName("label") val label: String? = null,
+    @SerializedName("issue_type") val issueType: String? = null,
     @SerializedName("content_type") val contentType: String? = null,
 )
 

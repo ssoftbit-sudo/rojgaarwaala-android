@@ -23,8 +23,8 @@ class HelpDeskRepositoryImpl @Inject constructor() : HelpDeskRepository, BaseApi
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).getHelpDeskConfig() })
     }.flowOn(Dispatchers.IO)
 
-    override fun getFaqs(issueType: String?, search: String?): Flow<ApiResult<HelpDeskFaqsResponse>> = flow {
-        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getHelpDeskFaqs(issueType, search) })
+    override fun getFaqs(category: String?, issueType: String?, search: String?): Flow<ApiResult<HelpDeskFaqsResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getHelpDeskFaqs(category, issueType, search) })
     }.flowOn(Dispatchers.IO)
 
     override fun getTutorials(issueType: String): Flow<ApiResult<HelpDeskTutorialsResponse>> = flow {

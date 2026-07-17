@@ -44,7 +44,8 @@ class HelpDeskActivity : AppCompatActivity() {
     private var issueCategories = emptyList<HelpDeskIssueCategory>()
     private var callPhone = "919201949203"
     private var whatsappPhone = "919201949203"
-    private var selectedIssueKey = "apply"
+    private var selectedCategoryKey = ""
+    private var selectedIssueType = "apply"
     private var selectedContentType = "faq"
     private var selectedPhotoUri: Uri? = null
 
@@ -81,7 +82,8 @@ class HelpDeskActivity : AppCompatActivity() {
         binding.helpDeskIssueSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val category = issueCategories.getOrNull(position) ?: return
-                selectedIssueKey = category.key.orEmpty().ifBlank { "apply" }
+                selectedCategoryKey = category.key.orEmpty()
+                selectedIssueType = category.issueType.orEmpty().ifBlank { "apply" }
                 selectedContentType = category.contentType.orEmpty().ifBlank { "faq" }
                 renderSelectedCategory()
             }
@@ -105,7 +107,11 @@ class HelpDeskActivity : AppCompatActivity() {
                 if (selectedContentType != "faq") return
                 searchRunnable?.let(searchHandler::removeCallbacks)
                 searchRunnable = Runnable {
-                    viewModel.loadFaqs(selectedIssueKey, s?.toString()?.trim()?.takeIf { it.isNotEmpty() })
+                    viewModel.loadFaqs(
+                        category = selectedCategoryKey.takeIf { it.isNotBlank() },
+                        issueType = null,
+                        search = s?.toString()?.trim()?.takeIf { it.isNotEmpty() },
+                    )
                 }
                 searchHandler.postDelayed(searchRunnable!!, 400)
             }
@@ -230,8 +236,12 @@ class HelpDeskActivity : AppCompatActivity() {
         binding.helpDeskFormSection.visibility = if (selectedContentType == "form") View.VISIBLE else View.GONE
 
         when (selectedContentType) {
-            "faq" -> viewModel.loadFaqs(selectedIssueKey, binding.helpDeskSearchInput.text?.toString()?.trim())
-            "tutorial" -> viewModel.loadTutorials(selectedIssueKey)
+            "faq" -> viewModel.loadFaqs(
+                category = selectedCategoryKey.takeIf { it.isNotBlank() },
+                issueType = null,
+                search = binding.helpDeskSearchInput.text?.toString()?.trim()?.takeIf { it.isNotEmpty() },
+            )
+            "tutorial" -> viewModel.loadTutorials(selectedIssueType)
         }
     }
 
