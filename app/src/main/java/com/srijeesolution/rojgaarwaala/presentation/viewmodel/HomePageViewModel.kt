@@ -254,20 +254,50 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
-    fun getSectionStoriesGrouped() {
+    private var sectionStoriesFetchedAt = 0L
+    private var activeStoriesFetchedAt = 0L
+
+    fun getSectionStoriesGrouped(forceRefresh: Boolean = false) {
+        val now = System.currentTimeMillis()
+        val cached = _storiesLiveData.value
+        val hasCachedData = cached is ApiResult.Success &&
+            cached.data?.data?.timeGroups?.any { !it.stories.isNullOrEmpty() } == true
+        if (!forceRefresh && hasCachedData && now - sectionStoriesFetchedAt < SECTION_STORIES_CACHE_MS) {
+            return
+        }
         viewModelScope.launch {
-            homePageRepository.getSectionStoriesGrouped().collectLatest{
+            homePageRepository.getSectionStoriesGrouped().collectLatest {
+                if (it is ApiResult.Success) {
+                    sectionStoriesFetchedAt = System.currentTimeMillis()
+                }
                 _storiesLiveData.postValue(it)
             }
         }
     }
 
-    fun getActiveStories(deviceKey: String) {
+    fun getActiveStories(deviceKey: String, forceRefresh: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!forceRefresh && now - activeStoriesFetchedAt < ACTIVE_STORIES_CACHE_MS) {
+            return
+        }
         viewModelScope.launch {
             homePageRepository.getActiveStories(deviceKey).collectLatest {
+                if (it is ApiResult.Success) {
+                    activeStoriesFetchedAt = System.currentTimeMillis()
+                }
                 _activeStoriesLiveData.postValue(it)
             }
         }
+    }
+
+    fun preloadStories(deviceKey: String) {
+        getSectionStoriesGrouped()
+        getActiveStories(deviceKey)
+    }
+
+    companion object {
+        private const val SECTION_STORIES_CACHE_MS = 10 * 60 * 1000L
+        private const val ACTIVE_STORIES_CACHE_MS = 2 * 60 * 1000L
     }
 
     fun markStoryViewed(storyId: Int, deviceKey: String) {

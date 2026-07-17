@@ -24,7 +24,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
+import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -71,6 +73,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pillStories: FrameLayout
 
     private val mainToolbarViewModel: MainToolbarViewModel by viewModels()
+    private val homePageViewModel: HomePageViewModel by viewModels()
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -110,6 +113,7 @@ class MainActivity : AppCompatActivity() {
         restoreToolbarState()
         setupToolbarChrome()
         setupBottomNav()
+        preloadStories()
 
         if (savedInstanceState == null) {
             selectTab(0)
@@ -363,6 +367,11 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .commit()
+    }
+
+    private fun preloadStories() {
+        val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+        homePageViewModel.preloadStories(deviceKey)
     }
 
     fun selectTabFromFragment(index: Int) {

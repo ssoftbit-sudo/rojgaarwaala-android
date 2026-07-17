@@ -59,7 +59,35 @@ class StoriesFragment : Fragment() {
         setupViews()
         setupSearch()
         setupObservers()
+        applyCachedStoriesIfAvailable()
         loadStories()
+    }
+
+    private fun applyCachedStoriesIfAvailable() {
+        when (val grouped = viewModel.storiesLiveData.value) {
+            is ApiResult.Success -> {
+                val timeGroups = grouped.data?.data?.timeGroups
+                if (grouped.data?.status == true && !timeGroups.isNullOrEmpty()) {
+                    displayStories(timeGroups)
+                }
+            }
+            else -> Unit
+        }
+
+        when (val active = viewModel.activeStoriesLiveData.value) {
+            is ApiResult.Success -> {
+                displayCircleStories(active.data?.data?.stories ?: emptyList())
+            }
+            else -> Unit
+        }
+
+        updateLoadingState()
+    }
+
+    private fun updateLoadingState() {
+        val hasContent = allTimeGroups.isNotEmpty() || activeCircleStories.isNotEmpty()
+        binding.storiesLoadingProgress.visibility =
+            if (hasContent) View.GONE else View.VISIBLE
     }
 
     private fun setupViews() {
@@ -109,7 +137,7 @@ class StoriesFragment : Fragment() {
     private fun setupObservers() {
         viewModel.storiesLiveData.observe(viewLifecycleOwner, Observer { result ->
             when (result) {
-                is ApiResult.Loading -> Unit
+                is ApiResult.Loading -> updateLoadingState()
                 is ApiResult.Success -> {
                     val data = result.data
                     if (data?.status == true && !data.data?.timeGroups.isNullOrEmpty()) {
@@ -117,11 +145,13 @@ class StoriesFragment : Fragment() {
                     } else if (activeCircleStories.isEmpty()) {
                         showEmptyState()
                     }
+                    updateLoadingState()
                 }
                 is ApiResult.Error -> {
                     if (activeCircleStories.isEmpty()) {
                         showError("Failed to load stories")
                     }
+                    updateLoadingState()
                 }
             }
         })
@@ -131,21 +161,23 @@ class StoriesFragment : Fragment() {
                 is ApiResult.Success -> {
                     val stories = result.data?.data?.stories ?: emptyList()
                     displayCircleStories(stories)
+                    updateLoadingState()
                 }
                 is ApiResult.Error -> {
                     if (activeCircleStories.isEmpty()) {
                         binding.storyCirclesRecyclerView.visibility = View.GONE
                     }
+                    updateLoadingState()
                 }
-                is ApiResult.Loading -> Unit
+                is ApiResult.Loading -> updateLoadingState()
             }
         })
     }
 
     private fun loadStories() {
         val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
-        viewModel.getActiveStories(deviceKey)
-        viewModel.getSectionStoriesGrouped()
+        viewModel.getActiveStories(deviceKey, forceRefresh = true)
+        viewModel.getSectionStoriesGrouped(forceRefresh = true)
     }
 
     private fun displayCircleStories(stories: List<CircleStory>) {
@@ -292,11 +324,6 @@ class StoriesFragment : Fragment() {
 
     private fun showError(message: String) {
         android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadStories()
     }
 
     override fun onDestroyView() {
