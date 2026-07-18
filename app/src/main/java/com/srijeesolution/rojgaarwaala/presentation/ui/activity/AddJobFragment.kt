@@ -89,11 +89,10 @@ class AddJobFragment : Fragment() {
     private val logoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handleLogoSelection(it) }
     }
-    private val candidatePhotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { handleCandidateResumeSelection(it, isPhoto = true) }
-    }
-    private val candidatePdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { handleCandidateResumeSelection(it, isPhoto = false) }
+    private val candidateResumeLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { handleCandidateResumeSelection(it) }
     }
 
     private val candidateDistrictLauncher = registerForActivityResult(
@@ -504,19 +503,18 @@ class AddJobFragment : Fragment() {
     }
 
     private fun submitJobWithFiles(requestBody: HashMap<String, String>) {
-        // Create MultipartBody.Part objects for files if available
         val pdfPart = pdfFile?.let { file ->
-            val requestFile = file.asRequestBody("application/pdf".toMediaTypeOrNull())
+            val requestFile = file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull())
             MultipartBody.Part.createFormData("pdf", file.name, requestFile)
         }
 
         val imagePart = imageFile?.let { file ->
-            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val requestFile = file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull())
             MultipartBody.Part.createFormData("image", file.name, requestFile)
         }
 
         val logoPart = logoFile?.let { file ->
-            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val requestFile = file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull())
             MultipartBody.Part.createFormData("logo", file.name, requestFile)
         }
 
@@ -552,37 +550,30 @@ class AddJobFragment : Fragment() {
         }
 
         binding.uploadCandidateResumeBtn.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Upload Resume")
-                .setItems(arrayOf("Photo from Gallery", "PDF Document")) { _, which ->
-                    when (which) {
-                        0 -> candidatePhotoLauncher.launch("image/*")
-                        1 -> candidatePdfLauncher.launch("application/pdf")
-                    }
-                }
-                .show()
+            candidateResumeLauncher.launch(arrayOf("image/*", "application/pdf"))
         }
     }
 
-    private fun handleCandidateResumeSelection(uri: Uri, isPhoto: Boolean) {
+    private fun handleCandidateResumeSelection(uri: Uri) {
         try {
             val mimeType = requireContext().contentResolver.getType(uri).orEmpty()
-            val rawName = getFileName(uri) ?: if (isPhoto) "candidate_resume.jpg" else "candidate_resume.pdf"
-            val fileName = ensureFileExtension(rawName, mimeType, isPhoto)
-            val lower = fileName.lowercase()
+            val rawName = getFileName(uri) ?: "candidate_resume"
+            val lower = rawName.lowercase()
 
             val isImage = mimeType.startsWith("image/") ||
                 lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")
             val isPdf = mimeType == "application/pdf" || lower.endsWith(".pdf")
 
-            if (isPhoto && !isImage) {
-                Toast.makeText(requireContext(), "Please choose a photo from gallery", Toast.LENGTH_SHORT).show()
+            if (!isImage && !isPdf) {
+                Toast.makeText(
+                    requireContext(),
+                    "Please choose JPG/PNG photo or PDF only",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return
             }
-            if (!isPhoto && !isPdf) {
-                Toast.makeText(requireContext(), "Please choose a PDF document", Toast.LENGTH_SHORT).show()
-                return
-            }
+
+            val fileName = ensureFileExtension(rawName, mimeType, isPhoto = isImage)
 
             val inputStream = requireContext().contentResolver.openInputStream(uri)
             val file = File(requireContext().cacheDir, fileName)
@@ -594,7 +585,8 @@ class AddJobFragment : Fragment() {
 
             candidateResumeFile = file
             candidateResumeUri = uri
-            binding.candidateResumeFileName.text = "Selected: $fileName"
+            val typeLabel = if (isImage) "Photo" else "PDF"
+            binding.candidateResumeFileName.text = "Selected ($typeLabel): $fileName"
             binding.candidateResumeFileName.visibility = View.VISIBLE
 
             if (isImage) {
@@ -1002,5 +994,15 @@ class AddJobFragment : Fragment() {
             }
         }
         return error?.errorMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit"
+    }
+
+    private fun mimeTypeForUpload(file: File): String {
+        return when {
+            file.name.lowercase().endsWith(".pdf") -> "application/pdf"
+            file.name.lowercase().endsWith(".png") -> "image/png"
+            file.name.lowercase().endsWith(".webp") -> "image/webp"
+            file.name.lowercase().endsWith(".gif") -> "image/gif"
+            else -> "image/jpeg"
+        }
     }
 }
