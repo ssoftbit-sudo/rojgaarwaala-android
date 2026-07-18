@@ -198,6 +198,16 @@
                 android:layout_gravity="center"
                 android:src="@drawable/ic_image"
                 android:tint="@color/tab_unselected" />
+
+            <View
+                android:id="@+id/storiesNavBadge"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_nav_badge_dot"
+                android:visibility="gone" />
         </FrameLayout>
 
         <TextView

@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pillImages: FrameLayout
     private lateinit var pillStories: FrameLayout
 
+    private lateinit var storiesNavBadge: View
+
     private val mainToolbarViewModel: MainToolbarViewModel by viewModels()
     private val homePageViewModel: HomePageViewModel by viewModels()
 
@@ -113,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         restoreToolbarState()
         setupToolbarChrome()
         setupBottomNav()
+        setupStoriesNavBadgeObserver()
         preloadStories()
 
         if (savedInstanceState == null) {
@@ -158,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         pillCategories = findViewById(R.id.pillCategories)
         pillImages = findViewById(R.id.pillImages)
         pillStories = findViewById(R.id.pillStories)
+        storiesNavBadge = findViewById(R.id.storiesNavBadge)
     }
 
     private fun restoreToolbarState() {
@@ -273,6 +277,12 @@ class MainActivity : AppCompatActivity() {
         toolbarLocationLabel.visibility = if (safeLocation.isBlank()) View.GONE else View.VISIBLE
     }
 
+    private fun setupStoriesNavBadgeObserver() {
+        homePageViewModel.hasUnseenStoriesLiveData.observe(this) { hasUnseen ->
+            storiesNavBadge.visibility = if (hasUnseen) View.VISIBLE else View.GONE
+        }
+    }
+
     private fun setupBottomNav() {
         tabHome.setOnClickListener { selectTab(0) }
         tabAddJob.setOnClickListener {
@@ -362,6 +372,7 @@ class MainActivity : AppCompatActivity() {
                 iconStories.setColorFilter(selectedIconColor)
                 textStories.setTextColor(selectedTextColor)
                 pillStories.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                homePageViewModel.dismissStoriesNavBadge()
                 showFragment(StoriesFragment())
             }
         }
@@ -392,6 +403,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshNotificationBadgeUi()
+        val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+        homePageViewModel.getActiveStories(deviceKey, forceRefresh = true)
         intent?.let { incoming ->
             if (incoming.hasExtra("type") || incoming.hasExtra("notification_type") || incoming.data != null) {
                 handleNotificationNavigation(incoming)

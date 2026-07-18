@@ -64,7 +64,11 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val storiesLiveData : LiveData<ApiResult<StoriesResponse>> = _storiesLiveData
     private var _activeStoriesLiveData : MutableLiveData<ApiResult<ActiveStoriesResponse>> = MutableLiveData()
     val activeStoriesLiveData : LiveData<ApiResult<ActiveStoriesResponse>> = _activeStoriesLiveData
-    
+    private val _hasUnseenStoriesLiveData = MutableLiveData(false)
+    val hasUnseenStoriesLiveData: LiveData<Boolean> = _hasUnseenStoriesLiveData
+
+    private var lastKnownStoryIds: Set<Int> = emptySet()
+    private var storiesNavBadgeDismissed = false
     fun onLoginData(email: HashMap<String, String>) {
         viewModelScope.launch {
             homePageRepository.onLoginUser(email).collectLatest{
@@ -284,9 +288,46 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
             homePageRepository.getActiveStories(deviceKey).collectLatest {
                 if (it is ApiResult.Success) {
                     activeStoriesFetchedAt = System.currentTimeMillis()
+                    processActiveStoriesResponse(it.data)
                 }
                 _activeStoriesLiveData.postValue(it)
             }
+        }
+    }
+
+    fun dismissStoriesNavBadge() {
+        storiesNavBadgeDismissed = true
+        _hasUnseenStoriesLiveData.postValue(false)
+    }
+
+    private fun processActiveStoriesResponse(response: ActiveStoriesResponse?) {
+        val stories = response?.data?.stories.orEmpty()
+        val currentIds = stories.mapNotNull { it.id }.toSet()
+        val hasNewStories = currentIds.any { it !in lastKnownStoryIds }
+        lastKnownStoryIds = currentIds
+
+        if (hasNewStories && response?.data?.hasUnseen == true) {
+            storiesNavBadgeDismissed = false
+        }
+
+        val hasUnseen = response?.data?.hasUnseen == true && !storiesNavBadgeDismissed
+        _hasUnseenStoriesLiveData.postValue(hasUnseen)
+    }
+
+    private fun updateLocalStorySeen(storyId: Int) {
+        val current = _activeStoriesLiveData.value as? ApiResult.Success ?: return
+        val response = current.data ?: return
+        val data = response.data ?: return
+        val updatedStories = data.stories?.map { story ->
+            if (story.id == storyId) story.copy(seen = true) else story
+        } ?: return
+        val hasUnseen = updatedStories.any { it.seen != true }
+        val updatedResponse = response.copy(
+            data = data.copy(stories = updatedStories, hasUnseen = hasUnseen)
+        )
+        _activeStoriesLiveData.postValue(ApiResult.Success(updatedResponse))
+        if (!storiesNavBadgeDismissed) {
+            _hasUnseenStoriesLiveData.postValue(hasUnseen)
         }
     }
 
@@ -301,6 +342,7 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     }
 
     fun markStoryViewed(storyId: Int, deviceKey: String) {
+        updateLocalStorySeen(storyId)
         viewModelScope.launch {
             homePageRepository.markStoryViewed(storyId, deviceKey).collectLatest { }
         }

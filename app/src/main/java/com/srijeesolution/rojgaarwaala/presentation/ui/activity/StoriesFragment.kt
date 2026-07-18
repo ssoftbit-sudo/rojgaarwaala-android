@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -7,6 +8,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -41,6 +43,15 @@ class StoriesFragment : Fragment() {
 
     private var allTimeGroups: List<TimeGroup> = emptyList()
     private var isSearchMode = false
+
+    private val storyViewerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+            viewModel.getActiveStories(deviceKey, forceRefresh = true)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -198,7 +209,7 @@ class StoriesFragment : Fragment() {
             ArrayList(activeCircleStories)
         )
         intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, startIndex)
-        startActivity(intent)
+        storyViewerLauncher.launch(intent)
     }
 
     private fun filterContent(query: String) {
@@ -283,7 +294,7 @@ class StoriesFragment : Fragment() {
                     arrayListOf(story.toCircleStory())
                 )
                 intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, 0)
-                startActivity(intent)
+                storyViewerLauncher.launch(intent)
             }
             else -> {
                 if (!story.imageUrl.isNullOrEmpty()) {

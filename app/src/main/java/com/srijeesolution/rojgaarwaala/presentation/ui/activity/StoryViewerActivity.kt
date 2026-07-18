@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -24,6 +25,7 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.CircleStory
 import com.srijeesolution.rojgaarwaala.databinding.ActivityStoryViewerBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
@@ -48,9 +50,10 @@ class StoryViewerActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var progressRunnable: Runnable? = null
     private var storyStartTime = 0L
-    private var storyDurationMs = STORY_DURATION_MS
+    private var storyDurationMs = IMAGE_STORY_DURATION_MS
     private lateinit var deviceKey: String
     private var autoAdvanceStarted = false
+    private var storiesUpdated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +83,11 @@ class StoryViewerActivity : AppCompatActivity() {
             return
         }
 
-        binding.storyCloseButton.setOnClickListener { finish() }
+        binding.storyCloseButton.setOnClickListener { finishWithResult() }
+        binding.storyLikeButton.setOnClickListener { toggleStoryLike() }
+        onBackPressedDispatcher.addCallback(this) {
+            finishWithResult()
+        }
         showStoryAt(currentIndex)
     }
 
@@ -89,20 +96,70 @@ class StoryViewerActivity : AppCompatActivity() {
         autoAdvanceStarted = false
 
         if (index >= stories.size) {
-            finish()
+            finishWithResult()
             return
         }
 
         currentIndex = index
         val story = stories[index]
-        binding.storyTitleText.text = story.title ?: ""
+        updateStoryCaption(story)
+        updateLikeButton(story.id)
         viewModel.markStoryViewed(story.id ?: return, deviceKey)
+        storiesUpdated = true
 
         when (story.mediaType) {
             MEDIA_VIDEO -> showVideoStory(story)
             MEDIA_LINK -> showLinkStory(story)
             else -> showImageStory(story)
         }
+    }
+
+    private fun updateStoryCaption(story: CircleStory) {
+        val title = story.title?.trim().orEmpty()
+        val description = story.description?.trim().orEmpty()
+
+        if (title.isBlank() && description.isBlank()) {
+            binding.storyCaptionContainer.visibility = View.GONE
+            binding.storyLikeButton.visibility = View.VISIBLE
+            return
+        }
+
+        binding.storyCaptionContainer.visibility = View.VISIBLE
+        binding.storyLikeButton.visibility = View.VISIBLE
+
+        if (title.isBlank()) {
+            binding.storyTitleText.visibility = View.GONE
+        } else {
+            binding.storyTitleText.visibility = View.VISIBLE
+            binding.storyTitleText.text = title
+        }
+
+        if (description.isBlank()) {
+            binding.storyDescriptionText.visibility = View.GONE
+        } else {
+            binding.storyDescriptionText.visibility = View.VISIBLE
+            binding.storyDescriptionText.text = description
+        }
+    }
+
+    private fun updateLikeButton(storyId: Int?) {
+        if (storyId == null) {
+            binding.storyLikeButton.visibility = View.GONE
+            return
+        }
+        val liked = sharedPrefs.isStoryLiked(storyId)
+        binding.storyLikeButton.setImageResource(
+            if (liked) R.drawable.ic_story_like_filled else R.drawable.ic_story_like
+        )
+    }
+
+    private fun toggleStoryLike() {
+        val storyId = stories.getOrNull(currentIndex)?.id ?: return
+        val liked = sharedPrefs.isStoryLiked(storyId)
+        sharedPrefs.setStoryLiked(storyId, !liked)
+        updateLikeButton(storyId)
+        val message = if (liked) "Like removed" else "Story liked"
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun showImageStory(story: CircleStory) {
@@ -144,7 +201,7 @@ class StoryViewerActivity : AppCompatActivity() {
             })
             .into(binding.storyImageView)
 
-        storyDurationMs = STORY_DURATION_MS
+        storyDurationMs = IMAGE_STORY_DURATION_MS
         startAutoAdvance()
     }
 
@@ -155,7 +212,7 @@ class StoryViewerActivity : AppCompatActivity() {
             append(message)
             story.title?.takeIf { it.isNotBlank() }?.let { append("\n\n").append(it) }
         }
-        storyDurationMs = STORY_DURATION_MS
+        storyDurationMs = IMAGE_STORY_DURATION_MS
         startAutoAdvance()
     }
 
@@ -178,14 +235,17 @@ class StoryViewerActivity : AppCompatActivity() {
             player.playWhenReady = true
             player.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (!autoAdvanceStarted && playbackState == Player.STATE_READY) {
-                        autoAdvanceStarted = true
-                        storyDurationMs = if (player.duration > 0) {
-                            minOf(STORY_DURATION_MS, player.duration)
-                        } else {
-                            STORY_DURATION_MS
+                    when (playbackState) {
+                        Player.STATE_READY -> {
+                            if (!autoAdvanceStarted) {
+                                autoAdvanceStarted = true
+                                storyDurationMs = player.duration
+                                    .takeIf { it > 0 }
+                                    ?: FALLBACK_VIDEO_DURATION_MS
+                                startAutoAdvance()
+                            }
                         }
-                        startAutoAdvance()
+                        Player.STATE_ENDED -> advanceToNextStory()
                     }
                 }
             })
@@ -194,10 +254,10 @@ class StoryViewerActivity : AppCompatActivity() {
         handler.postDelayed({
             if (!autoAdvanceStarted) {
                 autoAdvanceStarted = true
-                storyDurationMs = STORY_DURATION_MS
+                storyDurationMs = FALLBACK_VIDEO_DURATION_MS
                 startAutoAdvance()
             }
-        }, 500L)
+        }, 1500L)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -217,7 +277,7 @@ class StoryViewerActivity : AppCompatActivity() {
         }
 
         binding.storyWebView.loadUrl(normalizeLinkUrl(url))
-        storyDurationMs = STORY_DURATION_MS
+        storyDurationMs = IMAGE_STORY_DURATION_MS
         startAutoAdvance()
     }
 
@@ -244,7 +304,9 @@ class StoryViewerActivity : AppCompatActivity() {
                 binding.storyProgressBar.progress = progress
 
                 if (elapsed >= storyDurationMs) {
-                    advanceToNextStory()
+                    if (stories.getOrNull(currentIndex)?.mediaType != MEDIA_VIDEO) {
+                        advanceToNextStory()
+                    }
                 } else {
                     handler.postDelayed(this, 50L)
                 }
@@ -269,6 +331,13 @@ class StoryViewerActivity : AppCompatActivity() {
         binding.storyWebView.loadUrl("about:blank")
     }
 
+    private fun finishWithResult() {
+        if (storiesUpdated) {
+            setResult(RESULT_OK)
+        }
+        finish()
+    }
+
     override fun onStop() {
         exoPlayer?.pause()
         super.onStop()
@@ -282,7 +351,8 @@ class StoryViewerActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_STORIES = "circle_stories"
         const val EXTRA_START_INDEX = "start_index"
-        private const val STORY_DURATION_MS = 10_000L
+        private const val IMAGE_STORY_DURATION_MS = 10_000L
+        private const val FALLBACK_VIDEO_DURATION_MS = 30_000L
         private const val MEDIA_VIDEO = "video"
         private const val MEDIA_LINK = "link"
     }

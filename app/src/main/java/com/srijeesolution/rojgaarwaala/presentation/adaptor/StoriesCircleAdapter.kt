@@ -1,7 +1,10 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.graphics.Outline
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
@@ -20,6 +23,15 @@ class StoriesCircleAdapter(
 
     inner class CircleViewHolder(private val binding: ItemStoryCircleBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.storyCircleImage.clipToOutline = true
+            binding.storyCircleImage.outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, view.width, view.height)
+                }
+            }
+        }
 
         fun bind(story: CircleStory) {
             val ringDrawable = if (story.seen == true) {

@@ -94,6 +94,14 @@ class SharedPrefs @Inject constructor(context: Context) {
         preferences.edit().putInt("image_dislike_count_$imageKey", count.coerceAtLeast(0)).apply()
     }
 
+    fun setStoryLiked(storyId: Int, isLiked: Boolean) {
+        preferences.edit().putBoolean("story_liked_$storyId", isLiked).apply()
+    }
+
+    fun isStoryLiked(storyId: Int): Boolean {
+        return preferences.getBoolean("story_liked_$storyId", false)
+    }
+
     companion object {
         private const val APP_NAME = "com.kaarigar"
     }
