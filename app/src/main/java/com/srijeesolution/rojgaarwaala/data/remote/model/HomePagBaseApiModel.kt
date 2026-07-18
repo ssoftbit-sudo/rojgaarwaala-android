@@ -28,6 +28,12 @@ data class HomePageData(
     val userDetails: UserData? = null,
     @SerializedName("cityList")
     val cityList: ArrayList<CityItem>? = ArrayList(),
+    @SerializedName("otp")
+    val otp: String? = null,
+    @SerializedName("mobile")
+    val mobile: String? = null,
+    @SerializedName("expires_at")
+    val expiresAt: String? = null,
 )
 
 data class CityItem(

@@ -34,12 +34,25 @@
             android:layout_marginBottom="8dp" />
 
         <TextView
+            android:id="@+id/otpSubtitleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Enter the OTP sent to your mobile number"
             android:textColor="@color/gray_light_3"
             android:textSize="16sp"
             android:gravity="center" />
+
+        <TextView
+            android:id="@+id/fallbackOtpText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/modern_edit_text_background"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/brand_color_yellow"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Input Section -->
@@ -96,6 +109,18 @@
             android:background="@drawable/modern_button_background"
             android:stateListAnimator="@null"
             android:elevation="8dp" />
+
+        <TextView
+            android:id="@+id/resendOtpButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="Resend OTP"
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

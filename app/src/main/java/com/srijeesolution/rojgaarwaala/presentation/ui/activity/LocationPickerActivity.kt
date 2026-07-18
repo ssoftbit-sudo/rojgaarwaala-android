@@ -2,9 +2,12 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -15,8 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.ChhattisgarhDistricts
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
-import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,6 +28,8 @@ class LocationPickerActivity : AppCompatActivity() {
     private val homePageViewModel: HomePageViewModel by viewModels()
     private lateinit var locationAdapter: LocationAdapter
     private lateinit var progressBar: ProgressBar
+    private lateinit var searchInput: EditText
+    private var allDistricts: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +40,7 @@ class LocationPickerActivity : AppCompatActivity() {
         }
 
         progressBar = findViewById(R.id.locationProgressBar)
+        searchInput = findViewById(R.id.locationSearchInput)
 
         val recycler = findViewById<RecyclerView>(R.id.locationsRecyclerView)
         recycler.layoutManager = LinearLayoutManager(this)
@@ -43,6 +49,14 @@ class LocationPickerActivity : AppCompatActivity() {
             finish()
         }
         recycler.adapter = locationAdapter
+
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                filterDistricts(s?.toString().orEmpty())
+            }
+        })
 
         observeCities()
         homePageViewModel.getCityList()
@@ -59,6 +73,15 @@ class LocationPickerActivity : AppCompatActivity() {
         return listOf(HomeLocationDefaults.ALL_CHHATTISGARH) + rest
     }
 
+    private fun filterDistricts(query: String) {
+        val filtered = if (query.isBlank()) {
+            allDistricts
+        } else {
+            allDistricts.filter { it.contains(query, ignoreCase = true) }
+        }
+        locationAdapter.updateItems(filtered)
+    }
+
     private fun observeCities() {
         homePageViewModel.cityListLiveData.observe(this) { apiResponse ->
             when (apiResponse) {
@@ -71,12 +94,16 @@ class LocationPickerActivity : AppCompatActivity() {
                         .orEmpty()
                         .mapNotNull { it.name?.trim()?.takeIf { name -> name.isNotEmpty() } }
                         .distinct()
-                    locationAdapter.updateItems(withDefaultOption(cities))
+                    allDistricts = withDefaultOption(
+                        if (cities.isNotEmpty()) cities else ChhattisgarhDistricts.list
+                    )
+                    filterDistricts(searchInput.text?.toString().orEmpty())
                 }
                 is ApiResult.Error -> {
                     progressBar.visibility = View.GONE
-                    locationAdapter.updateItems(withDefaultOption(LocationSuggestions.districtList))
-                    val errorMessage = apiResponse.message?.toString() ?: "Failed to load cities"
+                    allDistricts = withDefaultOption(ChhattisgarhDistricts.list)
+                    filterDistricts(searchInput.text?.toString().orEmpty())
+                    val errorMessage = apiResponse.message?.toString() ?: "Failed to load districts"
                     Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }

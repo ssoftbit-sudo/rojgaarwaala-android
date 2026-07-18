@@ -31,7 +31,8 @@
     <string name="stories">Stories</string>
     <string name="choose_location">Choose location</string>
     <string name="search_jobs_categories_hint">Search jobs, categories…</string>
-    <string name="location_picker_title">Select location</string>
+    <string name="location_picker_title">Select District</string>
+    <string name="field_is_required">%1$s is required</string>
     <string name="notifications">Notifications</string>
     <string name="close_search">Close search</string>
     <string name="more_options">More options</string>

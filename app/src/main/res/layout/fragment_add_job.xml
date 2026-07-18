@@ -67,19 +67,19 @@
                             android:padding="12dp">
 
                             <RadioButton
-                                android:id="@+id/companyTypeRadio"
+                                android:id="@+id/candidateTypeRadio"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Company"
+                                android:text="Candidate"
                                 android:textColor="@color/white"
                                 android:checked="true" />
 
                             <RadioButton
-                                android:id="@+id/candidateTypeRadio"
+                                android:id="@+id/companyTypeRadio"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="20dp"
-                                android:text="Candidate"
+                                android:text="Company"
                                 android:textColor="@color/white" />
                         </RadioGroup>
                     </LinearLayout>
@@ -89,7 +89,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
+                        android:visibility="visible"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -117,7 +117,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Preferred Location"
+                            android:text="District"
                             android:textColor="@color/white"
                             android:textSize="16sp"
                             android:textStyle="bold"
@@ -125,11 +125,11 @@
                             android:layout_marginBottom="8dp" />
 
                         <TextView
-                            android:id="@+id/candidateLocation"
+                            android:id="@+id/candidateDistrict"
                             android:layout_width="match_parent"
                             android:layout_height="60dp"
                             android:background="@drawable/modern_edit_text_background"
-                            android:hint="Tap to choose location"
+                            android:hint="Tap to choose district"
                             android:textColorHint="@color/gray_light_3"
                             android:textColor="@color/white"
                             android:textSize="16sp"
@@ -139,6 +139,29 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="?attr/selectableItemBackground" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Colony / Area"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="14dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <AutoCompleteTextView
+                            android:id="@+id/candidateColony"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:hint="Type or choose colony / area"
+                            android:textColorHint="@color/gray_light_3"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp"
+                            android:completionThreshold="1" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -227,13 +250,26 @@
                             android:visibility="gone"
                             android:background="@drawable/modern_edit_text_background"
                             android:padding="12dp" />
+
+                        <ImageView
+                            android:id="@+id/candidateResumePreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="160dp"
+                            android:layout_marginTop="8dp"
+                            android:adjustViewBounds="true"
+                            android:background="@drawable/modern_edit_text_background"
+                            android:contentDescription="@null"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
                     </LinearLayout>
 
-                    <!-- Job Title Section -->
+                    <!-- Job Title Section (Company only) -->
                     <LinearLayout
+                        android:id="@+id/jobTitleSection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:visibility="gone"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -291,11 +327,13 @@
 
                     </LinearLayout>
 
-                    <!-- Job Category Section -->
+                    <!-- Job Category Section (Company only) -->
                     <LinearLayout
+                        android:id="@+id/companyCategorySection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:visibility="gone"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -353,11 +391,13 @@
 
                     </LinearLayout>
 
-                    <!-- File Upload Section -->
+                    <!-- File Upload Section (Company only) -->
                     <LinearLayout
+                        android:id="@+id/companyUploadSection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:visibility="gone"
                         android:layout_marginBottom="32dp">
 
                         <TextView
@@ -608,7 +648,16 @@
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginTop="8dp"
-                        android:layout_marginBottom="16dp" />
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/submitValidationErrors"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:textColor="@color/brand_color_red"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
 
                 </LinearLayout>
 

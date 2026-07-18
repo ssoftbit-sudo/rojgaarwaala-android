@@ -40,6 +40,23 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <EditText
+            android:id="@+id/locationSearchInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/modern_edit_text_background"
+            android:hint="@string/search_location"
+            android:imeOptions="actionSearch"
+            android:inputType="textCapWords"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_light_3"
+            android:textSize="15sp" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/locationsRecyclerView"
             android:layout_width="match_parent"
