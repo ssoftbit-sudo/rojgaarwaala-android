@@ -25,4 +25,6 @@ interface JobApplicationRepository {
     fun markPaymentFailed(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>>
 
     fun getApplication(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>>
+
+    fun getMyApplications(): Flow<ApiResult<JobApplicationApiResponse>>
 }

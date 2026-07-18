@@ -31,6 +31,7 @@ class NetworkConstants {
         const val STORIES_ACTIVE = "stories/active"
         const val STORIES_VIEW = "stories/{id}/view"
         const val JOB_APPLICATIONS = "job-applications"
+        const val JOB_APPLICATIONS_MY = "job-applications/my"
         const val JOB_APPLICATION_DETAIL = "job-applications/{id}"
         const val JOB_APPLICATION_ORDER = "job-applications/{id}/razorpay-order"
         const val JOB_APPLICATION_CONFIRM = "job-applications/{id}/confirm-payment"

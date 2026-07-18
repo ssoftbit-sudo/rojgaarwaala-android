@@ -14,4 +14,6 @@ object SharedPrefsConstant {
     const val DEVICE_KEY = "device_key"
     /** Locally played videos — hide NEW tag immediately after playback. */
     const val VIEWED_VIDEO_IDS = "viewed_video_ids_for_new_tag"
+    /** True when admin updates application status or user submits a new application. */
+    const val JOB_STATUS_UPDATE_PENDING = "job_status_update_pending"
 }

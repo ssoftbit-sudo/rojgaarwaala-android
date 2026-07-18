@@ -162,6 +162,9 @@ interface RetrofitApiInterface {
     @GET(NetworkConstants.JOB_APPLICATION_DETAIL)
     suspend fun getJobApplication(@Path("id") id: Int): Response<JobApplicationApiResponse>
 
+    @GET(NetworkConstants.JOB_APPLICATIONS_MY)
+    suspend fun getMyJobApplications(): Response<JobApplicationApiResponse>
+
     @GET(NetworkConstants.HELP_DESK_CONFIG)
     suspend fun getHelpDeskConfig(): Response<HelpDeskConfigResponse>
 

@@ -10,6 +10,7 @@ data class JobApplicationApiResponse(
 
 data class JobApplicationApiData(
     @SerializedName("application") val application: JobApplicationDto? = null,
+    @SerializedName("applications") val applications: List<JobApplicationDto>? = null,
     @SerializedName("requires_payment") val requiresPayment: Boolean? = true,
     @SerializedName("razorpay_key_id") val razorpayKeyId: String? = null,
     @SerializedName("amount_paise") val amountPaise: Int? = null,
@@ -28,6 +29,16 @@ data class JobApplicationDto(
     @SerializedName("status") val status: String? = null,
     @SerializedName("payment_status") val paymentStatus: String? = null,
     @SerializedName("amount_paise") val amountPaise: Int? = null,
+    @SerializedName("applied_at") val appliedAt: String? = null,
+    @SerializedName("paid_at") val paidAt: String? = null,
+    @SerializedName("resume_url") val resumeUrl: String? = null,
+    @SerializedName("timeline") val timeline: List<JobApplicationTimelineEntry>? = null,
+)
+
+data class JobApplicationTimelineEntry(
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("note") val note: String? = null,
+    @SerializedName("at") val at: String? = null,
 )
 
 data class ConfirmPaymentRequest(

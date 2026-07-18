@@ -65,4 +65,10 @@ class JobApplicationRepositoryImpl @Inject constructor() : JobApplicationReposit
             RetrofitApiService.create(BASE_URL).getJobApplication(applicationId)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun getMyApplications(): Flow<ApiResult<JobApplicationApiResponse>> = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getMyJobApplications()
+        })
+    }.flowOn(Dispatchers.IO)
 }

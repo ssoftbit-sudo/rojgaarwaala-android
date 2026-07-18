@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,16 +17,16 @@ class StatusViewModel @Inject constructor(
   private val repository: JobApplicationRepository,
 ) : ViewModel() {
 
-  private val _applicationStatus = MutableLiveData<String>()
-  val applicationStatus: LiveData<String> = _applicationStatus
+  private val _applicationDetails = MutableLiveData<JobApplicationDto?>()
+  val applicationDetails: LiveData<JobApplicationDto?> = _applicationDetails
 
   private val _isLoading = MutableLiveData<Boolean>()
   val isLoading: LiveData<Boolean> = _isLoading
 
-  fun getApplicationStatus(applicationId: String) {
+  fun getApplicationDetails(applicationId: String) {
     val id = applicationId.toIntOrNull()
     if (id == null || id <= 0) {
-      _applicationStatus.value = "error"
+      _applicationDetails.value = null
       return
     }
 
@@ -34,11 +35,11 @@ class StatusViewModel @Inject constructor(
       repository.getApplication(id).collectLatest { result ->
         when (result) {
           is ApiResult.Success -> {
-            _applicationStatus.value = result.data?.data?.application?.status ?: "unknown"
+            _applicationDetails.value = result.data?.data?.application
           }
           is ApiResult.Loading -> Unit
           is ApiResult.Error -> {
-            _applicationStatus.value = "error"
+            _applicationDetails.value = null
           }
         }
         _isLoading.value = false

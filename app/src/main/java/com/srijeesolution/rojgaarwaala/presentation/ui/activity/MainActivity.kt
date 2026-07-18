@@ -25,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.JobApplicationsViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toolbarTitle: TextView
     private lateinit var toolbarLocationLabel: TextView
     private lateinit var toolbarNotification: ImageButton
+    private lateinit var toolbarNotificationContainer: FrameLayout
+    private lateinit var toolbarNotificationBadge: TextView
     private lateinit var toolbarOverflow: ImageButton
     private lateinit var bottomNav: LinearLayout
 
@@ -76,6 +79,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainToolbarViewModel: MainToolbarViewModel by viewModels()
     private val homePageViewModel: HomePageViewModel by viewModels()
+    private val jobApplicationsViewModel: JobApplicationsViewModel by viewModels()
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -116,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         setupToolbarChrome()
         setupBottomNav()
         setupStoriesNavBadgeObserver()
+        setupJobStatusObservers()
         preloadStories()
 
         if (savedInstanceState == null) {
@@ -135,6 +140,8 @@ class MainActivity : AppCompatActivity() {
         toolbarTitle = findViewById(R.id.toolbarTitle)
         toolbarLocationLabel = findViewById(R.id.toolbarLocationLabel)
         toolbarNotification = findViewById(R.id.toolbarNotification)
+        toolbarNotificationContainer = findViewById(R.id.toolbarNotificationContainer)
+        toolbarNotificationBadge = findViewById(R.id.toolbarNotificationBadge)
         toolbarOverflow = findViewById(R.id.toolbarOverflow)
         bottomNav = findViewById(R.id.customBottomNav)
 
@@ -207,14 +214,47 @@ class MainActivity : AppCompatActivity() {
         }
 
         toolbarNotification.setOnClickListener {
-            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, false))
-            toolbarNotification.visibility = View.GONE
-            Toast.makeText(this, R.string.notifications, Toast.LENGTH_SHORT).show()
+            openJobStatusScreen()
         }
 
         toolbarOverflow.setOnClickListener { showOverflowMenu() }
 
-        refreshNotificationBadgeUi()
+        refreshJobStatusUi()
+    }
+
+    private fun setupJobStatusObservers() {
+        jobApplicationsViewModel.badgeCount.observe(this) { count ->
+            updateJobStatusBadge(count)
+        }
+    }
+
+    private fun openJobStatusScreen() {
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            startActivity(Intent(this, AppliedJobsActivity::class.java))
+        } else {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to view job status", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateJobStatusBadge(count: Int) {
+        if (count > 0) {
+            toolbarNotificationBadge.visibility = View.VISIBLE
+            toolbarNotificationBadge.text = if (count > 9) "9+" else count.toString()
+        } else {
+            toolbarNotificationBadge.visibility = View.GONE
+        }
+    }
+
+    private fun refreshJobStatusUi() {
+        val loggedIn = sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)
+        val showOnHome = loggedIn && currentTabIndex == 0
+        toolbarNotificationContainer.visibility = if (showOnHome) View.VISIBLE else View.GONE
+        if (loggedIn) {
+            jobApplicationsViewModel.refreshApplications(isLoggedIn = true)
+        } else {
+            updateJobStatusBadge(0)
+        }
     }
 
     private fun showOverflowMenu() {
@@ -315,8 +355,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshNotificationBadgeUi() {
-        val pending = sharedPrefs.getPrefs(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, false)
-        toolbarNotification.visibility = if (pending) View.VISIBLE else View.GONE
+        // Legacy FCM flag — job status badge is handled separately.
     }
 
     private fun selectTab(index: Int) {
@@ -377,6 +416,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         updateChromeForTab(index)
+        refreshJobStatusUi()
     }
 
     private fun showFragment(fragment: Fragment) {
@@ -403,6 +443,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshNotificationBadgeUi()
+        refreshJobStatusUi()
         val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
         homePageViewModel.getActiveStories(deviceKey, forceRefresh = true)
         intent?.let { incoming ->
@@ -439,6 +480,17 @@ class MainActivity : AppCompatActivity() {
                 it.data?.let { uri ->
                     notificationType = uri.getQueryParameter("type")
                     notificationId = uri.getQueryParameter("id")
+                        ?: uri.getQueryParameter("application_id")
+                }
+            }
+
+            var applicationId = it.getStringExtra("application_id")
+            if (applicationId.isNullOrEmpty()) {
+                applicationId = notificationId
+            }
+            if (applicationId.isNullOrEmpty()) {
+                it.data?.let { uri ->
+                    applicationId = uri.getQueryParameter("application_id")
                 }
             }
 
@@ -460,6 +512,16 @@ class MainActivity : AppCompatActivity() {
                     categoryIntent.putExtra("category_id", notificationId)
                     categoryIntent.putExtra("category_title", "Category")
                     startActivity(categoryIntent)
+                }
+                "job_application_status" -> {
+                    if (!applicationId.isNullOrBlank()) {
+                        val statusIntent = Intent(this, ApplicationStatusActivity::class.java)
+                        statusIntent.putExtra("application_id", applicationId)
+                        startActivity(statusIntent)
+                    } else {
+                        openJobStatusScreen()
+                    }
+                    jobApplicationsViewModel.notifyJobStatusUpdated()
                 }
                 else -> selectTab(0)
             }

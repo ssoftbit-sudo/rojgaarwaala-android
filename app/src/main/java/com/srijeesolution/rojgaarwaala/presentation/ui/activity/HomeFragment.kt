@@ -20,11 +20,15 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.Category
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideo
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.JobApplicationsViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.CategoryGridAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -56,6 +60,9 @@ class HomeFragment : Fragment() {
 
     private lateinit var mainToolbarViewModel: MainToolbarViewModel
 
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -75,7 +82,41 @@ class HomeFragment : Fragment() {
         setupViewAllClickListeners()
         
         observeHomePageData()
+        setupJobStatusCard()
         callApi()
+    }
+
+    private fun setupJobStatusCard() {
+        val jobApplicationsViewModel =
+            ViewModelProvider(requireActivity())[JobApplicationsViewModel::class.java]
+
+        binding.jobStatusCard.setOnClickListener {
+            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+                startActivity(Intent(requireContext(), AppliedJobsActivity::class.java))
+            } else {
+                startActivity(Intent(requireContext(), LoginActivity::class.java))
+                Toast.makeText(requireContext(), "Please login to view job status", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        jobApplicationsViewModel.badgeCount.observe(viewLifecycleOwner) { count ->
+            val loggedIn = sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)
+            binding.jobStatusCard.visibility = if (loggedIn) View.VISIBLE else View.GONE
+            if (count > 0) {
+                binding.jobStatusBadge.visibility = View.VISIBLE
+                binding.jobStatusBadge.text = if (count > 9) "9+" else count.toString()
+            } else {
+                binding.jobStatusBadge.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            ViewModelProvider(requireActivity())[JobApplicationsViewModel::class.java]
+                .refreshApplications(isLoggedIn = true)
+        }
     }
 
     private fun observeMainToolbarFilters() {

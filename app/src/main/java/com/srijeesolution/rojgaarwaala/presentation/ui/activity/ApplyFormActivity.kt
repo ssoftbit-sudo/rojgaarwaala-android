@@ -9,7 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.databinding.ActivityApplyFormBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.ApplyViewModel
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ApplyFormActivity : AppCompatActivity() {
@@ -20,6 +23,9 @@ class ApplyFormActivity : AppCompatActivity() {
   private var videoId: Int = 0
   private var scheduledImageId: Int = 0
   private var jobTitle: String = ""
+
+  @Inject
+  lateinit var sharedPrefs: SharedPrefs
 
   private val resumePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     uri?.let {
@@ -97,21 +103,10 @@ class ApplyFormActivity : AppCompatActivity() {
       binding.submitButton.text = "Submit Application"
 
       if (success) {
-        if (viewModel.requiresPayment.value == true) {
-          val intent = Intent(this, PaymentActivity::class.java)
-          intent.putExtra("application_id", viewModel.applicationId.value)
-          intent.putExtra("razorpay_key_id", viewModel.razorpayKeyId.value)
-          intent.putExtra("amount_paise", viewModel.amountPaise.value ?: 10000)
-          intent.putExtra("candidate_name", binding.nameInput.text?.toString()?.trim().orEmpty())
-          intent.putExtra("candidate_phone", binding.phoneInput.text?.toString()?.trim().orEmpty())
-          intent.putExtra("candidate_email", binding.emailInput.text?.toString()?.trim().orEmpty())
-          startActivity(intent)
-        } else {
-          val intent = Intent(this, ApplicationStatusActivity::class.java)
-          intent.putExtra("application_id", viewModel.applicationId.value)
-          intent.putExtra("status_override", "applied")
-          startActivity(intent)
-        }
+        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.JOB_STATUS_UPDATE_PENDING, true))
+        val intent = Intent(this, ApplicationStatusActivity::class.java)
+        intent.putExtra("application_id", viewModel.applicationId.value)
+        startActivity(intent)
         finish()
       } else {
         Toast.makeText(

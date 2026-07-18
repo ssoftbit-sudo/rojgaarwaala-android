@@ -42,59 +42,114 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:fillViewport="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_theme_panel"
-                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="16dp">
 
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_marginBottom="16dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_profile"
-                    app:tint="@color/accent" />
-
-                <TextView
-                    android:id="@+id/statusText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Loading..."
-                    android:textColor="@color/white"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/checkStatusButton"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:background="@drawable/bg_theme_chip"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless"
-                    android:gravity="center"
-                    android:minHeight="52dp"
-                    android:paddingStart="16dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="16dp"
-                    android:paddingBottom="10dp"
-                    android:text="Refresh Status"
-                    android:textColor="@color/accent"
-                    android:textSize="15sp"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/jobTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Job Title"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/categoryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Category"
+                        android:textColor="@color/brand_color_yellow"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/appliedDateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Applied on"
+                        android:textColor="@color/search_hint"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/statusText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Loading..."
+                        android:textColor="@color/white"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/checkStatusButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:padding="12dp"
+                        android:text="Refresh Status"
+                        android:textColor="@color/accent"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="Status Timeline"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/timelineRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+
+                    <TextView
+                        android:id="@+id/timelineEmptyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="12dp"
+                        android:text="Status updates will appear here."
+                        android:textColor="@color/search_hint"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 </FrameLayout>

@@ -2,9 +2,12 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.srijeesolution.rojgaarwaala.databinding.ActivityApplicationStatusBinding
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.ApplicationTimelineAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.StatusViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -13,8 +16,8 @@ class ApplicationStatusActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityApplicationStatusBinding
     private lateinit var viewModel: StatusViewModel
+    private lateinit var timelineAdapter: ApplicationTimelineAdapter
     private var applicationId: String = ""
-    private var statusOverride: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,47 +25,47 @@ class ApplicationStatusActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         viewModel = ViewModelProvider(this)[StatusViewModel::class.java]
-
         applicationId = intent.getStringExtra("application_id") ?: ""
-        statusOverride = intent.getStringExtra("status_override") ?: ""
+
+        timelineAdapter = ApplicationTimelineAdapter(emptyList())
+        binding.timelineRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.timelineRecyclerView.adapter = timelineAdapter
+        binding.timelineRecyclerView.isNestedScrollingEnabled = false
 
         setupClickListeners()
         observeViewModel()
-        if (statusOverride.isNotEmpty()) {
-            updateStatusDisplay(statusOverride)
-            binding.checkStatusButton.isEnabled = false
-            binding.checkStatusButton.text = "Demo Status"
-        } else {
-            loadStatus()
-        }
+        loadStatus()
     }
 
     private fun setupClickListeners() {
-        binding.backButton.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        binding.checkStatusButton.setOnClickListener {
-            loadStatus()
-        }
+        binding.backButton.setOnClickListener { finish() }
+        binding.checkStatusButton.setOnClickListener { loadStatus() }
     }
 
     private fun loadStatus() {
-        if (statusOverride.isNotEmpty()) {
-            updateStatusDisplay(statusOverride)
-            return
-        }
         if (applicationId.isNotEmpty()) {
-            viewModel.getApplicationStatus(applicationId)
+            viewModel.getApplicationDetails(applicationId)
         }
     }
 
     private fun observeViewModel() {
-        viewModel.applicationStatus.observe(this) { status ->
-            updateStatusDisplay(status)
+        viewModel.applicationDetails.observe(this) { application ->
+            if (application == null) return@observe
+
+            binding.jobTitleText.text = application.jobTitle ?: "Job Application"
+            binding.categoryText.text = application.categoryName?.let { "Category - $it" }.orEmpty()
+            binding.categoryText.visibility =
+                if (application.categoryName.isNullOrBlank()) View.GONE else View.VISIBLE
+            binding.appliedDateText.text = application.appliedAt?.let {
+                "Applied on $it"
+            } ?: "Application submitted"
+
+            updateStatusDisplay(application.status.orEmpty())
+
+            val timeline = application.timeline.orEmpty()
+            timelineAdapter.updateEntries(timeline)
+            binding.timelineEmptyText.visibility = if (timeline.isEmpty()) View.VISIBLE else View.GONE
+            binding.timelineRecyclerView.visibility = if (timeline.isEmpty()) View.GONE else View.VISIBLE
         }
 
         viewModel.isLoading.observe(this) { loading ->
@@ -72,18 +75,16 @@ class ApplicationStatusActivity : AppCompatActivity() {
     }
 
     private fun updateStatusDisplay(status: String) {
-        val (statusText, statusColor) = when (status.lowercase()) {
-            "applied" -> "Congratulations! Your application has been submitted successfully." to android.R.color.holo_green_dark
-            "under_review" -> "Your application is under review." to android.R.color.holo_blue_dark
-            "interview_scheduled" -> "Interview scheduled. HR will contact you." to android.R.color.holo_orange_dark
-            "selected" -> "Congratulations! You are selected." to android.R.color.holo_green_dark
-            "rejected" -> "Application not selected this time." to android.R.color.holo_red_dark
-            "pending_payment" -> "Payment pending. Please complete payment." to android.R.color.holo_orange_dark
-            "failed" -> "Payment failed. Please retry from apply flow." to android.R.color.holo_red_dark
-            else -> "Status: ${status.replace('_', ' ')}" to android.R.color.darker_gray
+        val statusText = when (status.lowercase()) {
+            "applied" -> "Congratulations! Your application has been submitted successfully."
+            "under_review" -> "Your application is under review."
+            "interview_scheduled" -> "Interview scheduled. HR will contact you."
+            "selected" -> "Congratulations! You are selected."
+            "rejected" -> "Application not selected this time."
+            "pending_payment" -> "Your application has been submitted successfully."
+            "failed" -> "There was an issue with your application. Please contact support."
+            else -> "Status: ${status.replace('_', ' ')}"
         }
-
         binding.statusText.text = statusText
-        binding.statusText.setTextColor(resources.getColor(statusColor))
     }
 }

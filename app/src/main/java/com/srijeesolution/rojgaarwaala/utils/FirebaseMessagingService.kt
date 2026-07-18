@@ -81,12 +81,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         // Always create and show notification (even for background)
         val type = remoteMessage.data["type"]
         val id = remoteMessage.data["id"]
+        val applicationId = remoteMessage.data["application_id"]
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Rojgaarwaala"
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "New notification"
         
-        Log.d(TAG, "Final Notification Type: $type, ID: $id")
+        Log.d(TAG, "Final Notification Type: $type, ID: $id, Application ID: $applicationId")
         Log.d(TAG, "Creating notification with title: $title, body: $body")
-        sendNotification(title, body, type, id)
+        sendNotification(title, body, type, id, applicationId)
     }
 
     private fun sendRegistrationToServer(token: String) {
@@ -94,15 +95,26 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "sendRegistrationTokenToServer($token)")
     }
 
-    private fun sendNotification(title: String?, messageBody: String?, type: String?, id: String?) {
+    private fun sendNotification(
+        title: String?,
+        messageBody: String?,
+        type: String?,
+        id: String?,
+        applicationId: String? = null,
+    ) {
         Log.d(TAG, "=== SENDING NOTIFICATION ===")
         Log.d(TAG, "Title: $title")
         Log.d(TAG, "Body: $messageBody")
         Log.d(TAG, "Type: $type")
         Log.d(TAG, "ID: $id")
-        
-        // Create deep link URL for background notifications
-        val deepLinkUrl = "rojgaarwaala://notification?type=$type&id=$id"
+        Log.d(TAG, "Application ID: $applicationId")
+
+        val resolvedApplicationId = applicationId ?: id
+        val deepLinkUrl = if (type == "job_application_status") {
+            "rojgaarwaala://notification?type=$type&application_id=$resolvedApplicationId"
+        } else {
+            "rojgaarwaala://notification?type=$type&id=$id"
+        }
         Log.d(TAG, "Deep link URL: $deepLinkUrl")
         
         val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -110,14 +122,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             setPackage(packageName)
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             
-            // Also add notification data as extras for when app is open
             putExtra("notification_type", type)
             putExtra("notification_id", id)
             putExtra("type", type)
             putExtra("id", id)
+            putExtra("application_id", resolvedApplicationId)
             
             Log.d(TAG, "Intent created with data: $data")
-            Log.d(TAG, "Intent extras - Type: $type, ID: $id")
             Log.d(TAG, "Intent package: $packageName")
         }
         
@@ -156,7 +167,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
 
         // Show in-app bell on MainActivity when user opens the app
-        SharedPrefs(this).setPrefsData(Pair(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, true))
+        val sharedPrefs = SharedPrefs(this)
+        if (type == "job_application_status") {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.JOB_STATUS_UPDATE_PENDING, true))
+        } else {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, true))
+        }
 
         // Use a unique notification ID to ensure proper handling
         val notificationId = System.currentTimeMillis().toInt()
