@@ -40,6 +40,9 @@ class ApplyViewModel @Inject constructor(
   private val _amountPaise = MutableLiveData<Int>()
   val amountPaise: LiveData<Int> = _amountPaise
 
+  private val _requiresPayment = MutableLiveData(true)
+  val requiresPayment: LiveData<Boolean> = _requiresPayment
+
   private val _errorMessage = MutableLiveData<String>()
   val errorMessage: LiveData<String> = _errorMessage
 
@@ -91,6 +94,7 @@ class ApplyViewModel @Inject constructor(
                 _submitResult.value = false
               } else {
                 _applicationId.value = appId.toString()
+                _requiresPayment.value = data?.requiresPayment ?: true
                 _razorpayKeyId.value = data?.razorpayKeyId.orEmpty()
                 _amountPaise.value = data?.amountPaise ?: data?.application?.amountPaise ?: 10000
                 _submitResult.value = true

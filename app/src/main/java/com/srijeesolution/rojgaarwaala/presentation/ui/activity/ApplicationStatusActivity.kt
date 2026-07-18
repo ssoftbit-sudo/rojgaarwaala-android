@@ -73,7 +73,7 @@ class ApplicationStatusActivity : AppCompatActivity() {
 
     private fun updateStatusDisplay(status: String) {
         val (statusText, statusColor) = when (status.lowercase()) {
-            "applied" -> "Application submitted. HR team will review your resume." to android.R.color.holo_blue_dark
+            "applied" -> "Congratulations! Your application has been submitted successfully." to android.R.color.holo_green_dark
             "under_review" -> "Your application is under review." to android.R.color.holo_blue_dark
             "interview_scheduled" -> "Interview scheduled. HR will contact you." to android.R.color.holo_orange_dark
             "selected" -> "Congratulations! You are selected." to android.R.color.holo_green_dark

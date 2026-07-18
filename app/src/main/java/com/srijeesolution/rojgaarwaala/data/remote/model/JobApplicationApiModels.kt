@@ -10,6 +10,7 @@ data class JobApplicationApiResponse(
 
 data class JobApplicationApiData(
     @SerializedName("application") val application: JobApplicationDto? = null,
+    @SerializedName("requires_payment") val requiresPayment: Boolean? = true,
     @SerializedName("razorpay_key_id") val razorpayKeyId: String? = null,
     @SerializedName("amount_paise") val amountPaise: Int? = null,
     @SerializedName("order_id") val orderId: String? = null,

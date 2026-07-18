@@ -97,14 +97,21 @@ class ApplyFormActivity : AppCompatActivity() {
       binding.submitButton.text = "Submit Application"
 
       if (success) {
-        val intent = Intent(this, PaymentActivity::class.java)
-        intent.putExtra("application_id", viewModel.applicationId.value)
-        intent.putExtra("razorpay_key_id", viewModel.razorpayKeyId.value)
-        intent.putExtra("amount_paise", viewModel.amountPaise.value ?: 10000)
-        intent.putExtra("candidate_name", binding.nameInput.text?.toString()?.trim().orEmpty())
-        intent.putExtra("candidate_phone", binding.phoneInput.text?.toString()?.trim().orEmpty())
-        intent.putExtra("candidate_email", binding.emailInput.text?.toString()?.trim().orEmpty())
-        startActivity(intent)
+        if (viewModel.requiresPayment.value == true) {
+          val intent = Intent(this, PaymentActivity::class.java)
+          intent.putExtra("application_id", viewModel.applicationId.value)
+          intent.putExtra("razorpay_key_id", viewModel.razorpayKeyId.value)
+          intent.putExtra("amount_paise", viewModel.amountPaise.value ?: 10000)
+          intent.putExtra("candidate_name", binding.nameInput.text?.toString()?.trim().orEmpty())
+          intent.putExtra("candidate_phone", binding.phoneInput.text?.toString()?.trim().orEmpty())
+          intent.putExtra("candidate_email", binding.emailInput.text?.toString()?.trim().orEmpty())
+          startActivity(intent)
+        } else {
+          val intent = Intent(this, ApplicationStatusActivity::class.java)
+          intent.putExtra("application_id", viewModel.applicationId.value)
+          intent.putExtra("status_override", "applied")
+          startActivity(intent)
+        }
         finish()
       } else {
         Toast.makeText(

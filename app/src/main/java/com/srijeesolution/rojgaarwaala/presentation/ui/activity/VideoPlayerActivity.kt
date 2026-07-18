@@ -337,7 +337,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun setupPlaybackOverlay() {
         binding.playPauseOverlay.setOnClickListener {
             val p = exoPlayer ?: return@setOnClickListener
-            if (p.isPlaying) p.pause() else p.play()
+            if (p.playbackState == Player.STATE_ENDED) {
+                p.seekTo(0)
+                p.play()
+                showPlayerControls()
+                startAutoHideTimer()
+            } else if (p.isPlaying) {
+                p.pause()
+            } else {
+                p.play()
+            }
         }
         binding.skipBackButton.setOnClickListener {
             exoPlayer?.let {
@@ -422,10 +431,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         descriptionExpanded = !descriptionExpanded
         if (descriptionExpanded) {
             binding.videoDetailDescription.maxLines = Int.MAX_VALUE
-            binding.expandDescriptionButton.rotation = 270f
+            binding.expandDescriptionButton.text = "Less"
         } else {
             binding.videoDetailDescription.maxLines = 3
-            binding.expandDescriptionButton.rotation = 90f
+            binding.expandDescriptionButton.text = "More Details"
         }
     }
 
@@ -788,7 +797,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             if (needsExpand) View.VISIBLE else View.GONE
         descriptionExpanded = false
         binding.videoDetailDescription.maxLines = 3
-        binding.expandDescriptionButton.rotation = 90f
+        binding.expandDescriptionButton.text = "More Details"
 
         // Related videos
         val related = data.relatedVideos ?: emptyList()
@@ -1281,7 +1290,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun onVideoAreaTapped() {
         if (controlsVisible) {
-            startAutoHideTimer()
+            autoHideHandler.removeCallbacks(autoHideRunnable)
+            hidePlayerControls()
         } else {
             showPlayerControls()
             startAutoHideTimer()
