@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
@@ -27,6 +28,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import org.json.JSONObject
 
 import com.srijeesolution.rojgaarwaala.R
 import com.bumptech.glide.Glide
@@ -241,17 +243,30 @@ class AddJobFragment : Fragment() {
                 is ApiResult.Success -> {
                     binding.progressBar.visibility= View.GONE
                     resetSubmitButton()
-                    if (apiResponse.data?.dataObj != null) {
-                        Toast.makeText(requireContext(),"Job added successfully!", Toast.LENGTH_SHORT).show()
+                    if (apiResponse.data?.status == true) {
+                        Toast.makeText(
+                            requireContext(),
+                            apiResponse.data?.message ?: "Job added successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         (activity as? MainActivity)?.selectTabFromFragment(0)
-                    }else{
-                        Toast.makeText(requireContext(),""+apiResponse.data?.message, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            apiResponse.data?.message ?: "Submit failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
                 is ApiResult.Error -> {
                     binding.progressBar.visibility= View.GONE
                     resetSubmitButton()
-                    Toast.makeText(requireContext(),"Failed Job Submit", Toast.LENGTH_SHORT).show()
+                    val serverMsg = parseApiErrorMessage(apiResponse.message)
+                    Toast.makeText(
+                        requireContext(),
+                        serverMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -581,7 +596,14 @@ class AddJobFragment : Fragment() {
             candidateResumeUri = uri
             binding.candidateResumeFileName.text = "Selected: $fileName"
             binding.candidateResumeFileName.visibility = View.VISIBLE
-            pdfFile = file
+
+            if (isImage) {
+                imageFile = file
+                pdfFile = null
+            } else {
+                pdfFile = file
+                imageFile = null
+            }
 
             if (isImage) {
                 binding.candidateResumePreview.visibility = View.VISIBLE
@@ -968,4 +990,17 @@ class AddJobFragment : Fragment() {
     private fun updatePageTitle(title: String) {
         activity?.title = title
     }
-} 
+
+    private fun parseApiErrorMessage(error: ApiError?): String {
+        val body = error?.errorBody.orEmpty()
+        if (body.isNotBlank()) {
+            try {
+                val message = JSONObject(body).optString("message")
+                if (message.isNotBlank()) return message
+            } catch (_: Exception) {
+                // fall through
+            }
+        }
+        return error?.errorMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit"
+    }
+}
