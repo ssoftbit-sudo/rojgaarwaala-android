@@ -54,6 +54,13 @@ class AddJobFragment : Fragment() {
     private lateinit var homePageViewModel: HomePageViewModel
     private var updateJobId: Int? = null
     private var categoryDialog: AlertDialog? = null
+    private var categoryPickerTarget: CategoryPickerTarget = CategoryPickerTarget.COMPANY
+    private var categoriesObserverRegistered = false
+    private var categoryPickerRequested = false
+
+    private enum class CategoryPickerTarget {
+        COMPANY, CANDIDATE
+    }
     
     // File upload variables
     private var pdfFile: File? = null
@@ -150,6 +157,7 @@ class AddJobFragment : Fragment() {
         observeJobSubmitData()
         observeJobUpdateData()
         setupCategoryDropdown()
+        observeCategoriesDropdown()
         setupUserTypeFlow()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
@@ -164,13 +172,6 @@ class AddJobFragment : Fragment() {
             updateUserTypeUi()
         }
 
-        val categorySuggestions = arrayOf(
-            "Sales Executive", "Telecaller", "Back Office", "Delivery", "Marketing",
-            "Accountant", "Driver", "Electrician", "Plumber", "Teacher", "Data Entry"
-        )
-        binding.candidateJobCategory.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categorySuggestions)
-        )
         binding.candidateDistrict.setOnClickListener {
             candidateDistrictLauncher.launch(Intent(requireContext(), LocationPickerActivity::class.java))
         }
@@ -283,15 +284,28 @@ class AddJobFragment : Fragment() {
         binding.jobCategory.isFocusable = false
         binding.jobCategory.isClickable = true
         binding.jobCategory.setOnClickListener {
-            // Show loading
-            binding.progressBar.visibility = View.VISIBLE
-            // Fetch categories
-            homePageViewModel.getCategoriesData()
-            observeCategoriesDropdown()
+            openCategoryPicker(CategoryPickerTarget.COMPANY)
+        }
+
+        binding.candidateJobCategory.isFocusable = false
+        binding.candidateJobCategory.isClickable = true
+        binding.candidateJobCategory.keyListener = null
+        binding.candidateJobCategory.setOnClickListener {
+            openCategoryPicker(CategoryPickerTarget.CANDIDATE)
         }
     }
 
+    private fun openCategoryPicker(target: CategoryPickerTarget) {
+        categoryPickerTarget = target
+        categoryPickerRequested = true
+        binding.progressBar.visibility = View.VISIBLE
+        homePageViewModel.getCategoriesData()
+    }
+
     private fun observeCategoriesDropdown() {
+        if (categoriesObserverRegistered) return
+        categoriesObserverRegistered = true
+
         homePageViewModel.categoriesLiveData.observe(viewLifecycleOwner) { apiResponse ->
             when (apiResponse) {
                 is ApiResult.Loading -> {
@@ -299,25 +313,33 @@ class AddJobFragment : Fragment() {
                 }
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    val data = apiResponse.data?.dataObj
-                    val categories = data?.categories ?: emptyList<com.srijeesolution.rojgaarwaala.data.remote.model.Category>()
-                    val titles = categories.mapNotNull { it.title }
-                    if (titles.isNotEmpty()) {
-                        if (categoryDialog?.isShowing == true) return@observe
-                        val builder = AlertDialog.Builder(requireContext())
-                        builder.setTitle("Select Category")
-                        builder.setItems(titles.toTypedArray()) { dialog, which ->
-                            binding.jobCategory.setText(titles[which])
-                        }
-                        categoryDialog = builder.create()
-                        categoryDialog?.setOnDismissListener { categoryDialog = null }
-                        categoryDialog?.show()
-                    } else {
+                    if (!categoryPickerRequested) return@observe
+                    categoryPickerRequested = false
+                    val categories = apiResponse.data?.dataObj?.categories.orEmpty()
+                    val titles = categories.mapNotNull { it.title?.trim() }.filter { it.isNotEmpty() }
+                    if (titles.isEmpty()) {
                         Toast.makeText(requireContext(), "No categories found", Toast.LENGTH_SHORT).show()
+                        return@observe
                     }
+                    if (categoryDialog?.isShowing == true) return@observe
+                    val builder = AlertDialog.Builder(requireContext())
+                    builder.setTitle("Select Category")
+                    builder.setItems(titles.toTypedArray()) { _, which ->
+                        val selected = titles[which]
+                        when (categoryPickerTarget) {
+                            CategoryPickerTarget.COMPANY -> binding.jobCategory.setText(selected)
+                            CategoryPickerTarget.CANDIDATE -> binding.candidateJobCategory.setText(selected)
+                        }
+                        binding.candidateJobCategory.error = null
+                        binding.jobCategory.error = null
+                    }
+                    categoryDialog = builder.create()
+                    categoryDialog?.setOnDismissListener { categoryDialog = null }
+                    categoryDialog?.show()
                 }
                 is ApiResult.Error -> {
                     binding.progressBar.visibility = View.GONE
+                    categoryPickerRequested = false
                     Toast.makeText(requireContext(), "Failed to load categories", Toast.LENGTH_SHORT).show()
                 }
             }

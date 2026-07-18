@@ -106,12 +106,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="60dp"
                             android:background="@drawable/modern_edit_text_background"
-                            android:hint="Choose job category"
+                            android:hint="Tap to choose job category"
                             android:textColorHint="@color/gray_light_3"
                             android:textColor="@color/white"
                             android:textSize="16sp"
                             android:paddingStart="20dp"
                             android:paddingEnd="20dp"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:cursorVisible="false"
                             android:completionThreshold="1" />
 
                         <TextView
