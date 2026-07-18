@@ -20,6 +20,7 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskIssueCategory
 import com.srijeesolution.rojgaarwaala.databinding.ActivityHelpDeskBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.presentation.ui.adapter.HelpDeskListItem
 import com.srijeesolution.rojgaarwaala.presentation.ui.adapter.HelpFaqAdapter
 import com.srijeesolution.rojgaarwaala.presentation.ui.adapter.HelpSuggestionAdapter
 import com.srijeesolution.rojgaarwaala.presentation.ui.adapter.HelpTutorialAdapter
@@ -31,7 +32,10 @@ class HelpDeskActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHelpDeskBinding
     private val viewModel: HelpDeskViewModel by viewModels()
-    private val faqAdapter = HelpFaqAdapter()
+    private val faqAdapter = HelpFaqAdapter(
+        onOpenVideo = { url -> openExternalUrl(url) },
+        onOpenAudio = { url -> openExternalUrl(url) },
+    )
     private val suggestionAdapter = HelpSuggestionAdapter()
     private val tutorialAdapter = HelpTutorialAdapter(
         onOpenVideo = { url -> openExternalUrl(url) },
@@ -168,7 +172,13 @@ class HelpDeskActivity : AppCompatActivity() {
                             val question = faq.question?.trim().orEmpty()
                             val answer = faq.answer?.trim().orEmpty()
                             if (question.isBlank() || answer.isBlank()) return@mapNotNull null
-                            Triple(id, question, answer)
+                            HelpDeskListItem.FaqRow(
+                                id = id,
+                                question = question,
+                                answer = answer,
+                                videoUrl = faq.videoUrl,
+                                audioUrl = faq.audioUrl,
+                            )
                         }
                         if (faqs.isEmpty()) return@mapNotNull null
                         title to faqs

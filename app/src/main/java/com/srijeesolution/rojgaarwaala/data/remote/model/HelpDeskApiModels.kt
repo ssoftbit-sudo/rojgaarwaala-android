@@ -47,6 +47,7 @@ data class HelpDeskFaqItem(
     @SerializedName("question") val question: String? = null,
     @SerializedName("answer") val answer: String? = null,
     @SerializedName("audio_url") val audioUrl: String? = null,
+    @SerializedName("video_url") val videoUrl: String? = null,
 )
 
 data class HelpDeskFaqSuggestion(

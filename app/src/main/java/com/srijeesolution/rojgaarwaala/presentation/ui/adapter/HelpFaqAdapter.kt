@@ -9,20 +9,29 @@ import com.srijeesolution.rojgaarwaala.R
 
 sealed class HelpDeskListItem {
     data class CategoryHeader(val title: String) : HelpDeskListItem()
-    data class FaqRow(val id: Int, val question: String, val answer: String) : HelpDeskListItem()
+    data class FaqRow(
+        val id: Int,
+        val question: String,
+        val answer: String,
+        val videoUrl: String? = null,
+        val audioUrl: String? = null,
+    ) : HelpDeskListItem()
 }
 
-class HelpFaqAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class HelpFaqAdapter(
+    private val onOpenVideo: (String) -> Unit = {},
+    private val onOpenAudio: (String) -> Unit = {},
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = ArrayList<HelpDeskListItem>()
     private val expandedIds = HashSet<Int>()
 
-    fun submitCategories(categories: List<Pair<String, List<Triple<Int, String, String>>>>) {
+    fun submitCategories(categories: List<Pair<String, List<HelpDeskListItem.FaqRow>>>) {
         items.clear()
         categories.forEach { (category, faqs) ->
             items.add(HelpDeskListItem.CategoryHeader(category))
-            faqs.forEach { (id, question, answer) ->
-                items.add(HelpDeskListItem.FaqRow(id, question, answer))
+            faqs.forEach { faq ->
+                items.add(faq)
             }
         }
         notifyDataSetChanged()
@@ -50,14 +59,20 @@ class HelpFaqAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 (holder as CategoryViewHolder).bind(item.title)
             }
             is HelpDeskListItem.FaqRow -> {
-                (holder as FaqViewHolder).bind(item, expandedIds.contains(item.id)) {
-                    if (expandedIds.contains(item.id)) {
-                        expandedIds.remove(item.id)
-                    } else {
-                        expandedIds.add(item.id)
-                    }
-                    notifyItemChanged(position)
-                }
+                (holder as FaqViewHolder).bind(
+                    item,
+                    expandedIds.contains(item.id),
+                    onToggle = {
+                        if (expandedIds.contains(item.id)) {
+                            expandedIds.remove(item.id)
+                        } else {
+                            expandedIds.add(item.id)
+                        }
+                        notifyItemChanged(position)
+                    },
+                    onOpenVideo = onOpenVideo,
+                    onOpenAudio = onOpenAudio,
+                )
             }
         }
     }
@@ -76,12 +91,33 @@ class HelpFaqAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val questionView: TextView = itemView.findViewById(R.id.faqQuestion)
         private val answerView: TextView = itemView.findViewById(R.id.faqAnswer)
         private val chevronView: TextView = itemView.findViewById(R.id.faqChevron)
+        private val mediaRow: View = itemView.findViewById(R.id.faqMediaRow)
+        private val watchVideoButton: TextView = itemView.findViewById(R.id.faqWatchVideo)
+        private val listenAudioButton: TextView = itemView.findViewById(R.id.faqListenAudio)
 
-        fun bind(item: HelpDeskListItem.FaqRow, expanded: Boolean, onToggle: () -> Unit) {
+        fun bind(
+            item: HelpDeskListItem.FaqRow,
+            expanded: Boolean,
+            onToggle: () -> Unit,
+            onOpenVideo: (String) -> Unit,
+            onOpenAudio: (String) -> Unit,
+        ) {
             questionView.text = item.question
             answerView.text = item.answer
             answerView.visibility = if (expanded) View.VISIBLE else View.GONE
             chevronView.text = if (expanded) "−" else "+"
+
+            val videoUrl = item.videoUrl.orEmpty()
+            val audioUrl = item.audioUrl.orEmpty()
+            val hasMedia = expanded && (videoUrl.isNotBlank() || audioUrl.isNotBlank())
+            mediaRow.visibility = if (hasMedia) View.VISIBLE else View.GONE
+
+            watchVideoButton.visibility = if (expanded && videoUrl.isNotBlank()) View.VISIBLE else View.GONE
+            watchVideoButton.setOnClickListener { onOpenVideo(videoUrl) }
+
+            listenAudioButton.visibility = if (expanded && audioUrl.isNotBlank()) View.VISIBLE else View.GONE
+            listenAudioButton.setOnClickListener { onOpenAudio(audioUrl) }
+
             itemView.setOnClickListener { onToggle() }
         }
     }

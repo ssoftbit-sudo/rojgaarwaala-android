@@ -42,4 +42,40 @@
         android:textColor="@color/search_hint"
         android:textSize="14sp"
         android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/faqMediaRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/faqWatchVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_theme_chip"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp"
+            android:text="@string/watch_tutorial"
+            android:textColor="@color/brand_color_yellow"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/faqListenAudio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_theme_chip"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp"
+            android:text="@string/listen_audio"
+            android:textColor="@color/brand_color_yellow"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>
