@@ -90,18 +90,22 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String>,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
                 RetrofitApiService.create(BASE_URL).onSubmitJobWithFiles(
-                    jobTitle =  jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobTitle = jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
-                    logo = logoFile
+                    logo = logoFile,
+                    locations = locations.map { location ->
+                        MultipartBody.Part.createFormData("locations[]", location)
+                    },
                 )
             })
         }.flowOn(Dispatchers.IO)
@@ -199,7 +203,8 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String>,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
@@ -211,7 +216,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
-                    logo = logoFile
+                    logo = logoFile,
+                    locations = locations.map { location ->
+                        MultipartBody.Part.createFormData("locations[]", location)
+                    },
                 )
             })
         }.flowOn(Dispatchers.IO)

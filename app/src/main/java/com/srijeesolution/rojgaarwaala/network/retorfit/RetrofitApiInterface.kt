@@ -70,7 +70,8 @@ interface RetrofitApiInterface {
         @Part("job_responsibility") jobResponsibility: RequestBody,
         @Part pdf: MultipartBody.Part? = null,
         @Part image: MultipartBody.Part? = null,
-        @Part logo: MultipartBody.Part? = null
+        @Part logo: MultipartBody.Part? = null,
+        @Part locations: List<MultipartBody.Part> = emptyList(),
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.CATEGORIES_LIST)
@@ -126,7 +127,8 @@ interface RetrofitApiInterface {
         @Part("job_responsibility") jobResponsibility: RequestBody,
         @Part pdf: MultipartBody.Part? = null,
         @Part image: MultipartBody.Part? = null,
-        @Part logo: MultipartBody.Part? = null
+        @Part logo: MultipartBody.Part? = null,
+        @Part locations: List<MultipartBody.Part> = emptyList(),
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_GROUPED)

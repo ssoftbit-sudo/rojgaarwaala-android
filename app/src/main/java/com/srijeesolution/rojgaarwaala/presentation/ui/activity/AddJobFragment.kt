@@ -31,6 +31,7 @@ import java.io.File
 import org.json.JSONObject
 
 import com.srijeesolution.rojgaarwaala.R
+import com.google.android.material.chip.Chip
 import com.bumptech.glide.Glide
 import android.app.Dialog
 import android.widget.ImageView
@@ -76,6 +77,7 @@ class AddJobFragment : Fragment() {
     private var existingLogoUrl: String? = null
     
     private var candidateResumeUri: Uri? = null
+    private val companyJobLocations = mutableListOf<String>()
     
     // Activity result launchers for file selection
     private val pdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -103,6 +105,22 @@ class AddJobFragment : Fragment() {
             if (district.isNotBlank()) {
                 binding.candidateDistrict.text = district
                 updateColonySuggestions(district)
+            }
+        }
+    }
+
+    private val companyLocationsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val selected = result.data
+                ?.getStringArrayListExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATIONS)
+                .orEmpty()
+                .filter { it.isNotBlank() }
+            if (selected.isNotEmpty()) {
+                companyJobLocations.clear()
+                companyJobLocations.addAll(selected.distinct())
+                renderCompanyLocationChips()
             }
         }
     }
@@ -160,6 +178,7 @@ class AddJobFragment : Fragment() {
         setupCategoryDropdown()
         observeCategoriesDropdown()
         setupUserTypeFlow()
+        renderCompanyLocationChips()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
             validateLogin()
@@ -176,6 +195,16 @@ class AddJobFragment : Fragment() {
         binding.candidateDistrict.setOnClickListener {
             candidateDistrictLauncher.launch(Intent(requireContext(), LocationPickerActivity::class.java))
         }
+        binding.addCompanyLocationBtn.setOnClickListener {
+            val intent = Intent(requireContext(), LocationPickerActivity::class.java).apply {
+                putExtra(LocationPickerActivity.EXTRA_MULTI_SELECT, true)
+                putStringArrayListExtra(
+                    LocationPickerActivity.EXTRA_PRESELECTED_LOCATIONS,
+                    ArrayList(companyJobLocations)
+                )
+            }
+            companyLocationsLauncher.launch(intent)
+        }
         binding.candidateColony.setAdapter(
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, emptyList<String>())
         )
@@ -187,6 +216,7 @@ class AddJobFragment : Fragment() {
         binding.candidateFieldsContainer.visibility = if (isCandidate) View.VISIBLE else View.GONE
         binding.jobTitleSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
         binding.companyCategorySection.visibility = if (isCandidate) View.GONE else View.VISIBLE
+        binding.companyLocationsSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
         binding.companyUploadSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
         binding.jobResponsibility.hint = if (isCandidate) {
             "Why should recruiter consider you?"
@@ -402,6 +432,10 @@ class AddJobFragment : Fragment() {
             errors.add(getString(R.string.field_is_required, label))
         }
 
+        if (!isCandidate && companyJobLocations.isEmpty()) {
+            errors.add(getString(R.string.field_is_required, "At least one Job Location"))
+        }
+
         if (isCandidate) {
             if (candidateCategory.isEmpty()) {
                 binding.candidateJobCategory.error = getString(R.string.field_is_required, "Interested Job Category")
@@ -498,7 +532,7 @@ class AddJobFragment : Fragment() {
         // Call the new multipart update API method
         homePageViewModel.updateJobWithFiles(
             id, jobTitle, jobDescription, jobCategory, jobResponsibility,
-            pdfPart, imagePart, logoPart
+            pdfPart, imagePart, logoPart, companyJobLocations.toList()
         )
     }
 
@@ -527,8 +561,25 @@ class AddJobFragment : Fragment() {
         // Call the new multipart API method
         homePageViewModel.onSubmitJobWithFiles(
             jobTitle, jobDescription, jobCategory, jobResponsibility,
-            pdfPart, imagePart, logoPart
+            pdfPart, imagePart, logoPart, companyJobLocations.toList()
         )
+    }
+
+    private fun renderCompanyLocationChips() {
+        binding.companyLocationsChipGroup.removeAllViews()
+        companyJobLocations.forEach { location ->
+            val chip = Chip(requireContext()).apply {
+                text = location
+                isCloseIconVisible = true
+                setOnCloseIconClickListener {
+                    companyJobLocations.remove(location)
+                    renderCompanyLocationChips()
+                }
+            }
+            binding.companyLocationsChipGroup.addView(chip)
+        }
+        binding.companyLocationsHint.visibility =
+            if (companyJobLocations.isEmpty()) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {

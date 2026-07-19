@@ -30,6 +30,7 @@
                 android:tint="@color/white" />
 
             <TextView
+                android:id="@+id/locationPickerTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
@@ -60,9 +61,30 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/locationsRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="24dp" />
+            android:paddingBottom="12dp" />
+
+        <TextView
+            android:id="@+id/locationDoneButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_theme_chip"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:text="@string/done_selecting_locations"
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <ProgressBar

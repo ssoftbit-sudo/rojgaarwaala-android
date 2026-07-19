@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.R
@@ -29,11 +30,19 @@ class LocationPickerActivity : AppCompatActivity() {
     private lateinit var locationAdapter: LocationAdapter
     private lateinit var progressBar: ProgressBar
     private lateinit var searchInput: EditText
+    private lateinit var doneButton: TextView
     private var allDistricts: List<String> = emptyList()
+    private val multiSelect = intent.getBooleanExtra(EXTRA_MULTI_SELECT, false)
+    private val selectedLocations = linkedSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_picker)
+
+        intent.getStringArrayListExtra(EXTRA_PRESELECTED_LOCATIONS)
+            .orEmpty()
+            .filter { it.isNotBlank() }
+            .forEach { selectedLocations.add(it) }
 
         findViewById<View>(R.id.locationBackButton).setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
@@ -41,13 +50,35 @@ class LocationPickerActivity : AppCompatActivity() {
 
         progressBar = findViewById(R.id.locationProgressBar)
         searchInput = findViewById(R.id.locationSearchInput)
+        doneButton = findViewById(R.id.locationDoneButton)
+
+        if (multiSelect) {
+            findViewById<TextView>(R.id.locationPickerTitle).text =
+                getString(R.string.location_picker_multi_title)
+            doneButton.visibility = View.VISIBLE
+            doneButton.setOnClickListener { finishWithSelectedLocations() }
+        }
 
         val recycler = findViewById<RecyclerView>(R.id.locationsRecyclerView)
         recycler.layoutManager = LinearLayoutManager(this)
-        locationAdapter = LocationAdapter(emptyList()) { name ->
-            setResult(RESULT_OK, Intent().putExtra(EXTRA_SELECTED_LOCATION, name))
-            finish()
-        }
+        locationAdapter = LocationAdapter(
+            items = emptyList(),
+            selectedItems = selectedLocations,
+            multiSelect = multiSelect,
+            onPick = { name ->
+                if (multiSelect) {
+                    if (selectedLocations.contains(name)) {
+                        selectedLocations.remove(name)
+                    } else {
+                        selectedLocations.add(name)
+                    }
+                    locationAdapter.notifyDataSetChanged()
+                } else {
+                    setResult(RESULT_OK, Intent().putExtra(EXTRA_SELECTED_LOCATION, name))
+                    finish()
+                }
+            }
+        )
         recycler.adapter = locationAdapter
 
         searchInput.addTextChangedListener(object : TextWatcher {
@@ -62,8 +93,23 @@ class LocationPickerActivity : AppCompatActivity() {
         homePageViewModel.getCityList()
     }
 
+    private fun finishWithSelectedLocations() {
+        if (selectedLocations.isEmpty()) {
+            Toast.makeText(this, getString(R.string.field_is_required, "At least one location"), Toast.LENGTH_SHORT).show()
+            return
+        }
+        setResult(
+            RESULT_OK,
+            Intent().putStringArrayListExtra(EXTRA_SELECTED_LOCATIONS, ArrayList(selectedLocations))
+        )
+        finish()
+    }
+
     companion object {
         const val EXTRA_SELECTED_LOCATION = "extra_selected_location"
+        const val EXTRA_MULTI_SELECT = "extra_multi_select"
+        const val EXTRA_PRESELECTED_LOCATIONS = "extra_preselected_locations"
+        const val EXTRA_SELECTED_LOCATIONS = "extra_selected_locations"
     }
 
     private fun withDefaultOption(cities: List<String>): List<String> {
@@ -112,6 +158,8 @@ class LocationPickerActivity : AppCompatActivity() {
 
     private class LocationAdapter(
         private var items: List<String>,
+        private val selectedItems: Set<String>,
+        private val multiSelect: Boolean,
         private val onPick: (String) -> Unit
     ) : RecyclerView.Adapter<LocationAdapter.Holder>() {
 
@@ -126,7 +174,14 @@ class LocationPickerActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val name = items[position]
-            holder.text.text = name
+            val selected = selectedItems.contains(name)
+            holder.text.text = if (multiSelect && selected) "✓ $name" else name
+            holder.text.setTextColor(
+                ContextCompat.getColor(
+                    holder.itemView.context,
+                    if (multiSelect && selected) R.color.accent else R.color.white
+                )
+            )
             holder.itemView.setOnClickListener { onPick(name) }
         }
 

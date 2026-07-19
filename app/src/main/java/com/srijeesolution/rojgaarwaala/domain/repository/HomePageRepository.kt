@@ -31,7 +31,8 @@ interface HomePageRepository {
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>>
@@ -58,6 +59,7 @@ interface HomePageRepository {
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ): Flow<ApiResult<HomePagBaseApiModel>>
 }

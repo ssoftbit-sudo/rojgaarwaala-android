@@ -32,6 +32,11 @@
     <string name="choose_location">Choose location</string>
     <string name="search_jobs_categories_hint">Search jobs, categories…</string>
     <string name="location_picker_title">Select District</string>
+    <string name="location_picker_multi_title">Select Job Locations</string>
+    <string name="done_selecting_locations">Done</string>
+    <string name="job_locations_label">Job Locations</string>
+    <string name="add_job_location">+ Add Location</string>
+    <string name="job_locations_hint">Select one or more districts where this job is available.</string>
     <string name="field_is_required">%1$s is required</string>
     <string name="notifications">Notifications</string>
     <string name="close_search">Close search</string>

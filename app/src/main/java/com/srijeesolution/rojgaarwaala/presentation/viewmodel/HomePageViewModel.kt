@@ -145,12 +145,13 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         jobResponsibility: String,
         pdfFile: okhttp3.MultipartBody.Part?,
         imageFile: okhttp3.MultipartBody.Part?,
-        logoFile: okhttp3.MultipartBody.Part?
+        logoFile: okhttp3.MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ) {
         viewModelScope.launch {
             homePageRepository.onSubmitJobWithFiles(
                 jobTitle, jobDescription, jobCategory, jobResponsibility,
-                pdfFile, imageFile, logoFile
+                pdfFile, imageFile, logoFile, locations
             ).collectLatest{
                 _jobSubmitLiveData.postValue(it)
             }
@@ -367,12 +368,13 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         jobResponsibility: String,
         pdfFile: okhttp3.MultipartBody.Part?,
         imageFile: okhttp3.MultipartBody.Part?,
-        logoFile: okhttp3.MultipartBody.Part?
+        logoFile: okhttp3.MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ) {
         viewModelScope.launch {
             homePageRepository.updateJobWithFiles(
                 id, jobTitle, jobDescription, jobCategory, jobResponsibility,
-                pdfFile, imageFile, logoFile
+                pdfFile, imageFile, logoFile, locations
             ).collectLatest{
                 _updateJobLiveData.postValue(it)
             }
