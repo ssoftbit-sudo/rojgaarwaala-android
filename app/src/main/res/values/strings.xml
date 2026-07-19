@@ -37,6 +37,7 @@
     <string name="job_locations_label">Job Locations</string>
     <string name="add_job_location">+ Add Location</string>
     <string name="job_locations_hint">Select one or more districts where this job is available.</string>
+    <string name="candidate_profile_hint">Category, district, colony and resume are saved in My Profile. Complete your profile there before submitting.</string>
     <string name="field_is_required">%1$s is required</string>
     <string name="notifications">Notifications</string>
     <string name="close_search">Close search</string>

@@ -124,6 +124,16 @@ data class UserData(
     val state: String? = null,
     @SerializedName("pincode")
     val pincode: String? = null,
+    @SerializedName("district")
+    val district: String? = null,
+    @SerializedName("colony")
+    val colony: String? = null,
+    @SerializedName("preferred_job_category")
+    val preferredJobCategory: String? = null,
+    @SerializedName("resume_url")
+    val resumeUrl: String? = null,
+    @SerializedName("candidate_profile_complete")
+    val candidateProfileComplete: Boolean? = null,
 )
 
 data class VideoDetailsResponse(

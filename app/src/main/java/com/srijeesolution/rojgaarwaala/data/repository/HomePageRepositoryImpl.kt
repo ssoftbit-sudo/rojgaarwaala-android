@@ -75,6 +75,37 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         }.flowOn(Dispatchers.IO)
     }
 
+    override fun updateProfileMultipart(
+        name: String,
+        mobile: String,
+        email: String,
+        city: String,
+        state: String,
+        pincode: String,
+        district: String,
+        colony: String,
+        preferredJobCategory: String,
+        resumePart: MultipartBody.Part?,
+    ): Flow<ApiResult<HomePagBaseApiModel>> {
+        val text = "text/plain".toMediaTypeOrNull()
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).updateProfileMultipart(
+                    name = name.toRequestBody(text),
+                    mobile = mobile.toRequestBody(text),
+                    email = email.toRequestBody(text),
+                    city = city.toRequestBody(text),
+                    state = state.toRequestBody(text),
+                    pincode = pincode.toRequestBody(text),
+                    district = district.toRequestBody(text),
+                    colony = colony.toRequestBody(text),
+                    preferredJobCategory = preferredJobCategory.toRequestBody(text),
+                    resume = resumePart,
+                )
+            })
+        }.flowOn(Dispatchers.IO)
+    }
+
     override fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall{
@@ -100,6 +131,7 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    postType = "company".toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
                     logo = logoFile,

@@ -1,35 +1,65 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.databinding.ActivityProfileBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_AUTH_TOKEN
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_LOGGED_IN_STATUS
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_SKIP_STATUS
 import dagger.hilt.android.AndroidEntryPoint
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
-
 
 @AndroidEntryPoint
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
-
-    var isProfileUpdateCalled=false
+    private var isProfileUpdateCalled = false
+    private var categoryDialog: AlertDialog? = null
+    private var categoryPickerRequested = false
+    private var categoriesObserverRegistered = false
+    private var resumeFile: File? = null
+    private var existingResumeUrl: String? = null
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
 
     private lateinit var homePageViewModel: HomePageViewModel
+
+    private val districtLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val district = result.data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
+            if (district.isNotBlank()) {
+                binding.districtEditText.text = district
+                updateColonySuggestions(district)
+            }
+        }
+    }
+
+    private val resumeLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { handleResumeSelection(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,28 +68,26 @@ class ProfileActivity : AppCompatActivity() {
 
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
-        // Observe profile data
-        observeProfileData()
+        binding.preferredJobCategoryEditText.setOnClickListener { openCategoryPicker() }
+        binding.districtEditText.setOnClickListener {
+            districtLauncher.launch(Intent(this, LocationPickerActivity::class.java))
+        }
+        binding.uploadProfileResumeBtn.setOnClickListener {
+            resumeLauncher.launch(arrayOf("image/*", "application/pdf"))
+        }
+        binding.colonyEditText.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, emptyList<String>())
+        )
 
-        // Observe update profile response
+        observeProfileData()
         observeUpdateProfileData()
         observeLogoutData()
-        // Fetch existing profile data
+        observeCategoriesDropdown()
         fetchProfileData()
 
-        // Handle Update Profile button click
-        binding.updateProfileButton.setOnClickListener {
-            validateAndUpdateProfile()
-        }
-
-        binding.profileBackButton.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-
-        // Handle Logout button click
-        binding.logoutButton.setOnClickListener {
-            logoutUser()
-        }
+        binding.updateProfileButton.setOnClickListener { validateAndUpdateProfile() }
+        binding.profileBackButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        binding.logoutButton.setOnClickListener { logoutUser() }
     }
 
     private fun hideKeyboard() {
@@ -69,34 +97,40 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Fetches the user's existing profile data from the server or local storage.
-     */
     private fun fetchProfileData() {
-        // Show ProgressBar while fetching data
         showLoading(true)
-
-        // Assuming there's a method in ViewModel to fetch profile data
         homePageViewModel.getProfileData()
     }
 
-    /**
-     * Observes the LiveData for fetching profile data.
-     */
+    private fun bindProfileFields() {
+        // populated from observer
+    }
+
+    private fun populateProfile(userProfile: com.srijeesolution.rojgaarwaala.data.remote.model.UserData) {
+        binding.firstNameEditText.setText(userProfile.name)
+        binding.mobileEditText.setText(userProfile.mobile)
+        binding.emailEditText.setText(userProfile.email)
+        binding.cityEditText.setText(userProfile.city)
+        binding.stateEditText.setText(userProfile.state)
+        binding.pincodeEditText.setText(userProfile.pincode)
+        binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
+        binding.districtEditText.text = userProfile.district.orEmpty()
+        binding.colonyEditText.setText(userProfile.colony)
+        updateColonySuggestions(userProfile.district)
+        existingResumeUrl = userProfile.resumeUrl
+        if (!existingResumeUrl.isNullOrBlank()) {
+            binding.profileResumeFileName.text = "Saved resume on profile"
+            binding.profileResumeFileName.visibility = View.VISIBLE
+        }
+    }
+
     private fun observeProfileData() {
         homePageViewModel.profileUpdateLiveData.observe(this) { apiResponse ->
             when (apiResponse) {
-                is ApiResult.Loading -> {
-                    showLoading(true)
-                }
+                is ApiResult.Loading -> showLoading(true)
                 is ApiResult.Success -> {
                     showLoading(false)
-                    apiResponse.data?.dataObj?.let { userProfile ->
-                        // Pre-fill the input fields with existing data
-                        binding.firstNameEditText.setText(userProfile.userDetails?.name)
-//                        binding.mobileEditText.setText(userProfile.mobile)
-                        binding.emailEditText.setText(userProfile.userDetails?.email)
-                    }
+                    apiResponse.data?.dataObj?.userDetails?.let { populateProfile(it) }
                 }
                 is ApiResult.Error -> {
                     showLoading(false)
@@ -106,35 +140,21 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Observes the LiveData for updating profile data.
-     */
     private fun observeUpdateProfileData() {
         homePageViewModel.profileUpdateLiveData.observe(this) { apiResponse ->
             when (apiResponse) {
-                is ApiResult.Loading -> {
-                    showLoading(true)
-                }
+                is ApiResult.Loading -> showLoading(true)
                 is ApiResult.Success -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
                     binding.updateProfileButton.text = "Update Profile"
-                    
                     if (apiResponse.data?.dataObj != null) {
-                        if (isProfileUpdateCalled){
+                        if (isProfileUpdateCalled) {
                             isProfileUpdateCalled = false
-                        Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                            resumeFile = null
+                            Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
                         }
-                        // Optionally, update shared preferences or local storage if needed
-                        apiResponse.data.dataObj.userDetails?.let { userProfile ->
-                            // Pre-fill the input fields with existing data
-                            binding.firstNameEditText.setText(userProfile.name)
-                            binding.mobileEditText.setText(userProfile.mobile)
-                            binding.emailEditText.setText(userProfile.email)
-                            binding.cityEditText.setText(userProfile.city)
-                            binding.stateEditText.setText(userProfile.state)
-                            binding.pincodeEditText.setText(userProfile.pincode)
-                        }
+                        apiResponse.data.dataObj.userDetails?.let { populateProfile(it) }
                     } else {
                         Toast.makeText(this, apiResponse.data?.message ?: "Update failed", Toast.LENGTH_SHORT).show()
                     }
@@ -149,9 +169,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Validates the input fields and initiates the profile update process.
-     */
     private fun validateAndUpdateProfile() {
         val firstname = binding.firstNameEditText.text.toString().trim()
         val mobile = binding.mobileEditText.text.toString().trim()
@@ -159,75 +176,157 @@ class ProfileActivity : AppCompatActivity() {
         val city = binding.cityEditText.text.toString().trim()
         val state = binding.stateEditText.text.toString().trim()
         val pincode = binding.pincodeEditText.text.toString().trim()
+        val preferredCategory = binding.preferredJobCategoryEditText.text.toString().trim()
+        val district = binding.districtEditText.text?.toString()?.trim().orEmpty()
+        val colony = binding.colonyEditText.text.toString().trim()
 
-        // Validation
         if (firstname.isEmpty()) {
             binding.firstNameEditText.error = "First name is required"
             return
         }
-
-        if (mobile.isEmpty() || mobile.length != 10) {
+        if (mobile.length != 10) {
             binding.mobileEditText.error = "Enter a valid 10-digit mobile number"
             return
         }
-
-        if (email.isEmpty()) {
-            binding.emailEditText.error = "Email is required"
-            return
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             binding.emailEditText.error = "Enter a valid email"
             return
         }
-
-        if (city.isEmpty()) {
-            binding.cityEditText.error = "City is required"
+        if (preferredCategory.isEmpty()) {
+            binding.preferredJobCategoryEditText.error = "Job category is required"
+            return
+        }
+        if (district.isEmpty()) {
+            Toast.makeText(this, "District is required", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (colony.isEmpty()) {
+            binding.colonyEditText.error = "Colony / Area is required"
+            return
+        }
+        if (resumeFile == null && existingResumeUrl.isNullOrBlank()) {
+            Toast.makeText(this, "Please upload resume (photo or PDF)", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (state.isEmpty()) {
-            binding.stateEditText.error = "State is required"
-            return
-        }
-
-        if (pincode.isEmpty()) {
-            binding.pincodeEditText.error = "Pincode is required"
-            return
-        }
-
-        // If validation passes, proceed to update profile
-        updateUserProfile(firstname, mobile, email,city,state,pincode)
-    }
-
-    /**
-     * Initiates the profile update API call.
-     */
-    private fun updateUserProfile(firstname: String,mobile: String, email: String, city: String, state: String, pincode: String) {
-        // Hide keyboard and show button loader
         hideKeyboard()
         isProfileUpdateCalled = true
         binding.updateProfileButton.isEnabled = false
         binding.updateProfileButton.text = "Updating..."
         showLoading(true)
-        
-        val requestBody = HashMap<String, String>()
-        requestBody["name"] = firstname
-        requestBody["mobile"] = mobile
-        requestBody["email"] = email
-        requestBody["city"] = city
-        requestBody["state"] = state
-        requestBody["pincode"] = pincode
-        homePageViewModel.updateProfileLiveData(requestBody)
+
+        val resumePart = resumeFile?.let { file ->
+            MultipartBody.Part.createFormData(
+                "resume",
+                file.name,
+                file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull())
+            )
+        }
+
+        homePageViewModel.updateProfileMultipart(
+            firstname, mobile, email, city, state, pincode,
+            district, colony, preferredCategory, resumePart
+        )
     }
 
-    /**
-     * Logs out the user by clearing shared preferences and navigating to the Login screen.
-     */
+    private fun openCategoryPicker() {
+        categoryPickerRequested = true
+        homePageViewModel.getCategoriesData()
+    }
+
+    private fun observeCategoriesDropdown() {
+        if (categoriesObserverRegistered) return
+        categoriesObserverRegistered = true
+        homePageViewModel.categoriesLiveData.observe(this) { apiResponse ->
+            if (!categoryPickerRequested) return@observe
+            when (apiResponse) {
+                is ApiResult.Success -> {
+                    categoryPickerRequested = false
+                    val titles = apiResponse.data?.dataObj?.categories
+                        .orEmpty()
+                        .mapNotNull { it.title?.trim() }
+                        .filter { it.isNotEmpty() }
+                    if (titles.isEmpty()) {
+                        Toast.makeText(this, "No categories found", Toast.LENGTH_SHORT).show()
+                        return@observe
+                    }
+                    if (categoryDialog?.isShowing == true) return@observe
+                    categoryDialog = AlertDialog.Builder(this)
+                        .setTitle("Select Category")
+                        .setItems(titles.toTypedArray()) { _, which ->
+                            binding.preferredJobCategoryEditText.setText(titles[which])
+                            binding.preferredJobCategoryEditText.error = null
+                        }
+                        .also { it.setOnDismissListener { categoryDialog = null } }
+                        .show()
+                }
+                is ApiResult.Error -> {
+                    categoryPickerRequested = false
+                    Toast.makeText(this, "Failed to load categories", Toast.LENGTH_SHORT).show()
+                }
+                is ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    private fun updateColonySuggestions(district: String?) {
+        val colonies = ColonySuggestions.forDistrict(district)
+        binding.colonyEditText.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, colonies)
+        )
+    }
+
+    private fun handleResumeSelection(uri: Uri) {
+        try {
+            val mimeType = contentResolver.getType(uri).orEmpty()
+            val rawName = getFileName(uri) ?: "candidate_resume"
+            val lower = rawName.lowercase()
+            val isImage = mimeType.startsWith("image/") ||
+                lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")
+            val isPdf = mimeType == "application/pdf" || lower.endsWith(".pdf")
+            if (!isImage && !isPdf) {
+                Toast.makeText(this, "Please choose JPG/PNG photo or PDF only", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val fileName = if (isImage && !lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
+                "$rawName.jpg"
+            } else if (isPdf && !lower.endsWith(".pdf")) {
+                "$rawName.pdf"
+            } else {
+                rawName
+            }
+            contentResolver.openInputStream(uri)?.use { input ->
+                val file = File(cacheDir, fileName)
+                file.outputStream().use { output -> input.copyTo(output) }
+                resumeFile = file
+                binding.profileResumeFileName.text = "Selected: $fileName"
+                binding.profileResumeFileName.visibility = View.VISIBLE
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to read resume file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getFileName(uri: Uri): String? {
+        var name: String? = null
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (cursor.moveToFirst() && index >= 0) name = cursor.getString(index)
+        }
+        return name ?: uri.lastPathSegment
+    }
+
+    private fun mimeTypeForUpload(file: File): String {
+        val lower = file.name.lowercase()
+        return when {
+            lower.endsWith(".pdf") -> "application/pdf"
+            lower.endsWith(".png") -> "image/png"
+            lower.endsWith(".webp") -> "image/webp"
+            else -> "image/jpeg"
+        }
+    }
+
     private fun logoutUser() {
-        // Clear shared preferences
-       /* showLoading(true)
-        homePageViewModel.onLogoutData()*/
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS)
         Toast.makeText(this, "Successfully logged out!", Toast.LENGTH_SHORT).show()
@@ -240,48 +339,25 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun observeLogoutData() {
         homePageViewModel.loginRegisterLiveData.observe(this) { apiResponse ->
-            when(apiResponse){
-                is ApiResult.Loading -> {
-                }
+            when (apiResponse) {
                 is ApiResult.Success -> {
                     if (apiResponse.data?.dataObj != null) {
                         showLoading(false)
                         sharedPrefs.removeSharedPrefs(USER_AUTH_TOKEN)
                         sharedPrefs.removeSharedPrefs(USER_LOGGED_IN_STATUS)
                         sharedPrefs.removeSharedPrefs(USER_SKIP_STATUS)
-                        // Navigate to LoginActivity
-                        val intent = Intent(this, LoginActivity::class.java)
-                        startActivity(intent)
+                        startActivity(Intent(this, LoginActivity::class.java))
                         finish()
-                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                    }else{
-                        Toast.makeText(this,""+apiResponse.data?.message, Toast.LENGTH_SHORT).show()
                     }
                 }
-                is ApiResult.Error -> {
-                    showLoading(false)
-                    Toast.makeText(this,"Invalid Login Details", Toast.LENGTH_SHORT).show()
-                }
+                is ApiResult.Error -> showLoading(false)
+                is ApiResult.Loading -> Unit
             }
         }
     }
 
     private fun showLoading(isLoading: Boolean) {
-        if (isLoading) {
-            binding.profileProgressBar.visibility = View.VISIBLE
-            setViewsEnabled(false)
-        } else {
-            binding.profileProgressBar.visibility = View.GONE
-            setViewsEnabled(true)
-        }
-    }
-
-    private fun setViewsEnabled(isEnabled: Boolean) {
-        // Disable or enable all interaction views during loading
-        binding.mainLayout.isEnabled = isEnabled
-        for (i in 0 until binding.mainLayout.childCount) {
-            val child: View = binding.mainLayout.getChildAt(i)
-            child.isEnabled = isEnabled
-        }
+        binding.profileProgressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.mainLayout.isEnabled = !isLoading
     }
 }

@@ -130,6 +130,28 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
+    fun updateProfileMultipart(
+        name: String,
+        mobile: String,
+        email: String,
+        city: String,
+        state: String,
+        pincode: String,
+        district: String,
+        colony: String,
+        preferredJobCategory: String,
+        resumePart: okhttp3.MultipartBody.Part?,
+    ) {
+        viewModelScope.launch {
+            homePageRepository.updateProfileMultipart(
+                name, mobile, email, city, state, pincode,
+                district, colony, preferredJobCategory, resumePart
+            ).collectLatest {
+                _profileUpdateLiveData.postValue(it)
+            }
+        }
+    }
+
     fun onSubmitJob(email: HashMap<String, String>) {
         viewModelScope.launch {
             homePageRepository.onSubmitJob(email).collectLatest{

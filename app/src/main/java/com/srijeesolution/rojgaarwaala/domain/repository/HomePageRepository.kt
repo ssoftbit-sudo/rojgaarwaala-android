@@ -23,6 +23,18 @@ interface HomePageRepository {
     fun getHomePageData(searchTerm:String): Flow<ApiResult<HomePagBaseApiModel>>
     fun getProfileData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateProfileLiveData(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun updateProfileMultipart(
+        name: String,
+        mobile: String,
+        email: String,
+        city: String,
+        state: String,
+        pincode: String,
+        district: String,
+        colony: String,
+        preferredJobCategory: String,
+        resumePart: MultipartBody.Part?,
+    ): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJobWithFiles(
         jobTitle: String,

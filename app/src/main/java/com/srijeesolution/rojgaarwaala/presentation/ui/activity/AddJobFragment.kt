@@ -16,13 +16,11 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
-import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
 import android.app.AlertDialog
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -57,26 +55,19 @@ class AddJobFragment : Fragment() {
     private lateinit var homePageViewModel: HomePageViewModel
     private var updateJobId: Int? = null
     private var categoryDialog: AlertDialog? = null
-    private var categoryPickerTarget: CategoryPickerTarget = CategoryPickerTarget.COMPANY
     private var categoriesObserverRegistered = false
     private var categoryPickerRequested = false
-
-    private enum class CategoryPickerTarget {
-        COMPANY, CANDIDATE
-    }
     
     // File upload variables
     private var pdfFile: File? = null
     private var imageFile: File? = null
     private var logoFile: File? = null
-    private var candidateResumeFile: File? = null
     
     // Existing file URLs (for edit mode)
     private var existingPdfUrl: String? = null
     private var existingImageUrl: String? = null
     private var existingLogoUrl: String? = null
     
-    private var candidateResumeUri: Uri? = null
     private val companyJobLocations = mutableListOf<String>()
     
     // Activity result launchers for file selection
@@ -90,23 +81,6 @@ class AddJobFragment : Fragment() {
     
     private val logoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handleLogoSelection(it) }
-    }
-    private val candidateResumeLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let { handleCandidateResumeSelection(it) }
-    }
-
-    private val candidateDistrictLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val district = result.data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
-            if (district.isNotBlank()) {
-                binding.candidateDistrict.text = district
-                updateColonySuggestions(district)
-            }
-        }
     }
 
     private val companyLocationsLauncher = registerForActivityResult(
@@ -192,9 +166,6 @@ class AddJobFragment : Fragment() {
             updateUserTypeUi()
         }
 
-        binding.candidateDistrict.setOnClickListener {
-            candidateDistrictLauncher.launch(Intent(requireContext(), LocationPickerActivity::class.java))
-        }
         binding.addCompanyLocationBtn.setOnClickListener {
             val intent = Intent(requireContext(), LocationPickerActivity::class.java).apply {
                 putExtra(LocationPickerActivity.EXTRA_MULTI_SELECT, true)
@@ -205,15 +176,15 @@ class AddJobFragment : Fragment() {
             }
             companyLocationsLauncher.launch(intent)
         }
-        binding.candidateColony.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, emptyList<String>())
-        )
+        binding.candidateProfileHint.setOnClickListener {
+            startActivity(Intent(requireContext(), ProfileActivity::class.java))
+        }
         updateUserTypeUi()
     }
 
     private fun updateUserTypeUi() {
         val isCandidate = binding.userTypeGroup.checkedRadioButtonId == binding.candidateTypeRadio.id
-        binding.candidateFieldsContainer.visibility = if (isCandidate) View.VISIBLE else View.GONE
+        binding.candidateProfileHint.visibility = if (isCandidate) View.VISIBLE else View.GONE
         binding.jobTitleSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
         binding.companyCategorySection.visibility = if (isCandidate) View.GONE else View.VISIBLE
         binding.companyLocationsSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
@@ -228,16 +199,6 @@ class AddJobFragment : Fragment() {
             updateJobId != null -> "Update Job"
             else -> "Submit Job"
         }
-        if (isCandidate) {
-            updateColonySuggestions(binding.candidateDistrict.text?.toString())
-        }
-    }
-
-    private fun updateColonySuggestions(district: String?) {
-        val colonies = ColonySuggestions.forDistrict(district)
-        binding.candidateColony.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, colonies)
-        )
     }
 
     private fun resetSubmitButton() {
@@ -291,11 +252,22 @@ class AddJobFragment : Fragment() {
                     binding.progressBar.visibility= View.GONE
                     resetSubmitButton()
                     val serverMsg = parseApiErrorMessage(apiResponse.message)
-                    Toast.makeText(
-                        requireContext(),
-                        serverMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    if (serverMsg?.contains("Complete your profile", ignoreCase = true) == true) {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Profile incomplete")
+                            .setMessage(serverMsg)
+                            .setPositiveButton("Open My Profile") { _, _ ->
+                                startActivity(Intent(requireContext(), ProfileActivity::class.java))
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            serverMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
         }
@@ -328,19 +300,11 @@ class AddJobFragment : Fragment() {
         binding.jobCategory.isFocusable = false
         binding.jobCategory.isClickable = true
         binding.jobCategory.setOnClickListener {
-            openCategoryPicker(CategoryPickerTarget.COMPANY)
-        }
-
-        binding.candidateJobCategory.isFocusable = false
-        binding.candidateJobCategory.isClickable = true
-        binding.candidateJobCategory.keyListener = null
-        binding.candidateJobCategory.setOnClickListener {
-            openCategoryPicker(CategoryPickerTarget.CANDIDATE)
+            openCategoryPicker()
         }
     }
 
-    private fun openCategoryPicker(target: CategoryPickerTarget) {
-        categoryPickerTarget = target
+    private fun openCategoryPicker() {
         categoryPickerRequested = true
         binding.progressBar.visibility = View.VISIBLE
         homePageViewModel.getCategoriesData()
@@ -369,12 +333,7 @@ class AddJobFragment : Fragment() {
                     val builder = AlertDialog.Builder(requireContext())
                     builder.setTitle("Select Category")
                     builder.setItems(titles.toTypedArray()) { _, which ->
-                        val selected = titles[which]
-                        when (categoryPickerTarget) {
-                            CategoryPickerTarget.COMPANY -> binding.jobCategory.setText(selected)
-                            CategoryPickerTarget.CANDIDATE -> binding.candidateJobCategory.setText(selected)
-                        }
-                        binding.candidateJobCategory.error = null
+                        binding.jobCategory.setText(titles[which])
                         binding.jobCategory.error = null
                     }
                     categoryDialog = builder.create()
@@ -396,18 +355,11 @@ class AddJobFragment : Fragment() {
         val jobDescription = binding.jobDescription.text.toString().trim()
         val jobCategory = binding.jobCategory.text.toString().trim()
         val jobResponsibility = binding.jobResponsibility.text.toString().trim()
-        val candidateCategory = binding.candidateJobCategory.text.toString().trim()
-        val candidateDistrict = binding.candidateDistrict.text.toString().trim()
-        val candidateColony = binding.candidateColony.text.toString().trim()
-        val candidateMobile = binding.candidateMobile.text.toString().trim()
 
         binding.jobTitle.error = null
         binding.jobDescription.error = null
         binding.jobCategory.error = null
         binding.jobResponsibility.error = null
-        binding.candidateJobCategory.error = null
-        binding.candidateColony.error = null
-        binding.candidateMobile.error = null
 
         val errors = mutableListOf<String>()
 
@@ -436,27 +388,6 @@ class AddJobFragment : Fragment() {
             errors.add(getString(R.string.field_is_required, "At least one Job Location"))
         }
 
-        if (isCandidate) {
-            if (candidateCategory.isEmpty()) {
-                binding.candidateJobCategory.error = getString(R.string.field_is_required, "Interested Job Category")
-                errors.add(getString(R.string.field_is_required, "Interested Job Category"))
-            }
-            if (candidateDistrict.isEmpty()) {
-                errors.add(getString(R.string.field_is_required, "District"))
-            }
-            if (candidateColony.isEmpty()) {
-                binding.candidateColony.error = getString(R.string.field_is_required, "Colony / Area")
-                errors.add(getString(R.string.field_is_required, "Colony / Area"))
-            }
-            if (candidateMobile.length != 10) {
-                binding.candidateMobile.error = getString(R.string.field_is_required, "Valid 10 digit Mobile Number")
-                errors.add(getString(R.string.field_is_required, "Valid 10 digit Mobile Number"))
-            }
-            if (candidateResumeFile == null) {
-                errors.add(getString(R.string.field_is_required, "Candidate Resume (Photo or PDF)"))
-            }
-        }
-
         if (errors.isNotEmpty()) {
             showValidationErrors(errors)
             binding.scrollView.post {
@@ -469,18 +400,23 @@ class AddJobFragment : Fragment() {
         binding.submitBtn.isEnabled = false
         binding.submitBtn.text = if (updateJobId != null) "Updating..." else "Submitting..."
 
-        val effectiveTitle = if (isCandidate) candidateCategory else jobTitle
-        val effectiveCategory = if (isCandidate) candidateCategory else jobCategory
-        val locationLabel = listOf(candidateDistrict, candidateColony)
-            .filter { it.isNotBlank() }
-            .joinToString(", ")
-        val effectiveResponsibility = if (isCandidate) {
-            "$jobResponsibility | district=$candidateDistrict|colony=$candidateColony|preferred_location=$locationLabel|candidate_mobile=$candidateMobile|post_type=candidate"
-        } else {
-            jobResponsibility
+        if (isCandidate) {
+            submitCandidateProfile(jobDescription, jobResponsibility)
+            return true
         }
-        onSuccess(effectiveTitle, jobDescription, effectiveCategory, effectiveResponsibility)
+
+        onSuccess(jobTitle, jobDescription, jobCategory, jobResponsibility)
         return true
+    }
+
+    private fun submitCandidateProfile(jobDescription: String, jobResponsibility: String) {
+        binding.progressBar.visibility = View.VISIBLE
+        val requestBody = hashMapOf(
+            "post_type" to "candidate",
+            "job_description" to jobDescription,
+            "job_responsibility" to jobResponsibility,
+        )
+        homePageViewModel.onSubmitJob(requestBody)
     }
 
     private fun onSuccess(
@@ -598,78 +534,6 @@ class AddJobFragment : Fragment() {
         
         binding.uploadLogoBtn.setOnClickListener {
             logoLauncher.launch("image/*")
-        }
-
-        binding.uploadCandidateResumeBtn.setOnClickListener {
-            candidateResumeLauncher.launch(arrayOf("image/*", "application/pdf"))
-        }
-    }
-
-    private fun handleCandidateResumeSelection(uri: Uri) {
-        try {
-            val mimeType = requireContext().contentResolver.getType(uri).orEmpty()
-            val rawName = getFileName(uri) ?: "candidate_resume"
-            val lower = rawName.lowercase()
-
-            val isImage = mimeType.startsWith("image/") ||
-                lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")
-            val isPdf = mimeType == "application/pdf" || lower.endsWith(".pdf")
-
-            if (!isImage && !isPdf) {
-                Toast.makeText(
-                    requireContext(),
-                    "Please choose JPG/PNG photo or PDF only",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-
-            val fileName = ensureFileExtension(rawName, mimeType, isPhoto = isImage)
-
-            val inputStream = requireContext().contentResolver.openInputStream(uri)
-            val file = File(requireContext().cacheDir, fileName)
-            inputStream?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            candidateResumeFile = file
-            candidateResumeUri = uri
-            val typeLabel = if (isImage) "Photo" else "PDF"
-            binding.candidateResumeFileName.text = "Selected ($typeLabel): $fileName"
-            binding.candidateResumeFileName.visibility = View.VISIBLE
-
-            if (isImage) {
-                imageFile = file
-                pdfFile = null
-            } else {
-                pdfFile = file
-                imageFile = null
-            }
-
-            if (isImage) {
-                binding.candidateResumePreview.visibility = View.VISIBLE
-                Glide.with(this)
-                    .load(uri)
-                    .centerCrop()
-                    .into(binding.candidateResumePreview)
-            } else {
-                binding.candidateResumePreview.visibility = View.GONE
-                binding.candidateResumePreview.setImageDrawable(null)
-            }
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Error selecting resume file", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun ensureFileExtension(fileName: String, mimeType: String, isPhoto: Boolean): String {
-        if (fileName.contains('.')) return fileName
-        return when {
-            mimeType.equals("image/png", true) -> "$fileName.png"
-            mimeType.startsWith("image/") || isPhoto -> "$fileName.jpg"
-            mimeType == "application/pdf" -> "$fileName.pdf"
-            else -> fileName
         }
     }
 
