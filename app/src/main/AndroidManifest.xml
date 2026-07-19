@@ -2,8 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Keep optional so Play does not filter tablets / Wi‑Fi-only / no-SIM devices -->
     <uses-feature
         android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.faketouch"
         android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -14,6 +24,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Declared explicitly for Firebase Analytics (Play AD_ID policy / targetSdk 33+) -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     
     <application
         android:name=".utils.RojgaarwalaApplication"
