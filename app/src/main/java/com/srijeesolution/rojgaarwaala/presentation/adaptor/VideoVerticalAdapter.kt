@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
@@ -29,6 +30,7 @@ class VideoVerticalAdapter(
         return VideoViewHolder(binding)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val video = videos[position]
         val sharedPrefs = SharedPrefs(holder.binding.root.context)

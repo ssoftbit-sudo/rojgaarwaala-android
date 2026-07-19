@@ -27,7 +27,7 @@
             android:layout_height="22dp"
             android:src="@android:drawable/ic_menu_search"
             android:contentDescription="Search"
-            android:tint="@color/search_icon_tint" />
+            app:tint="@color/search_icon_tint" />
 
         <EditText
             android:id="@+id/searchBar"
@@ -50,10 +50,10 @@
             android:layout_height="22dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:contentDescription="Clear search"
-            android:tint="@color/search_hint"
             android:visibility="gone"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            app:tint="@color/search_hint" />
 
     </LinearLayout>
 
@@ -105,8 +105,8 @@
             android:layout_height="64dp"
             android:src="@android:drawable/ic_menu_search"
             android:contentDescription="No results"
-            android:tint="@color/gray_light_3"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            app:tint="@color/gray_light_3" />
 
         <TextView
             android:layout_width="wrap_content"

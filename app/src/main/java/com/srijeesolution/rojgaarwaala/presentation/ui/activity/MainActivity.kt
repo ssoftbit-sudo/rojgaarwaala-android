@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -465,6 +466,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun handleNotificationNavigation(intent: Intent?) {
         if (notificationProcessed) return
 

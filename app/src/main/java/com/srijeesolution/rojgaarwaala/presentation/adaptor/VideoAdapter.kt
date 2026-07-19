@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
@@ -41,6 +42,7 @@ class VideoAdapter(
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val video = getItem(position)
         if (holder is ViewMoreViewHolder) {

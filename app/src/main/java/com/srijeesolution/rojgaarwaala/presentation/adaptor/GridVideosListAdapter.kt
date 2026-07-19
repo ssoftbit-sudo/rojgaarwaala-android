@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ class GridVideosListAdapter : ListAdapter<TopVideo, GridVideosListAdapter.TopVid
         return TopVideoViewHolder(binding)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
         val video = getItem(position)
         val sharedPrefs = SharedPrefs(holder.binding.root.context)

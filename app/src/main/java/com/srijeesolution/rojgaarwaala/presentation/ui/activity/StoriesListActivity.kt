@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -115,6 +116,7 @@ class StoriesListActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun onStoryClick(story: Story) {
         val intent = Intent(this, StoryViewerActivity::class.java)
         intent.putParcelableArrayListExtra(

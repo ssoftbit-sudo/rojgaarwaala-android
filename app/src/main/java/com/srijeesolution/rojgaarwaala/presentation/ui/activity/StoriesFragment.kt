@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -201,6 +202,7 @@ class StoriesFragment : Fragment() {
         circleAdapter?.updateStories(stories)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun openCircleStoryViewer(startIndex: Int) {
         val intent = Intent(context, StoryViewerActivity::class.java)
         intent.putParcelableArrayListExtra(
@@ -284,6 +286,7 @@ class StoriesFragment : Fragment() {
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun onStoryClick(story: Story) {
         val intent = Intent(context, StoryViewerActivity::class.java)
         intent.putParcelableArrayListExtra(

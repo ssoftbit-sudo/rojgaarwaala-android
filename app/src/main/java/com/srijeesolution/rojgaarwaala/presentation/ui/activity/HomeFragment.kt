@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -447,6 +448,7 @@ class HomeFragment : Fragment() {
         bannerHandler?.postDelayed(bannerRunnable!!, 3500)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun startBackgroundVideoPreloading() {
         try {
             // Collect all video URLs from top videos and category videos
