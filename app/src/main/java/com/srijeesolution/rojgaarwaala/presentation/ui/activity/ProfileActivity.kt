@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.databinding.ActivityProfileBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
@@ -26,6 +27,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import javax.inject.Inject
+import org.json.JSONObject
 
 @AndroidEntryPoint
 class ProfileActivity : AppCompatActivity() {
@@ -148,22 +150,36 @@ class ProfileActivity : AppCompatActivity() {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
                     binding.updateProfileButton.text = "Update Profile"
-                    if (apiResponse.data?.dataObj != null) {
+                    val payload = apiResponse.data
+                    if (payload?.status == true) {
                         if (isProfileUpdateCalled) {
                             isProfileUpdateCalled = false
                             resumeFile = null
-                            Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                payload.message ?: "Profile updated successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                        apiResponse.data.dataObj.userDetails?.let { populateProfile(it) }
+                        payload.dataObj?.userDetails?.let { populateProfile(it) }
                     } else {
-                        Toast.makeText(this, apiResponse.data?.message ?: "Update failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            payload?.message ?: "Update failed",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
                 is ApiResult.Error -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
                     binding.updateProfileButton.text = "Update Profile"
-                    Toast.makeText(this, "Update Failed: ${apiResponse.message}", Toast.LENGTH_SHORT).show()
+                    val serverMsg = parseApiErrorMessage(apiResponse.message)
+                    Toast.makeText(
+                        this,
+                        serverMsg?.takeIf { it.isNotBlank() } ?: "Update failed",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -324,6 +340,19 @@ class ProfileActivity : AppCompatActivity() {
             lower.endsWith(".webp") -> "image/webp"
             else -> "image/jpeg"
         }
+    }
+
+    private fun parseApiErrorMessage(error: ApiError?): String? {
+        val body = error?.errorBody.orEmpty()
+        if (body.isNotBlank()) {
+            try {
+                val message = JSONObject(body).optString("message")
+                if (message.isNotBlank()) return message
+            } catch (_: Exception) {
+                // fall through
+            }
+        }
+        return error?.errorMsg?.takeIf { it.isNotBlank() }
     }
 
     private fun logoutUser() {
