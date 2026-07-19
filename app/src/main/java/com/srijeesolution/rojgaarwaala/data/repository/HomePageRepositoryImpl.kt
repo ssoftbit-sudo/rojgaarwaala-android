@@ -131,7 +131,6 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
-                    postType = "company".toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
                     logo = logoFile,

@@ -83,7 +83,6 @@ interface RetrofitApiInterface {
         @Part("job_description") jobDescription: RequestBody,
         @Part("job_category") jobCategory: RequestBody,
         @Part("job_responsibility") jobResponsibility: RequestBody,
-        @Part("post_type") postType: RequestBody,
         @Part pdf: MultipartBody.Part? = null,
         @Part image: MultipartBody.Part? = null,
         @Part logo: MultipartBody.Part? = null,

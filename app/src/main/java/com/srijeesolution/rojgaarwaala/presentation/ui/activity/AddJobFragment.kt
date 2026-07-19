@@ -151,7 +151,7 @@ class AddJobFragment : Fragment() {
         observeJobUpdateData()
         setupCategoryDropdown()
         observeCategoriesDropdown()
-        setupUserTypeFlow()
+        setupCompanyJobForm()
         renderCompanyLocationChips()
         binding.submitBtn.setOnClickListener {
             hideKeyboard()
@@ -161,11 +161,7 @@ class AddJobFragment : Fragment() {
         setupFileUploadListeners()
     }
 
-    private fun setupUserTypeFlow() {
-        binding.userTypeGroup.setOnCheckedChangeListener { _, _ ->
-            updateUserTypeUi()
-        }
-
+    private fun setupCompanyJobForm() {
         binding.addCompanyLocationBtn.setOnClickListener {
             val intent = Intent(requireContext(), LocationPickerActivity::class.java).apply {
                 putExtra(LocationPickerActivity.EXTRA_MULTI_SELECT, true)
@@ -176,39 +172,11 @@ class AddJobFragment : Fragment() {
             }
             companyLocationsLauncher.launch(intent)
         }
-        binding.candidateProfileHint.setOnClickListener {
-            startActivity(Intent(requireContext(), ProfileActivity::class.java))
-        }
-        updateUserTypeUi()
-    }
-
-    private fun updateUserTypeUi() {
-        val isCandidate = binding.userTypeGroup.checkedRadioButtonId == binding.candidateTypeRadio.id
-        binding.candidateProfileHint.visibility = if (isCandidate) View.VISIBLE else View.GONE
-        binding.jobTitleSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
-        binding.companyCategorySection.visibility = if (isCandidate) View.GONE else View.VISIBLE
-        binding.companyLocationsSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
-        binding.companyUploadSection.visibility = if (isCandidate) View.GONE else View.VISIBLE
-        binding.jobResponsibility.hint = if (isCandidate) {
-            "Why should recruiter consider you?"
-        } else {
-            "Enter job responsibility"
-        }
-        binding.submitBtn.text = when {
-            isCandidate -> "Submit Profile"
-            updateJobId != null -> "Update Job"
-            else -> "Submit Job"
-        }
     }
 
     private fun resetSubmitButton() {
-        val isCandidate = binding.userTypeGroup.checkedRadioButtonId == binding.candidateTypeRadio.id
         binding.submitBtn.isEnabled = true
-        binding.submitBtn.text = when {
-            isCandidate -> "Submit Profile"
-            updateJobId != null -> "Update Job"
-            else -> "Submit Job"
-        }
+        binding.submitBtn.text = if (updateJobId != null) "Update Job" else "Submit Job"
     }
 
     private fun showValidationErrors(errors: List<String>) {
@@ -252,22 +220,11 @@ class AddJobFragment : Fragment() {
                     binding.progressBar.visibility= View.GONE
                     resetSubmitButton()
                     val serverMsg = parseApiErrorMessage(apiResponse.message)
-                    if (serverMsg?.contains("Complete your profile", ignoreCase = true) == true) {
-                        AlertDialog.Builder(requireContext())
-                            .setTitle("Profile incomplete")
-                            .setMessage(serverMsg)
-                            .setPositiveButton("Open My Profile") { _, _ ->
-                                startActivity(Intent(requireContext(), ProfileActivity::class.java))
-                            }
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show()
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            serverMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    Toast.makeText(
+                        requireContext(),
+                        serverMsg?.takeIf { it.isNotBlank() } ?: "Failed Job Submit",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -350,7 +307,6 @@ class AddJobFragment : Fragment() {
     }
 
     private fun validateLogin(): Boolean {
-        val isCandidate = binding.userTypeGroup.checkedRadioButtonId == binding.candidateTypeRadio.id
         val jobTitle = binding.jobTitle.text.toString().trim()
         val jobDescription = binding.jobDescription.text.toString().trim()
         val jobCategory = binding.jobCategory.text.toString().trim()
@@ -363,7 +319,7 @@ class AddJobFragment : Fragment() {
 
         val errors = mutableListOf<String>()
 
-        if (!isCandidate && jobTitle.isEmpty()) {
+        if (jobTitle.isEmpty()) {
             binding.jobTitle.error = getString(R.string.field_is_required, "Job Title")
             errors.add(getString(R.string.field_is_required, "Job Title"))
         }
@@ -373,18 +329,17 @@ class AddJobFragment : Fragment() {
             errors.add(getString(R.string.field_is_required, "Job Description"))
         }
 
-        if (!isCandidate && jobCategory.isEmpty()) {
+        if (jobCategory.isEmpty()) {
             binding.jobCategory.error = getString(R.string.field_is_required, "Job Category")
             errors.add(getString(R.string.field_is_required, "Job Category"))
         }
 
         if (jobResponsibility.isEmpty()) {
-            val label = if (isCandidate) "Why should recruiter consider you" else "Job Responsibility"
-            binding.jobResponsibility.error = getString(R.string.field_is_required, label)
-            errors.add(getString(R.string.field_is_required, label))
+            binding.jobResponsibility.error = getString(R.string.field_is_required, "Job Responsibility")
+            errors.add(getString(R.string.field_is_required, "Job Responsibility"))
         }
 
-        if (!isCandidate && companyJobLocations.isEmpty()) {
+        if (companyJobLocations.isEmpty()) {
             errors.add(getString(R.string.field_is_required, "At least one Job Location"))
         }
 
@@ -400,23 +355,8 @@ class AddJobFragment : Fragment() {
         binding.submitBtn.isEnabled = false
         binding.submitBtn.text = if (updateJobId != null) "Updating..." else "Submitting..."
 
-        if (isCandidate) {
-            submitCandidateProfile(jobDescription, jobResponsibility)
-            return true
-        }
-
         onSuccess(jobTitle, jobDescription, jobCategory, jobResponsibility)
         return true
-    }
-
-    private fun submitCandidateProfile(jobDescription: String, jobResponsibility: String) {
-        binding.progressBar.visibility = View.VISIBLE
-        val requestBody = hashMapOf(
-            "post_type" to "candidate",
-            "job_description" to jobDescription,
-            "job_responsibility" to jobResponsibility,
-        )
-        homePageViewModel.onSubmitJob(requestBody)
     }
 
     private fun onSuccess(

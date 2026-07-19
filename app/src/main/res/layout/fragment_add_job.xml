@@ -42,67 +42,13 @@
                     android:gravity="top">
 
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginBottom="20dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="I am posting as"
-                            android:textColor="@color/white"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="8dp" />
-
-                        <RadioGroup
-                            android:id="@+id/userTypeGroup"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:background="@drawable/modern_edit_text_background"
-                            android:padding="12dp">
-
-                            <RadioButton
-                                android:id="@+id/candidateTypeRadio"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Candidate"
-                                android:textColor="@color/white"
-                                android:checked="true" />
-
-                            <RadioButton
-                                android:id="@+id/companyTypeRadio"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="20dp"
-                                android:text="Company"
-                                android:textColor="@color/white" />
-                        </RadioGroup>
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/candidateProfileHint"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:background="@drawable/bg_theme_panel"
-                        android:padding="16dp"
-                        android:text="@string/candidate_profile_hint"
-                        android:textColor="@color/gray_light_3"
-                        android:textSize="14sp"
-                        android:visibility="gone" />
-
-                    <!-- Job Title Section (Company only) -->
+                    <!-- Job Title Section -->
                     <LinearLayout
                         android:id="@+id/jobTitleSection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
+                        android:layout_marginTop="20dp"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -160,13 +106,12 @@
 
                     </LinearLayout>
 
-                    <!-- Job Category Section (Company only) -->
+                    <!-- Job Category Section -->
                     <LinearLayout
                         android:id="@+id/companyCategorySection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -224,13 +169,12 @@
 
                     </LinearLayout>
 
-                    <!-- Job Locations (Company only) -->
+                    <!-- Job Locations -->
                     <LinearLayout
                         android:id="@+id/companyLocationsSection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
                         android:layout_marginBottom="20dp">
 
                         <TextView
@@ -277,13 +221,12 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
-                    <!-- File Upload Section (Company only) -->
+                    <!-- File Upload Section -->
                     <LinearLayout
                         android:id="@+id/companyUploadSection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
                         android:layout_marginBottom="32dp">
 
                         <TextView
