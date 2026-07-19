@@ -134,3 +134,12 @@
     <fields>;
     <methods>;
 }
+
+# Razorpay (optional Google Pay / ProGuard annotation classes)
+-keep class com.razorpay.** { *; }
+-dontwarn com.razorpay.**
+-dontwarn com.google.android.apps.nbu.paisa.inapp.client.api.PaymentsClient
+-dontwarn com.google.android.apps.nbu.paisa.inapp.client.api.Wallet
+-dontwarn com.google.android.apps.nbu.paisa.inapp.client.api.WalletUtils
+-dontwarn proguard.annotation.Keep
+-dontwarn proguard.annotation.KeepClassMembers

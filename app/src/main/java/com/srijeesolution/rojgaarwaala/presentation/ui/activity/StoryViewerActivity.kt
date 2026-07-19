@@ -15,7 +15,6 @@ import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Observer
@@ -44,7 +43,8 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 @UnstableApi
-class StoryViewerActivity : AppCompatActivity() {
+class StoryViewerActivity : AppCompatActivity(),
+    com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
 
     private lateinit var binding: ActivityStoryViewerBinding
     private val viewModel: HomePageViewModel by viewModels()
@@ -74,7 +74,6 @@ class StoryViewerActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, binding.root).let { controller ->
             controller.hide(WindowInsetsCompat.Type.statusBars())
             controller.systemBarsBehavior =

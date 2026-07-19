@@ -16,6 +16,9 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
 
+        // Modern edge-to-edge for targetSdk 35+ (avoids deprecated system-bar color APIs)
+        registerActivityLifecycleCallbacks(EdgeToEdgeLifecycleCallbacks())
+
         // Initialize the default uncaught exception handler
         mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler()
 

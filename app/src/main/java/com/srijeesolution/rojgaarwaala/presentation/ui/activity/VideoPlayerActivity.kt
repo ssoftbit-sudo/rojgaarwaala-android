@@ -1,13 +1,19 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -15,6 +21,7 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.EdgeToEdgeHelper
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -63,7 +70,8 @@ import androidx.core.widget.NestedScrollView
 
 @AndroidEntryPoint
 @UnstableApi
-class VideoPlayerActivity : AppCompatActivity() {
+class VideoPlayerActivity : AppCompatActivity(),
+    com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
 
     private lateinit var binding: ActivityVideoPlayerBinding
     private val viewModel: HomePageViewModel by viewModels()
@@ -128,6 +136,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         // Prevent screenshots and screen recording
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        applySystemBarInsets()
+        updatePictureInPictureParams()
 
         // Initialize ExoPlayer components
         initializeExoPlayer()
@@ -1096,11 +1106,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         layoutParams.gravity = android.view.Gravity.CENTER
         binding.customVideoView.layoutParams = layoutParams
         
-        // Hide system UI
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        
+        EdgeToEdgeHelper.hideSystemBars(this, binding.root)
         binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen_exit)
     }
 
@@ -1141,10 +1147,102 @@ class VideoPlayerActivity : AppCompatActivity() {
         layoutParams.gravity = android.view.Gravity.CENTER
         binding.customVideoView.layoutParams = layoutParams
         
-        // Show system UI
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-        
+        EdgeToEdgeHelper.showSystemBars(this, binding.root)
         binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen)
+    }
+
+    private fun applySystemBarInsets() {
+        val toolbar = binding.topBar
+        val toolbarStart = toolbar.paddingLeft
+        val toolbarTop = toolbar.paddingTop
+        val toolbarEnd = toolbar.paddingRight
+        val toolbarBottom = toolbar.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            if (!isInPictureInPictureMode) {
+                toolbar.setPadding(
+                    toolbarStart + insets.left,
+                    toolbarTop + insets.top,
+                    toolbarEnd + insets.right,
+                    toolbarBottom
+                )
+            }
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(binding.root)
+    }
+
+    private fun updatePictureInPictureParams() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val params = PictureInPictureParams.Builder()
+            .setAspectRatio(Rational(16, 9))
+            .build()
+        setPictureInPictureParams(params)
+    }
+
+    private fun enterPictureInPictureIfPossible(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        if (exoPlayer?.isPlaying != true) return false
+        return try {
+            updatePictureInPictureParams()
+            enterPictureInPictureMode(PictureInPictureParams.Builder()
+                .setAspectRatio(Rational(16, 9))
+                .build())
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        enterPictureInPictureIfPossible()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        }
+        applyPictureInPictureUi(isInPictureInPictureMode)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            applyPictureInPictureUi(isInPictureInPictureMode)
+        }
+    }
+
+    private fun applyPictureInPictureUi(inPip: Boolean) {
+        val chromeVisibility = if (inPip) View.GONE else View.VISIBLE
+        binding.topBar.visibility = chromeVisibility
+        binding.nestedScrollView.visibility = if (inPip) View.GONE else View.VISIBLE
+        binding.playerControlsOverlay.visibility = if (inPip) View.GONE else View.VISIBLE
+        binding.actionRow.visibility = View.GONE
+        binding.fullscreenActionControls.visibility = View.GONE
+        if (inPip) {
+            val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+            frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.videoPlayerFrame.layoutParams = frameParams
+        } else if (isFullscreen) {
+            enterFullscreen()
+        } else {
+            val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+            frameParams.height = if (preFullscreenVideoHeightPx > 0) {
+                preFullscreenVideoHeightPx
+            } else {
+                260.dpToPx()
+            }
+            frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.videoPlayerFrame.layoutParams = frameParams
+            binding.topBar.visibility = View.VISIBLE
+            binding.nestedScrollView.visibility = View.VISIBLE
+            binding.playerControlsOverlay.visibility = View.VISIBLE
+        }
     }
     
     private fun Int.dpToPx(): Int {
@@ -1248,7 +1346,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Pause video when activity is paused
+        // Keep playback running while in picture-in-picture
+        if (isInPictureInPictureMode) return
         exoPlayer?.pause()
         isPlaying = false
         progressHandler.removeCallbacks(progressRunnable)
@@ -1257,6 +1356,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        if (isInPictureInPictureMode) return
         // Resume video if it was playing before pause
         if (exoPlayer?.isPlaying == false && isPlaying) {
             exoPlayer?.play()

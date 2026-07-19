@@ -10,9 +10,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -33,7 +31,8 @@ import javax.inject.Inject
 import kotlin.math.max
 
 @AndroidEntryPoint
-class ImageViewerActivity : AppCompatActivity() {
+class ImageViewerActivity : AppCompatActivity(),
+    com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
 
     private lateinit var binding: ActivityImageViewerBinding
     private var scheduledImage: ScheduledImage? = null
@@ -104,8 +103,6 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     private fun setupEdgeToEdge() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.app_background)
         ViewCompat.setOnApplyWindowInsetsListener(binding.imageViewerRoot) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)

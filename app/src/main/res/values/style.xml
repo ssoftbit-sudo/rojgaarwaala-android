@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Android 12+ Splash Screen Theme -->
     <style name="Theme.Rojgaarwaala.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@drawable/rojgaarwaala_logo_new_v</item>
@@ -8,8 +8,11 @@
     </style>
 
     <style name="AppTheme.NoSplash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@null</item>
-        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
     </style>
     <style name="roundedImageViewRounded">
         <item name="cornerFamily">rounded</item>
@@ -19,7 +22,6 @@
         <item name="windowActionModeOverlay">true</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
         <item name="colorPrimaryDark">@color/color_green</item>
         <item name="colorSecondary">@color/color_green</item>
         <item name="colorAccent">@color/color_green</item>
@@ -27,8 +29,8 @@
         <item name="colorPrimary">@color/color_green</item>
         <item name="colorPrimaryVariant">@color/color_green</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
     <style name="TextInputLayoutStyle"
         parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">

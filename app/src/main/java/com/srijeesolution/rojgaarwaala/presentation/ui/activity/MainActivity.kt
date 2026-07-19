@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
@@ -36,7 +35,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
 
     private lateinit var rootView: LinearLayout
     private lateinit var mainToolbar: LinearLayout
@@ -550,10 +549,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSystemNavigationBar() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.app_background)
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.app_background)
-
         val toolbarStart = mainToolbar.paddingLeft
         val toolbarTop = mainToolbar.paddingTop
         val toolbarEnd = mainToolbar.paddingRight

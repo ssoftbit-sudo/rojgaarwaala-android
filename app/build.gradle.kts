@@ -15,14 +15,14 @@ android {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 23
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.0"
+        versionCode = 13
+        versionName = "2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file("play_store_file.jks")
+            storeFile = file("play_store_file")
             storePassword = "Rojgaarwaala@123"
             keyAlias = "Rojgaarwaala"
             keyPassword = "Rojgaarwaala@123"

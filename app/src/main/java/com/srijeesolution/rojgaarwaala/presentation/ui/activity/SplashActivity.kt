@@ -12,7 +12,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : AppCompatActivity(),
+    com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
     @Inject
     lateinit var sharedPrefs: SharedPrefs
     

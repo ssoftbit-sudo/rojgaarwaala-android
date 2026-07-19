@@ -80,6 +80,9 @@
         <activity
             android:name=".presentation.ui.activity.VideoPlayerActivity"
             android:theme="@style/AppTheme.NoSplash"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".presentation.ui.activity.OtpActivity"
