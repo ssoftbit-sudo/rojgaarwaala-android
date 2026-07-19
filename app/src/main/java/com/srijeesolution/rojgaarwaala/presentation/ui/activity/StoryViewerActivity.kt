@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -62,6 +63,10 @@ class StoryViewerActivity : AppCompatActivity() {
     private var autoAdvanceStarted = false
     private var storiesUpdated = false
     private var pendingLikeStoryId: Int? = null
+    private var fullDescription: String = ""
+    private var descriptionExpanded = false
+    private var progressPausedForReadMore = false
+    private var pausedElapsedMs = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +80,7 @@ class StoryViewerActivity : AppCompatActivity() {
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+        applySystemBarInsets()
 
         deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
         stories = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -94,12 +100,37 @@ class StoryViewerActivity : AppCompatActivity() {
         binding.storyBackButton.setOnClickListener { finishWithResult() }
         binding.storyCloseButton.setOnClickListener { finishWithResult() }
         binding.storyLikeButton.setOnClickListener { toggleStoryLike() }
+        binding.storyReadMoreButton.setOnClickListener { toggleDescriptionExpanded() }
         onBackPressedDispatcher.addCallback(this) {
             finishWithResult()
         }
 
         observeStoryLikeResponses()
         showStoryAt(currentIndex)
+    }
+
+    private fun applySystemBarInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.storyTopChrome.setPadding(
+                binding.storyTopChrome.paddingLeft,
+                bars.top,
+                binding.storyTopChrome.paddingRight,
+                binding.storyTopChrome.paddingBottom
+            )
+            binding.storyBottomOverlay.setPadding(
+                binding.storyBottomOverlay.paddingLeft,
+                binding.storyBottomOverlay.paddingTop,
+                binding.storyBottomOverlay.paddingRight,
+                bars.bottom.coerceAtLeast(dp(12))
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.root)
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 
     private fun observeStoryLikeResponses() {
@@ -193,7 +224,9 @@ class StoryViewerActivity : AppCompatActivity() {
 
     private fun updateStoryOverlay(story: CircleStory) {
         val title = story.title?.trim().orEmpty()
-        val description = story.description?.trim().orEmpty()
+        fullDescription = story.description?.trim().orEmpty()
+        descriptionExpanded = false
+        progressPausedForReadMore = false
 
         if (title.isBlank()) {
             binding.storyTitleText.visibility = View.GONE
@@ -202,12 +235,76 @@ class StoryViewerActivity : AppCompatActivity() {
             binding.storyTitleText.text = title
         }
 
-        if (description.isBlank()) {
+        renderDescriptionCollapsed()
+    }
+
+    private fun renderDescriptionCollapsed() {
+        if (fullDescription.isBlank()) {
+            binding.storyDescriptionScroll.visibility = View.GONE
             binding.storyDescriptionText.visibility = View.GONE
-        } else {
-            binding.storyDescriptionText.visibility = View.VISIBLE
-            binding.storyDescriptionText.text = description
+            binding.storyReadMoreButton.visibility = View.GONE
+            binding.storyDescriptionScroll.layoutParams = binding.storyDescriptionScroll.layoutParams.apply {
+                height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            }
+            return
         }
+
+        binding.storyDescriptionScroll.visibility = View.VISIBLE
+        binding.storyDescriptionText.visibility = View.VISIBLE
+        binding.storyDescriptionScroll.layoutParams = binding.storyDescriptionScroll.layoutParams.apply {
+            height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        }
+
+        binding.storyDescriptionText.maxLines = DESCRIPTION_COLLAPSED_LINES
+        binding.storyDescriptionText.ellipsize = android.text.TextUtils.TruncateAt.END
+        binding.storyDescriptionText.text = fullDescription
+
+        binding.storyDescriptionText.post {
+            val needsReadMore = binding.storyDescriptionText.lineCount > DESCRIPTION_COLLAPSED_LINES ||
+                fullDescription.length > DESCRIPTION_COLLAPSE_CHAR_LIMIT ||
+                fullDescription.lines().size > DESCRIPTION_COLLAPSED_LINES
+            if (needsReadMore) {
+                binding.storyReadMoreButton.visibility = View.VISIBLE
+                binding.storyReadMoreButton.text = "Read more"
+            } else {
+                binding.storyReadMoreButton.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun toggleDescriptionExpanded() {
+        descriptionExpanded = !descriptionExpanded
+        if (descriptionExpanded) {
+            binding.storyDescriptionText.maxLines = Integer.MAX_VALUE
+            binding.storyDescriptionText.ellipsize = null
+            binding.storyDescriptionText.text = fullDescription
+            binding.storyReadMoreButton.text = "Read less"
+            val maxHeight = (resources.displayMetrics.heightPixels * 0.38f).toInt()
+            binding.storyDescriptionScroll.layoutParams = binding.storyDescriptionScroll.layoutParams.apply {
+                height = maxHeight
+            }
+            pauseStoryForReadMore()
+        } else {
+            renderDescriptionCollapsed()
+            resumeStoryAfterReadMore()
+        }
+        binding.storyDescriptionScroll.requestLayout()
+    }
+
+    private fun pauseStoryForReadMore() {
+        if (progressPausedForReadMore) return
+        progressPausedForReadMore = true
+        pausedElapsedMs = (System.currentTimeMillis() - storyStartTime).coerceAtLeast(0L)
+        progressRunnable?.let { handler.removeCallbacks(it) }
+        exoPlayer?.pause()
+    }
+
+    private fun resumeStoryAfterReadMore() {
+        if (!progressPausedForReadMore) return
+        progressPausedForReadMore = false
+        storyStartTime = System.currentTimeMillis() - pausedElapsedMs
+        exoPlayer?.playWhenReady = true
+        startAutoAdvance(resumeFromPaused = true)
     }
 
     private fun updateLikeButton(story: CircleStory) {
@@ -293,8 +390,10 @@ class StoryViewerActivity : AppCompatActivity() {
             return
         }
 
+        // fitCenter keeps full poster visible (centerCrop was zooming/cropping permanent ads)
         Glide.with(this)
             .load(imageUrl)
+            .fitCenter()
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
                     e: GlideException?,
@@ -411,13 +510,16 @@ class StoryViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun startAutoAdvance() {
-        storyStartTime = System.currentTimeMillis()
-        binding.storyProgressBar.progress = 0
+    private fun startAutoAdvance(resumeFromPaused: Boolean = false) {
+        if (!resumeFromPaused) {
+            storyStartTime = System.currentTimeMillis()
+            binding.storyProgressBar.progress = 0
+        }
 
         progressRunnable?.let { handler.removeCallbacks(it) }
         progressRunnable = object : Runnable {
             override fun run() {
+                if (progressPausedForReadMore) return
                 val elapsed = System.currentTimeMillis() - storyStartTime
                 val progress = ((elapsed.toFloat() / storyDurationMs) * 1000).toInt().coerceIn(0, 1000)
                 binding.storyProgressBar.progress = progress
@@ -441,6 +543,8 @@ class StoryViewerActivity : AppCompatActivity() {
     private fun stopCurrentStory() {
         progressRunnable?.let { handler.removeCallbacks(it) }
         progressRunnable = null
+        progressPausedForReadMore = false
+        descriptionExpanded = false
         binding.storyErrorText.visibility = View.GONE
 
         exoPlayer?.release()
@@ -474,5 +578,7 @@ class StoryViewerActivity : AppCompatActivity() {
         private const val FALLBACK_VIDEO_DURATION_MS = 30_000L
         private const val MEDIA_VIDEO = "video"
         private const val MEDIA_LINK = "link"
+        private const val DESCRIPTION_COLLAPSED_LINES = 3
+        private const val DESCRIPTION_COLLAPSE_CHAR_LIMIT = 120
     }
 }

@@ -14,7 +14,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.srijeesolution.rojgaarwaala.data.remote.model.CircleStory
-import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.data.remote.model.Story
 import com.srijeesolution.rojgaarwaala.data.remote.model.TimeGroup
 import com.srijeesolution.rojgaarwaala.data.remote.model.toCircleStory
@@ -286,40 +285,13 @@ class StoriesFragment : Fragment() {
     }
 
     private fun onStoryClick(story: Story) {
-        when (story.mediaType) {
-            "video", "link" -> {
-                val intent = Intent(context, StoryViewerActivity::class.java)
-                intent.putParcelableArrayListExtra(
-                    StoryViewerActivity.EXTRA_STORIES,
-                    arrayListOf(story.toCircleStory())
-                )
-                intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, 0)
-                storyViewerLauncher.launch(intent)
-            }
-            else -> {
-                if (!story.imageUrl.isNullOrEmpty()) {
-                    val intent = Intent(context, ImageViewerActivity::class.java)
-                    val scheduledImage = ScheduledImage(
-                        id = story.id,
-                        title = story.title,
-                        description = story.description,
-                        imagePath = story.imageUrl,
-                        publishDate = story.publishDate,
-                        status = null,
-                        createdAt = story.createdAt,
-                        updatedAt = null
-                    )
-                    intent.putExtra("scheduled_image", scheduledImage)
-                    startActivity(intent)
-                } else {
-                    android.widget.Toast.makeText(
-                        context,
-                        "No image available for this story",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
+        val intent = Intent(context, StoryViewerActivity::class.java)
+        intent.putParcelableArrayListExtra(
+            StoryViewerActivity.EXTRA_STORIES,
+            arrayListOf(story.toCircleStory())
+        )
+        intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, 0)
+        storyViewerLauncher.launch(intent)
     }
 
     private fun onViewAllClick(timeGroup: TimeGroup) {

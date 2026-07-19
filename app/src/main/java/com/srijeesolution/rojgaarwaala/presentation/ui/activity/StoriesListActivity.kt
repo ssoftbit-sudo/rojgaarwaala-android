@@ -1,12 +1,13 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.Story
+import com.srijeesolution.rojgaarwaala.data.remote.model.toCircleStory
 import com.srijeesolution.rojgaarwaala.databinding.ActivityStoriesListBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesGridAdapter
@@ -115,26 +116,13 @@ class StoriesListActivity : AppCompatActivity() {
     }
 
     private fun onStoryClick(story: Story) {
-        // Launch ImageViewerActivity to show the story image
-        if (!story.imageUrl.isNullOrEmpty()) {
-            val intent = android.content.Intent(this, ImageViewerActivity::class.java)
-            // Convert Story to ScheduledImage for compatibility with ImageViewerActivity
-            val scheduledImage = ScheduledImage(
-                id = story.id,
-                title = story.title,
-                description = story.description,
-                imagePath = story.imageUrl,
-                publishDate = story.publishDate,
-                status = null,
-                createdAt = story.createdAt,
-                updatedAt = null
-            )
-            intent.putExtra("scheduled_image", scheduledImage)
-            startActivity(intent)
-        } else {
-            // Show toast if no image available
-            android.widget.Toast.makeText(this, "No image available for this story", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        val intent = Intent(this, StoryViewerActivity::class.java)
+        intent.putParcelableArrayListExtra(
+            StoryViewerActivity.EXTRA_STORIES,
+            arrayListOf(story.toCircleStory())
+        )
+        intent.putExtra(StoryViewerActivity.EXTRA_START_INDEX, 0)
+        startActivity(intent)
     }
 
     private fun showEmptyState() {
