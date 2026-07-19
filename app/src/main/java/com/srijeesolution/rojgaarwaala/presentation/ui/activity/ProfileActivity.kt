@@ -216,10 +216,6 @@ class ProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "District is required", Toast.LENGTH_SHORT).show()
             return
         }
-        if (colony.isEmpty()) {
-            binding.colonyEditText.error = "Colony / Area is required"
-            return
-        }
         if (resumeFile == null && existingResumeUrl.isNullOrBlank()) {
             Toast.makeText(this, "Please upload resume (photo or PDF)", Toast.LENGTH_SHORT).show()
             return

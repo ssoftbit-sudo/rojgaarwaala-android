@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@null"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         android:visibility="gone" />
 
     <androidx.media3.ui.PlayerView
@@ -24,6 +24,12 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_story_caption" />
+
     <ProgressBar
         android:id="@+id/storyProgressBar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -35,17 +41,73 @@
         android:progress="0"
         android:progressTint="@color/brand_color_yellow" />
 
-    <ImageView
-        android:id="@+id/storyCloseButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Close"
-        android:padding="8dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:tint="@color/white" />
+    <LinearLayout
+        android:id="@+id/storyHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageButton
+            android:id="@+id/storyBackButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_media_previous"
+            android:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/storyAvatarText"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_story_avatar"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/storyAuthorName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/storyTimeText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/storyCloseButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="@color/white" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/storyErrorText"
@@ -58,47 +120,72 @@
         android:textSize="16sp"
         android:visibility="gone" />
 
-    <ImageButton
-        android:id="@+id/storyLikeButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="96dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Like story"
-        android:padding="8dp"
-        android:src="@drawable/ic_story_like"
-        android:visibility="gone" />
-
     <LinearLayout
-        android:id="@+id/storyCaptionContainer"
+        android:id="@+id/storyBottomOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@drawable/bg_story_caption"
-        android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="24dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="16dp"
-        android:visibility="gone">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/storyTitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="6dp"
             android:textColor="@color/white"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/storyDescriptionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="12dp"
             android:textColor="@color/white"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/storyActionBar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_story_action_bar"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Reply"
+                android:textColor="#99FFFFFF"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/storyLikeCountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/storyLikeButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Like story"
+                android:padding="8dp"
+                android:src="@drawable/ic_story_like" />
+        </LinearLayout>
     </LinearLayout>
 
 </FrameLayout>

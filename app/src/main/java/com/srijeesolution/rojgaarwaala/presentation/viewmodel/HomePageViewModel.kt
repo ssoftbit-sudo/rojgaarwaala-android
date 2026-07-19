@@ -67,6 +67,12 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val storiesLiveData : LiveData<ApiResult<StoriesResponse>> = _storiesLiveData
     private var _activeStoriesLiveData : MutableLiveData<ApiResult<ActiveStoriesResponse>> = MutableLiveData()
     val activeStoriesLiveData : LiveData<ApiResult<ActiveStoriesResponse>> = _activeStoriesLiveData
+    private var _likeStoryLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = MutableLiveData()
+    val likeStoryLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = _likeStoryLiveData
+    private var _unlikeStoryLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = MutableLiveData()
+    val unlikeStoryLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = _unlikeStoryLiveData
+    private var _storyLikeStatusLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = MutableLiveData()
+    val storyLikeStatusLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>> = _storyLikeStatusLiveData
     private val _hasUnseenStoriesLiveData = MutableLiveData(false)
     val hasUnseenStoriesLiveData: LiveData<Boolean> = _hasUnseenStoriesLiveData
 
@@ -379,6 +385,30 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         updateLocalStorySeen(storyId)
         viewModelScope.launch {
             homePageRepository.markStoryViewed(storyId, deviceKey).collectLatest { }
+        }
+    }
+
+    fun likeStory(storyId: Int) {
+        viewModelScope.launch {
+            homePageRepository.likeStory(storyId).collectLatest {
+                _likeStoryLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun unlikeStory(storyId: Int) {
+        viewModelScope.launch {
+            homePageRepository.unlikeStory(storyId).collectLatest {
+                _unlikeStoryLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getStoryLikeStatus(storyId: Int) {
+        viewModelScope.launch {
+            homePageRepository.getStoryLikeStatus(storyId).collectLatest {
+                _storyLikeStatusLiveData.postValue(it)
+            }
         }
     }
 

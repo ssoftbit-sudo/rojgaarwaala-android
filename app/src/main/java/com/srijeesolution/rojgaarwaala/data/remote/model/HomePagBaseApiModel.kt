@@ -390,6 +390,10 @@ data class Story(
     val position: Int? = null,
     @SerializedName("created_by")
     val createdBy: String? = null,
+    @SerializedName("like_count")
+    val likeCount: Int? = 0,
+    @SerializedName("is_liked")
+    val isLiked: Boolean? = false,
     @SerializedName("created_at")
     val createdAt: String? = null
 )

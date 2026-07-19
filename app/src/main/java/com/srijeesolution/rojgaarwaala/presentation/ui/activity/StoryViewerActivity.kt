@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Observer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -28,10 +30,15 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.CircleStory
 import com.srijeesolution.rojgaarwaala.databinding.ActivityStoryViewerBinding
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -54,6 +61,7 @@ class StoryViewerActivity : AppCompatActivity() {
     private lateinit var deviceKey: String
     private var autoAdvanceStarted = false
     private var storiesUpdated = false
+    private var pendingLikeStoryId: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,12 +91,69 @@ class StoryViewerActivity : AppCompatActivity() {
             return
         }
 
+        binding.storyBackButton.setOnClickListener { finishWithResult() }
         binding.storyCloseButton.setOnClickListener { finishWithResult() }
         binding.storyLikeButton.setOnClickListener { toggleStoryLike() }
         onBackPressedDispatcher.addCallback(this) {
             finishWithResult()
         }
+
+        observeStoryLikeResponses()
         showStoryAt(currentIndex)
+    }
+
+    private fun observeStoryLikeResponses() {
+        viewModel.likeStoryLiveData.observe(this, Observer { result ->
+            handleStoryLikeApiResult(result, expectedLiked = true)
+        })
+        viewModel.unlikeStoryLiveData.observe(this, Observer { result ->
+            handleStoryLikeApiResult(result, expectedLiked = false)
+        })
+        viewModel.storyLikeStatusLiveData.observe(this, Observer { result ->
+            if (result is ApiResult.Success && result.data?.status == true) {
+                applyLikeStateFromApi(result.data.data)
+            }
+        })
+    }
+
+    private fun handleStoryLikeApiResult(
+        result: ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel>,
+        expectedLiked: Boolean
+    ) {
+        val storyId = pendingLikeStoryId
+        pendingLikeStoryId = null
+        binding.storyLikeButton.isEnabled = true
+
+        when (result) {
+            is ApiResult.Success -> {
+                if (result.data?.status == true) {
+                    applyLikeStateFromApi(result.data.data)
+                } else {
+                    Toast.makeText(this, result.data?.message ?: "Could not update like", Toast.LENGTH_SHORT).show()
+                }
+            }
+            is ApiResult.Error -> {
+                Toast.makeText(this, "Could not update like", Toast.LENGTH_SHORT).show()
+                storyId?.let { refreshStoryLikeStatus(it) }
+            }
+            else -> Unit
+        }
+    }
+
+    private fun applyLikeStateFromApi(
+        data: com.srijeesolution.rojgaarwaala.data.remote.model.StoryReactionData?
+    ) {
+        val storyId = data?.storyId ?: return
+        val index = stories.indexOfFirst { it.id == storyId }
+        if (index >= 0) {
+            stories[index] = stories[index].copy(
+                likeCount = data.likeCount ?: stories[index].likeCount,
+                isLiked = data.isLiked ?: stories[index].isLiked
+            )
+            if (index == currentIndex) {
+                updateLikeButton(stories[index])
+            }
+        }
     }
 
     private fun showStoryAt(index: Int) {
@@ -102,10 +167,15 @@ class StoryViewerActivity : AppCompatActivity() {
 
         currentIndex = index
         val story = stories[index]
-        updateStoryCaption(story)
-        updateLikeButton(story.id)
+        updateStoryHeader(story)
+        updateStoryOverlay(story)
+        updateLikeButton(story)
         viewModel.markStoryViewed(story.id ?: return, deviceKey)
         storiesUpdated = true
+
+        if (isLoggedIn()) {
+            refreshStoryLikeStatus(story.id)
+        }
 
         when (story.mediaType) {
             MEDIA_VIDEO -> showVideoStory(story)
@@ -114,18 +184,16 @@ class StoryViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateStoryCaption(story: CircleStory) {
+    private fun updateStoryHeader(story: CircleStory) {
+        val author = story.createdBy?.trim().takeUnless { it.isNullOrBlank() } ?: "Rojgaarwaala"
+        binding.storyAuthorName.text = author
+        binding.storyAvatarText.text = author.firstOrNull()?.uppercaseChar()?.toString() ?: "R"
+        binding.storyTimeText.text = formatStoryTime(story.publishDate ?: story.createdAt)
+    }
+
+    private fun updateStoryOverlay(story: CircleStory) {
         val title = story.title?.trim().orEmpty()
         val description = story.description?.trim().orEmpty()
-
-        if (title.isBlank() && description.isBlank()) {
-            binding.storyCaptionContainer.visibility = View.GONE
-            binding.storyLikeButton.visibility = View.VISIBLE
-            return
-        }
-
-        binding.storyCaptionContainer.visibility = View.VISIBLE
-        binding.storyLikeButton.visibility = View.VISIBLE
 
         if (title.isBlank()) {
             binding.storyTitleText.visibility = View.GONE
@@ -142,24 +210,75 @@ class StoryViewerActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateLikeButton(storyId: Int?) {
-        if (storyId == null) {
-            binding.storyLikeButton.visibility = View.GONE
-            return
-        }
-        val liked = sharedPrefs.isStoryLiked(storyId)
+    private fun updateLikeButton(story: CircleStory) {
+        val liked = story.isLiked == true
         binding.storyLikeButton.setImageResource(
             if (liked) R.drawable.ic_story_like_filled else R.drawable.ic_story_like
         )
+
+        val count = story.likeCount ?: 0
+        if (count > 0) {
+            binding.storyLikeCountText.visibility = View.VISIBLE
+            binding.storyLikeCountText.text = count.toString()
+        } else {
+            binding.storyLikeCountText.visibility = View.GONE
+        }
     }
 
     private fun toggleStoryLike() {
+        if (!isLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to like stories", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val storyId = stories.getOrNull(currentIndex)?.id ?: return
-        val liked = sharedPrefs.isStoryLiked(storyId)
-        sharedPrefs.setStoryLiked(storyId, !liked)
-        updateLikeButton(storyId)
-        val message = if (liked) "Like removed" else "Story liked"
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        val currentlyLiked = stories[currentIndex].isLiked == true
+        pendingLikeStoryId = storyId
+        binding.storyLikeButton.isEnabled = false
+
+        if (currentlyLiked) {
+            viewModel.unlikeStory(storyId)
+        } else {
+            viewModel.likeStory(storyId)
+        }
+    }
+
+    private fun refreshStoryLikeStatus(storyId: Int?) {
+        if (storyId == null || !isLoggedIn()) return
+        viewModel.getStoryLikeStatus(storyId)
+    }
+
+    private fun isLoggedIn(): Boolean {
+        return sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)
+    }
+
+    private fun formatStoryTime(raw: String?): String {
+        if (raw.isNullOrBlank()) return ""
+
+        return try {
+            val parsers = listOf(
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()),
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            )
+            val date = parsers.firstNotNullOfOrNull { parser ->
+                runCatching { parser.parse(raw) }.getOrNull()
+            } ?: return raw
+
+            val today = Calendar.getInstance()
+            val storyCal = Calendar.getInstance().apply { time = date }
+            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+
+            if (today.get(Calendar.YEAR) == storyCal.get(Calendar.YEAR) &&
+                today.get(Calendar.DAY_OF_YEAR) == storyCal.get(Calendar.DAY_OF_YEAR)
+            ) {
+                "Today, ${timeFormat.format(date)}"
+            } else {
+                SimpleDateFormat("dd MMM yyyy, h:mm a", Locale.getDefault()).format(date)
+            }
+        } catch (_: Exception) {
+            raw
+        }
     }
 
     private fun showImageStory(story: CircleStory) {

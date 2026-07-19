@@ -238,7 +238,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Colony / Area"
+                        android:text="Colony / Area (Optional)"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -249,7 +249,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Type or choose colony / area"
+                        android:hint="Type or choose colony / area (optional)"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
                         android:textColor="@color/white"

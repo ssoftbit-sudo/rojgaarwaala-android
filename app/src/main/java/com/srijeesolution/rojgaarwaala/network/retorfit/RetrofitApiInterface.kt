@@ -10,6 +10,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
@@ -162,6 +163,15 @@ interface RetrofitApiInterface {
         @Path("id") id: Int,
         @Header("X-Device-Key") deviceKey: String
     ): Response<StoriesResponse>
+
+    @POST(NetworkConstants.STORY_LIKE)
+    suspend fun likeStory(@Body request: HashMap<String, Any>): Response<StoryLikeApiModel>
+
+    @POST(NetworkConstants.STORY_UNLIKE)
+    suspend fun unlikeStory(@Body request: HashMap<String, Any>): Response<StoryLikeApiModel>
+
+    @GET(NetworkConstants.STORY_LIKE_STATUS)
+    suspend fun getStoryLikeStatus(@Query("story_id") storyId: Int): Response<StoryLikeApiModel>
 
     @Multipart
     @POST(NetworkConstants.JOB_APPLICATIONS)

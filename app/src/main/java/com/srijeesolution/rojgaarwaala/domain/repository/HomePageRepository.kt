@@ -10,6 +10,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
@@ -63,6 +64,9 @@ interface HomePageRepository {
     fun getSectionStoriesGrouped(): Flow<ApiResult<StoriesResponse>>
     fun getActiveStories(deviceKey: String): Flow<ApiResult<ActiveStoriesResponse>>
     fun markStoryViewed(storyId: Int, deviceKey: String): Flow<ApiResult<StoriesResponse>>
+    fun likeStory(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
+    fun unlikeStory(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
+    fun getStoryLikeStatus(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
     fun updateJobWithFiles(
         id: Int,
         jobTitle: String,

@@ -285,4 +285,26 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
             RetrofitApiService.create(BASE_URL).markStoryViewed(storyId, deviceKey)
         })
     }.flowOn(Dispatchers.IO)
+
+    override fun likeStory(storyId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["story_id"] = storyId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).likeStory(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun unlikeStory(storyId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["story_id"] = storyId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).unlikeStory(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getStoryLikeStatus(storyId: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getStoryLikeStatus(storyId)
+        })
+    }.flowOn(Dispatchers.IO)
 }
