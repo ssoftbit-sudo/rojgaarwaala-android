@@ -233,6 +233,32 @@
                         android:textColor="@color/white"
                         android:textColorHint="@color/search_hint"
                         android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/job_preferences_section_title"
+                        android:textColor="@color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/job_preferences_section_hint"
+                        android:textColor="@color/gray_light_3"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="wrap_content"

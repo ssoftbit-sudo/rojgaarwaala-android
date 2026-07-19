@@ -37,6 +37,8 @@
     <string name="job_locations_label">Job Locations</string>
     <string name="add_job_location">+ Add Location</string>
     <string name="job_locations_hint">Select one or more districts where this job is available.</string>
+    <string name="job_preferences_section_title">Job Preferences</string>
+    <string name="job_preferences_section_hint">Set the kind of work and location you want. Employers can match you using this profile.</string>
     <string name="job_preferences_hint">Update your preferred job category, location and resume in My Profile.</string>
     <string name="field_is_required">%1$s is required</string>
     <string name="notifications">Notifications</string>

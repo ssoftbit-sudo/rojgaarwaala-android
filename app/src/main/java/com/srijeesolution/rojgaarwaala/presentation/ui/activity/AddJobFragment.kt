@@ -87,10 +87,17 @@ class AddJobFragment : Fragment() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val selected = result.data
+            val data = result.data
+            var selected = data
                 ?.getStringArrayListExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATIONS)
                 .orEmpty()
                 .filter { it.isNotBlank() }
+            if (selected.isEmpty()) {
+                val single = data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
+                if (single.isNotBlank()) {
+                    selected = listOf(single)
+                }
+            }
             if (selected.isNotEmpty()) {
                 companyJobLocations.clear()
                 companyJobLocations.addAll(selected.distinct())

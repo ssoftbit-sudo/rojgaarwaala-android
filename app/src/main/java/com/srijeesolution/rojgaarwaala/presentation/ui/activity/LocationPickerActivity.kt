@@ -32,11 +32,12 @@ class LocationPickerActivity : AppCompatActivity() {
     private lateinit var searchInput: EditText
     private lateinit var doneButton: TextView
     private var allDistricts: List<String> = emptyList()
-    private val multiSelect = intent.getBooleanExtra(EXTRA_MULTI_SELECT, false)
+    private var multiSelect = false
     private val selectedLocations = linkedSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        multiSelect = intent.getBooleanExtra(EXTRA_MULTI_SELECT, false)
         setContentView(R.layout.activity_location_picker)
 
         intent.getStringArrayListExtra(EXTRA_PRESELECTED_LOCATIONS)
