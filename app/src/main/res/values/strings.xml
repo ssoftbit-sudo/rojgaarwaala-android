@@ -60,7 +60,7 @@
     <string name="select_issue_category">Select issue category</string>
     <string name="search_faq_hint">Search question or keyword</string>
     <string name="suggested_answers">Suggested answers</string>
-    <string name="watch_tutorials">Tutorial videos</string>
+    <string name="watch_tutorials">Step-by-step video guides</string>
     <string name="watch_tutorial">Watch video</string>
     <string name="listen_audio">Listen audio</string>
     <string name="no_tutorials">No tutorials available yet.</string>
