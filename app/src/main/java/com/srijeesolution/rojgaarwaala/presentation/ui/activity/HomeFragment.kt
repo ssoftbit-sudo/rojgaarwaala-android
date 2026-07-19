@@ -97,6 +97,9 @@ class HomeFragment : Fragment() {
         return if (HomeLocationDefaults.skipsDistrictFilter(loc)) "" else loc
     }
 
+    private fun hasActiveTextSearch(): Boolean =
+        mainToolbarViewModel.searchQuery.value.orEmpty().trim().isNotEmpty()
+
     private fun applyFromToolbarState() {
         val q = mainToolbarViewModel.searchQuery.value.orEmpty().trim()
         val loc = districtFilterQuery()
@@ -242,7 +245,7 @@ class HomeFragment : Fragment() {
         // Update top videos
         if (topVideos.isNotEmpty()) {
             val orderedTopVideos = VideoListUtils.orderVideos(topVideos)
-            val showTopViewMore = if (isSearchMode) {
+            val showTopViewMore = if (hasActiveTextSearch()) {
                 false
             } else {
                 topVideosHasMore
@@ -277,10 +280,16 @@ class HomeFragment : Fragment() {
                     Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
 
                     val orderedVideos = VideoListUtils.orderVideos(cat.videos ?: emptyList())
-                    val showCategoryViewMore = if (isSearchMode) {
+                    val sourceCategory = allCategoryVideos.find { it.id == cat.id } ?: cat
+                    val sourcePreviewCount = sourceCategory.videos?.size ?: orderedVideos.size
+                    val showCategoryViewMore = if (hasActiveTextSearch()) {
                         false
                     } else {
-                        cat.hasMore == true || (cat.videoTotal ?: 0) > orderedVideos.size
+                        VideoListUtils.inferHasMore(
+                            previewCount = sourcePreviewCount,
+                            hasMore = sourceCategory.hasMore,
+                            total = sourceCategory.videoTotal,
+                        )
                     }
                     sectionViewAll.visibility = if (showCategoryViewMore) View.VISIBLE else View.GONE
 
@@ -342,8 +351,11 @@ class HomeFragment : Fragment() {
                     
                     // Store all data for search functionality
                     allTopVideos = VideoListUtils.orderVideos(data?.topVideos ?: emptyList())
-                    topVideosHasMore = data?.topVideosHasMore == true ||
-                        (data?.topVideosTotal ?: 0) > allTopVideos.size
+                    topVideosHasMore = VideoListUtils.inferHasMore(
+                        previewCount = allTopVideos.size,
+                        hasMore = data?.topVideosHasMore,
+                        total = data?.topVideosTotal,
+                    )
                     allCategoryList = data?.categoryList ?: emptyList<Category>()
                     allCategoryVideos = (data?.categoryVideos ?: emptyList()).map { category ->
                         val orderedVideos = VideoListUtils.orderVideos(category.videos ?: emptyList())
