@@ -61,6 +61,14 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
+        <ProgressBar
+            android:id="@+id/loadMoreProgress"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/noVideosText"
             android:layout_width="wrap_content"

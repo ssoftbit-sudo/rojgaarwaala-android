@@ -135,9 +135,15 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         })
     }.flowOn(Dispatchers.IO)
 
-    override fun getCategoryVideos(id: Int) = flow {
+    override fun getCategoryVideos(id: Int, page: Int, perPage: Int) = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).getCategoryVideos(id)
+            RetrofitApiService.create(BASE_URL).getCategoryVideos(id, page, perPage)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getTopVideos(page: Int, perPage: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getTopVideos(page, perPage)
         })
     }.flowOn(Dispatchers.IO)
 

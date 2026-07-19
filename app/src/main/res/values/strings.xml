@@ -66,6 +66,9 @@
     <string name="no_tutorials">No tutorials available yet.</string>
     <string name="upload_screenshot">Upload screenshot</string>
     <string name="photo_selected">Photo selected</string>
+    <string name="view_more_videos">View More</string>
+    <string name="tap_to_view_more">Tap to see all</string>
+    <string name="loading_more_videos">Loading more videos…</string>
 
     <string-array name="help_desk_problems">
         <item>Fake job / scam</item>

@@ -5,6 +5,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideosListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
@@ -85,7 +86,17 @@ interface RetrofitApiInterface {
     suspend fun getJobList(): Response<JobListResponse>
 
     @GET(NetworkConstants.CATEGORY_VIDEOS)
-    suspend fun getCategoryVideos(@Path("id") id: Int): Response<CategoryVideosResponse>
+    suspend fun getCategoryVideos(
+        @Path("id") id: Int,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): Response<CategoryVideosResponse>
+
+    @GET(NetworkConstants.TOP_VIDEOS)
+    suspend fun getTopVideos(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): Response<TopVideosListResponse>
 
     @POST(NetworkConstants.VIDEO_LIKE)
     suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>

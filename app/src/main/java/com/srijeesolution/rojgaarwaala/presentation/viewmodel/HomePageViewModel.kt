@@ -8,6 +8,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideosListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
@@ -42,6 +43,8 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     val videoDetailsLiveData : LiveData<ApiResult<VideoDetailsResponse>> = _videoDetailsLiveData
     private var _jobListLiveData : MutableLiveData<ApiResult<JobListResponse>> = MutableLiveData()
     val jobListLiveData : LiveData<ApiResult<JobListResponse>> = _jobListLiveData
+    private var _topVideosLiveData : MutableLiveData<ApiResult<TopVideosListResponse>> = MutableLiveData()
+    val topVideosLiveData : LiveData<ApiResult<TopVideosListResponse>> = _topVideosLiveData
     private var _categoryVideosLiveData : MutableLiveData<ApiResult<CategoryVideosResponse>> = MutableLiveData()
     val categoryVideosLiveData : LiveData<ApiResult<CategoryVideosResponse>> = _categoryVideosLiveData
     private var _likeVideoLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel>> = MutableLiveData()
@@ -186,10 +189,18 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
-    fun getCategoryVideos(id: Int) {
+    fun getCategoryVideos(id: Int, page: Int = 1, perPage: Int = 20) {
         viewModelScope.launch {
-            homePageRepository.getCategoryVideos(id).collectLatest{
+            homePageRepository.getCategoryVideos(id, page, perPage).collectLatest{
                 _categoryVideosLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun getTopVideos(page: Int = 1, perPage: Int = 20) {
+        viewModelScope.launch {
+            homePageRepository.getTopVideos(page, perPage).collectLatest {
+                _topVideosLiveData.postValue(it)
             }
         }
     }

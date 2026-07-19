@@ -5,6 +5,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideosListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
@@ -36,7 +37,8 @@ interface HomePageRepository {
     fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
-    fun getCategoryVideos(id: Int): Flow<ApiResult<CategoryVideosResponse>>
+    fun getCategoryVideos(id: Int, page: Int = 1, perPage: Int = 20): Flow<ApiResult<CategoryVideosResponse>>
+    fun getTopVideos(page: Int = 1, perPage: Int = 20): Flow<ApiResult<TopVideosListResponse>>
     fun likeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun unlikeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun removeVideoReaction(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>

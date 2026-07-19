@@ -34,6 +34,7 @@ import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.VideoListUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoLocationFilter
 import android.util.Log
 
@@ -52,6 +53,7 @@ class HomeFragment : Fragment() {
     private var allCategoryList: List<Category> = emptyList()
     private var allCategoryVideos: List<CategoryVideo> = emptyList()
     private var isSearchMode = false
+    private var topVideosHasMore = false
     private lateinit var topVideosAdapter: TopVideosAdapter
 
     private lateinit var mainToolbarViewModel: MainToolbarViewModel
@@ -68,7 +70,7 @@ class HomeFragment : Fragment() {
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
         mainToolbarViewModel = ViewModelProvider(requireActivity())[MainToolbarViewModel::class.java]
 
-        topVideosAdapter = TopVideosAdapter()
+        topVideosAdapter = TopVideosAdapter(onViewMoreClick = { openTopVideosList() })
         observeMainToolbarFilters()
         
         // Set up View All click listeners
@@ -108,15 +110,23 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupViewAllClickListeners() {
-        // Top Videos View All click listener
-        binding.topVideosViewAll.setOnClickListener {
-            // Open CategoryVideosActivity for top videos (using a special category ID or title)
-            val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
-            intent.putExtra("category_id", -1) // Special ID for top videos
-            intent.putExtra("category_title", "Top Videos")
-            intent.putExtra("category_icon", "null")
-            startActivity(intent)
-        }
+        binding.topVideosViewAll.setOnClickListener { openTopVideosList() }
+    }
+
+    private fun openTopVideosList() {
+        val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
+        intent.putExtra("category_id", -1)
+        intent.putExtra("category_title", "Top Videos")
+        intent.putExtra("category_icon", "null")
+        startActivity(intent)
+    }
+
+    private fun openCategoryVideosList(category: CategoryVideo) {
+        val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
+        intent.putExtra("category_id", category.id ?: -1)
+        intent.putExtra("category_title", category.title)
+        intent.putExtra("category_icon", category.iconFile)
+        startActivity(intent)
     }
 
     private fun filterContent(query: String, locationQuery: String = "") {
@@ -231,12 +241,20 @@ class HomeFragment : Fragment() {
 
         // Update top videos
         if (topVideos.isNotEmpty()) {
+            val orderedTopVideos = VideoListUtils.orderVideos(topVideos)
+            val showTopViewMore = if (isSearchMode) {
+                false
+            } else {
+                topVideosHasMore
+            }
             binding.topVideosLabel.visibility = View.VISIBLE
             binding.topVideosRecyclerView.visibility = View.VISIBLE
-            binding.topVideosViewAll.visibility = View.VISIBLE
+            binding.topVideosViewAll.visibility = if (showTopViewMore) View.VISIBLE else View.GONE
             binding.topVideosRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             binding.topVideosRecyclerView.adapter = topVideosAdapter
-            topVideosAdapter.submitList(orderVideos(topVideos))
+            topVideosAdapter.submitList(
+                VideoListUtils.withViewMoreTile(orderedTopVideos, showTopViewMore)
+            )
         } else {
             binding.topVideosLabel.visibility = View.GONE
             binding.topVideosRecyclerView.visibility = View.GONE
@@ -257,23 +275,23 @@ class HomeFragment : Fragment() {
                     
                     sectionTitle.text = cat.title
                     Glide.with(sectionIcon.context).load(cat.iconFile).placeholder(R.drawable.no_image_placeholder).into(sectionIcon)
-                    
-                    // Show View All button only when videos are available
-                    sectionViewAll.visibility = View.VISIBLE
-                    
-                    // Set up View All click listener for this category section
-                    sectionViewAll.setOnClickListener {
-                        val intent = Intent(requireContext(), CategoryVideosActivity::class.java)
-                        intent.putExtra("category_id", cat.id)
-                        intent.putExtra("category_title", cat.title)
-                        intent.putExtra("category_icon", cat.iconFile)
-                        startActivity(intent)
+
+                    val orderedVideos = VideoListUtils.orderVideos(cat.videos ?: emptyList())
+                    val showCategoryViewMore = if (isSearchMode) {
+                        false
+                    } else {
+                        cat.hasMore == true || (cat.videoTotal ?: 0) > orderedVideos.size
                     }
-                    
+                    sectionViewAll.visibility = if (showCategoryViewMore) View.VISIBLE else View.GONE
+
+                    sectionViewAll.setOnClickListener { openCategoryVideosList(cat) }
+
                     sectionRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                    val adapter = VideoAdapter()
+                    val adapter = VideoAdapter(onViewMoreClick = { openCategoryVideosList(cat) })
                     sectionRecycler.adapter = adapter
-                    adapter.submitList(orderVideos(cat.videos ?: emptyList()))
+                    adapter.submitList(
+                        VideoListUtils.withViewMoreTile(orderedVideos, showCategoryViewMore)
+                    )
                     binding.categorySectionsContainer.addView(sectionView)
                 }
             }
@@ -323,10 +341,12 @@ class HomeFragment : Fragment() {
                     setupBannerSlider()
                     
                     // Store all data for search functionality
-                    allTopVideos = orderVideos(data?.topVideos ?: emptyList())
+                    allTopVideos = VideoListUtils.orderVideos(data?.topVideos ?: emptyList())
+                    topVideosHasMore = data?.topVideosHasMore == true ||
+                        (data?.topVideosTotal ?: 0) > allTopVideos.size
                     allCategoryList = data?.categoryList ?: emptyList<Category>()
                     allCategoryVideos = (data?.categoryVideos ?: emptyList()).map { category ->
-                        val orderedVideos = orderVideos(category.videos ?: emptyList())
+                        val orderedVideos = VideoListUtils.orderVideos(category.videos ?: emptyList())
                         category.copy(videos = ArrayList(orderedVideos))
                     }
 
@@ -347,13 +367,6 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-    }
-
-    private fun orderVideos(videos: List<TopVideo>): List<TopVideo> {
-        return videos.sortedWith(
-            compareBy<TopVideo> { it.sortOrder ?: Int.MAX_VALUE }
-                .thenByDescending { it.createdAt.orEmpty() }
-        )
     }
 
     private fun orderBanners(banners: List<BannerList>): List<BannerList> {
@@ -438,7 +451,7 @@ class HomeFragment : Fragment() {
             
             // Add category videos (limit to first 10 videos per category to avoid overwhelming)
             allCategoryVideos.forEach { categoryVideo ->
-                categoryVideo.videos?.take(10)?.forEach { video ->
+                categoryVideo.videos?.take(VideoListUtils.PREVIEW_LIMIT)?.forEach { video ->
                     video.videoUrl?.let { url ->
                         if (url.isNotEmpty()) {
                             videoUrls.add(url)

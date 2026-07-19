@@ -24,6 +24,10 @@ data class HomePageData(
     val topVideos: ArrayList<TopVideo>? = ArrayList(),
     @SerializedName("categoryVideos")
     val categoryVideos: ArrayList<CategoryVideo>? = ArrayList(),
+    @SerializedName("top_videos_total")
+    val topVideosTotal: Int? = null,
+    @SerializedName("top_videos_has_more")
+    val topVideosHasMore: Boolean? = null,
     @SerializedName("userDetails")
     val userDetails: UserData? = null,
     @SerializedName("cityList")
@@ -101,6 +105,10 @@ data class CategoryVideo(
     val iconFile: String? = null,
     @SerializedName("videos")
     val videos: ArrayList<TopVideo>? = ArrayList(),
+    @SerializedName("video_total")
+    val videoTotal: Int? = null,
+    @SerializedName("has_more")
+    val hasMore: Boolean? = null,
 )
 
 data class UserData(
@@ -246,7 +254,36 @@ data class CategoryVideosData(
     @SerializedName("category")
     val category: Category? = null,
     @SerializedName("videos")
-    val videos: List<TopVideo>? = null
+    val videos: List<TopVideo>? = null,
+    @SerializedName("pagination")
+    val pagination: VideoPagination? = null,
+)
+
+data class TopVideosListResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: TopVideosListData? = null,
+)
+
+data class TopVideosListData(
+    @SerializedName("topVideos")
+    val topVideos: List<TopVideo>? = null,
+    @SerializedName("pagination")
+    val pagination: VideoPagination? = null,
+)
+
+data class VideoPagination(
+    @SerializedName("current_page")
+    val currentPage: Int? = null,
+    @SerializedName("per_page")
+    val perPage: Int? = null,
+    @SerializedName("total")
+    val total: Int? = null,
+    @SerializedName("has_more")
+    val hasMore: Boolean? = null,
 )
 
 data class ImageListResponse(
