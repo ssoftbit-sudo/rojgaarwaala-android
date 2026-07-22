@@ -107,8 +107,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:padding="8dp" />
+                    android:background="@drawable/bg_help_desk_spinner"
+                    android:overlapAnchor="false"
+                    android:popupBackground="@drawable/bg_help_desk_spinner_popup"
+                    android:spinnerMode="dropdown" />
 
                 <LinearLayout
                     android:id="@+id/helpDeskFaqSection"
@@ -237,8 +239,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginBottom="10dp"
-                        android:background="@drawable/modern_edit_text_background"
-                        android:padding="8dp" />
+                        android:background="@drawable/bg_help_desk_spinner"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_help_desk_spinner_popup"
+                        android:spinnerMode="dropdown" />
 
                     <EditText
                         android:id="@+id/enquiryMessageInput"

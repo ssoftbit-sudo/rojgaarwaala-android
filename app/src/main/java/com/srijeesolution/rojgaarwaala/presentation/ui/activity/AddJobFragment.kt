@@ -74,12 +74,16 @@ class AddJobFragment : Fragment() {
     private val pdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handlePdfSelection(it) }
     }
-    
-    private val imageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+
+    private val imageLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
         uri?.let { handleImageSelection(it) }
     }
-    
-    private val logoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+
+    private val logoLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
         uri?.let { handleLogoSelection(it) }
     }
 
@@ -476,11 +480,19 @@ class AddJobFragment : Fragment() {
         }
         
         binding.uploadImageBtn.setOnClickListener {
-            imageLauncher.launch("image/*")
+            imageLauncher.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
         }
         
         binding.uploadLogoBtn.setOnClickListener {
-            logoLauncher.launch("image/*")
+            logoLauncher.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
         }
     }
 

@@ -53,7 +53,9 @@ class HelpDeskActivity : AppCompatActivity() {
     private var selectedContentType = "faq"
     private var selectedPhotoUri: Uri? = null
 
-    private val photoPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    private val photoPicker = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
         if (uri != null) {
             selectedPhotoUri = uri
             binding.enquiryPhotoName.visibility = View.VISIBLE
@@ -69,7 +71,13 @@ class HelpDeskActivity : AppCompatActivity() {
         binding.helpDeskBackButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
         binding.helpDeskCallButton.setOnClickListener { dialPhone(callPhone) }
         binding.helpDeskWhatsappButton.setOnClickListener { openWhatsApp(whatsappPhone) }
-        binding.enquiryPhotoButton.setOnClickListener { photoPicker.launch("image/*") }
+        binding.enquiryPhotoButton.setOnClickListener {
+            photoPicker.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
+        }
         binding.enquirySubmitButton.setOnClickListener { submitComplaint() }
 
         binding.helpDeskFaqList.layoutManager = LinearLayoutManager(this)
@@ -100,7 +108,13 @@ class HelpDeskActivity : AppCompatActivity() {
 
     private fun setupProblemSpinner() {
         val problems = resources.getStringArray(R.array.help_desk_problems)
-        binding.enquiryProblemSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, problems)
+        binding.enquiryProblemSpinner.adapter = createDarkSpinnerAdapter(problems.toList())
+    }
+
+    private fun createDarkSpinnerAdapter(items: List<String>): ArrayAdapter<String> {
+        return ArrayAdapter(this, R.layout.item_help_desk_spinner, items).apply {
+            setDropDownViewResource(R.layout.item_help_desk_spinner_dropdown)
+        }
     }
 
     private fun setupSearchWatcher() {
@@ -131,11 +145,7 @@ class HelpDeskActivity : AppCompatActivity() {
                     whatsappPhone = data?.support?.whatsappPhone.orEmpty().ifBlank { whatsappPhone }
                     issueCategories = data?.issueCategories.orEmpty()
                     val labels = issueCategories.map { it.label.orEmpty() }
-                    binding.helpDeskIssueSpinner.adapter = ArrayAdapter(
-                        this,
-                        android.R.layout.simple_spinner_dropdown_item,
-                        labels,
-                    )
+                    binding.helpDeskIssueSpinner.adapter = createDarkSpinnerAdapter(labels)
                     if (issueCategories.isNotEmpty()) {
                         renderSelectedCategory()
                     }
