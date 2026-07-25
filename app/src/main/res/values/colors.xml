@@ -34,4 +34,7 @@
     <color name="search_bar_stroke">#3A3A3C</color>
     <color name="search_hint">#8E8E93</color>
     <color name="search_icon_tint">#EBEBF5</color>
+
+    <!-- Dialog surface, kept dark in both light and dark mode -->
+    <color name="dialog_surface">#2A2A2A</color>
 </resources>

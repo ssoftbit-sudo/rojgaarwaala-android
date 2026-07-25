@@ -12,6 +12,22 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
     </style>
+    <!--
+      The app theme forces white text, which is invisible on the light dialog
+      surface used in day mode. Pin dialogs to a dark surface so title and
+      message stay readable in both modes.
+    -->
+    <style name="Theme.Rojgaarwaala.AlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="android:background">@color/dialog_surface</item>
+        <item name="android:colorBackground">@color/dialog_surface</item>
+        <item name="colorSurface">@color/dialog_surface</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/gray_light_3</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
     <style name="roundedImageViewRounded">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>

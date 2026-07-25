@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.srijeesolution.rojgaarwaala.BuildConfig
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls
 import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiService
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -116,7 +117,7 @@ class SplashActivity : AppCompatActivity(),
     }
 
     private fun showForceUpdateDialog(title: String, message: String, storeUrl: String) {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
             .setTitle(title)
             .setMessage(message)
             .setCancelable(false)
