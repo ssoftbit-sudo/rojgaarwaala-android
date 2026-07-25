@@ -10,9 +10,8 @@
         <item name="colorOnSecondary">#FFFFFF</item>
         <item name="android:textColorPrimary">#FFFFFF</item>
         <item name="android:textColorSecondary">#CCCCCC</item>
-        <!-- Literal ARGB: @android:color/transparent crashes some MIUI OEM themes -->
-        <item name="android:statusBarColor">#00000000</item>
-        <item name="android:navigationBarColor">#00000000</item>
+        <!-- Bar colors are deprecated from API 35; EdgeToEdgeHelper sets them
+             programmatically for older API levels instead. -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
         <item name="android:forceDarkAllowed" tools:targetApi="29">true</item>

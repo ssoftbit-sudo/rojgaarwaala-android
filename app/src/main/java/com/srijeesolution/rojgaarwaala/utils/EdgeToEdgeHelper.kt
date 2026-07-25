@@ -2,6 +2,7 @@ package com.srijeesolution.rojgaarwaala.utils
 
 import android.app.Activity
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -59,11 +60,28 @@ object EdgeToEdgeHelper {
 
     fun padWithSystemBars(root: View) {
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Cutout included so content clears notches in landscape too.
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             windowInsets
         }
         ViewCompat.requestApplyInsets(root)
+    }
+
+    fun applyDefaultPadding(activity: Activity) {
+        if (activity is ManualEdgeToEdge) return
+        if (activity !is ComponentActivity) return
+        val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
+        val root = content.getChildAt(0) ?: return
+        if (root.getTag(R.id.tag_edge_to_edge_padded) == true) return
+        root.setTag(R.id.tag_edge_to_edge_padded, true)
+        try {
+            padWithSystemBars(root)
+        } catch (t: Throwable) {
+            Log.w(TAG, "padWithSystemBars failed", t)
+        }
     }
 }
 
@@ -75,20 +93,20 @@ class EdgeToEdgeLifecycleCallbacks : android.app.Application.ActivityLifecycleCa
     }
 
     override fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
-        if (activity is ManualEdgeToEdge) return
-        if (activity !is ComponentActivity) return
-        val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
-        val root = content.getChildAt(0) ?: return
-        if (root.getTag(R.id.tag_edge_to_edge_padded) == true) return
-        root.setTag(R.id.tag_edge_to_edge_padded, true)
-        try {
-            EdgeToEdgeHelper.padWithSystemBars(root)
-        } catch (t: Throwable) {
-            Log.w("EdgeToEdgeHelper", "padWithSystemBars failed", t)
-        }
+        EdgeToEdgeHelper.applyDefaultPadding(activity)
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+    /**
+     * Pre/Post-created callbacks only fire from API 29, so API 23–28 has to be
+     * covered here or those devices get no edge-to-edge and no inset padding.
+     */
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return
+        if (activity is ComponentActivity) {
+            EdgeToEdgeHelper.enable(activity)
+        }
+        EdgeToEdgeHelper.applyDefaultPadding(activity)
+    }
     override fun onActivityStarted(activity: Activity) = Unit
     override fun onActivityResumed(activity: Activity) = Unit
     override fun onActivityPaused(activity: Activity) = Unit
