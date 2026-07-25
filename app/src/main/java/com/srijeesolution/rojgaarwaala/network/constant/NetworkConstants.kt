@@ -40,6 +40,7 @@ class NetworkConstants {
         const val JOB_APPLICATION_ORDER = "job-applications/{id}/razorpay-order"
         const val JOB_APPLICATION_CONFIRM = "job-applications/{id}/confirm-payment"
         const val JOB_APPLICATION_FAILED = "job-applications/{id}/payment-failed"
+        const val APP_CONFIG = "app-config"
         const val HELP_DESK_CONFIG = "help-desk/config"
         const val HELP_DESK_FAQS = "help-desk/faqs"
         const val HELP_DESK_TUTORIALS = "help-desk/tutorials"

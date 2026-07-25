@@ -203,6 +203,11 @@ interface RetrofitApiInterface {
     @GET(NetworkConstants.JOB_APPLICATIONS_MY)
     suspend fun getMyJobApplications(): Response<JobApplicationApiResponse>
 
+    @GET(NetworkConstants.APP_CONFIG)
+    suspend fun getAppConfig(
+        @Query("version_code") versionCode: Int,
+    ): Response<com.srijeesolution.rojgaarwaala.data.remote.model.AppConfigResponse>
+
     @GET(NetworkConstants.HELP_DESK_CONFIG)
     suspend fun getHelpDeskConfig(): Response<HelpDeskConfigResponse>
 

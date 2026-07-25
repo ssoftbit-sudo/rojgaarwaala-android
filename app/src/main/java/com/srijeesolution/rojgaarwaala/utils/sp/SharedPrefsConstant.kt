@@ -16,4 +16,14 @@ object SharedPrefsConstant {
     const val VIEWED_VIDEO_IDS = "viewed_video_ids_for_new_tag"
     /** True when admin updates application status or user submits a new application. */
     const val JOB_STATUS_UPDATE_PENDING = "job_status_update_pending"
+    /** Cached force-update flag from /api/app-config (speeds warm start). */
+    const val CACHED_FORCE_UPDATE = "cached_force_update"
+    /**
+     * Min version code the cached flag was computed against. Prefs survive app
+     * updates, so the flag alone would keep blocking an already-updated build.
+     */
+    const val CACHED_MIN_VERSION_CODE = "cached_min_version_code"
+    const val CACHED_FORCE_UPDATE_TITLE = "cached_force_update_title"
+    const val CACHED_FORCE_UPDATE_MESSAGE = "cached_force_update_message"
+    const val CACHED_FORCE_UPDATE_STORE_URL = "cached_force_update_store_url"
 }

@@ -1,6 +1,7 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import android.util.Log
+import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
@@ -34,6 +35,8 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
             }
             val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
             requestBuilder.header("X-Device-Key", deviceKey)
+            requestBuilder.header("X-App-Version-Code", BuildConfig.VERSION_CODE.toString())
+            requestBuilder.header("X-App-Version-Name", BuildConfig.VERSION_NAME)
             requestBuilder.method(original.method, original.body)
             response = chain.proceed(requestBuilder.build())
             return response

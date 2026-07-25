@@ -1,10 +1,13 @@
 package com.srijeesolution.rojgaarwaala.utils
 
 import android.app.Activity
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -18,21 +21,40 @@ import com.srijeesolution.rojgaarwaala.R
 interface ManualEdgeToEdge
 
 object EdgeToEdgeHelper {
+    private const val TAG = "EdgeToEdgeHelper"
+
     fun enable(activity: ComponentActivity) {
-        activity.enableEdgeToEdge()
+        try {
+            // Explicit ARGB colors avoid OEM theme ColorStateList lookups that crash
+            // some MIUI devices inside PhoneWindow.installDecor / ResourcesImpl.
+            activity.enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            )
+        } catch (t: Throwable) {
+            Log.w(TAG, "enableEdgeToEdge failed; continuing without edge-to-edge", t)
+        }
     }
 
     fun hideSystemBars(activity: ComponentActivity, root: View) {
-        WindowInsetsControllerCompat(activity.window, root).let { controller ->
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        try {
+            WindowInsetsControllerCompat(activity.window, root).let { controller ->
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } catch (t: Throwable) {
+            Log.w(TAG, "hideSystemBars failed", t)
         }
     }
 
     fun showSystemBars(activity: ComponentActivity, root: View) {
-        WindowInsetsControllerCompat(activity.window, root)
-            .show(WindowInsetsCompat.Type.systemBars())
+        try {
+            WindowInsetsControllerCompat(activity.window, root)
+                .show(WindowInsetsCompat.Type.systemBars())
+        } catch (t: Throwable) {
+            Log.w(TAG, "showSystemBars failed", t)
+        }
     }
 
     fun padWithSystemBars(root: View) {
@@ -59,7 +81,11 @@ class EdgeToEdgeLifecycleCallbacks : android.app.Application.ActivityLifecycleCa
         val root = content.getChildAt(0) ?: return
         if (root.getTag(R.id.tag_edge_to_edge_padded) == true) return
         root.setTag(R.id.tag_edge_to_edge_padded, true)
-        EdgeToEdgeHelper.padWithSystemBars(root)
+        try {
+            EdgeToEdgeHelper.padWithSystemBars(root)
+        } catch (t: Throwable) {
+            Log.w("EdgeToEdgeHelper", "padWithSystemBars failed", t)
+        }
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit

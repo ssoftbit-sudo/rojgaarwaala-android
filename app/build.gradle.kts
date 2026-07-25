@@ -14,9 +14,9 @@ android {
     defaultConfig {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 23
-        targetSdk = 35
-        versionCode = 18
-        versionName = "2.0.3"
+        targetSdk = 36
+        versionCode = 23
+        versionName = "2.0.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -32,6 +32,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -102,12 +103,10 @@ dependencies {
     // Material3 NavigationBar
     implementation("com.google.android.material:material:1.9.0")
 
-    // Firebase
+    // Firebase (only used SDKs — drop unused Firestore/Storage to cut memory on low-RAM devices)
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-storage")
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
     // Razorpay Payment Gateway

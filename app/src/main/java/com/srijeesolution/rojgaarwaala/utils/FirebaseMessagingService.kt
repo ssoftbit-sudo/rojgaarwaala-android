@@ -19,7 +19,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "FirebaseMsgService"
-        private const val CHANNEL_ID = "rojgaarwaala_channel"
+        private const val CHANNEL_ID = NotificationUtils.CHANNEL_ID
         private const val CHANNEL_NAME = "Rojgaarwaala Notifications"
         private const val CHANNEL_DESCRIPTION = "Notifications from Rojgaarwaala app"
     }
