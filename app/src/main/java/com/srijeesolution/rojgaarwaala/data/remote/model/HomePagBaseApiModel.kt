@@ -134,6 +134,8 @@ data class UserData(
     val resumeUrl: String? = null,
     @SerializedName("candidate_profile_complete")
     val candidateProfileComplete: Boolean? = null,
+    @SerializedName("is_employee")
+    val isEmployee: Boolean? = false,
 )
 
 data class VideoDetailsResponse(

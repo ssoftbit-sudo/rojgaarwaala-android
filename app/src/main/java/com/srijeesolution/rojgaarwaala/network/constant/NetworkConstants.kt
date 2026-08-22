@@ -45,5 +45,12 @@ class NetworkConstants {
         const val HELP_DESK_FAQS = "help-desk/faqs"
         const val HELP_DESK_TUTORIALS = "help-desk/tutorials"
         const val ENQUIRY_SUBMIT = "enquiry/submit"
+        const val EMPLOYEE_DASHBOARD = "employee/dashboard"
+        const val EMPLOYEE_PUNCH_IN = "employee/attendance/punch-in"
+        const val EMPLOYEE_PUNCH_OUT = "employee/attendance/punch-out"
+        const val EMPLOYEE_ATTENDANCE = "employee/attendance"
+        const val EMPLOYEE_MONTHLY_SUMMARY = "employee/attendance/monthly-summary"
+        const val EMPLOYEE_PAYMENTS = "employee/payments"
+        const val EMPLOYEE_FACTORY_TERMS = "employee/factory/terms"
     }
 }

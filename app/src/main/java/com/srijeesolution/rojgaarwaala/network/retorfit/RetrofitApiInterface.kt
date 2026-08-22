@@ -17,6 +17,13 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskConfigResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskTutorialsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EnquirySubmitResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -233,5 +240,26 @@ interface RetrofitApiInterface {
         @Part("mobile") mobile: RequestBody? = null,
         @Part photo: MultipartBody.Part? = null,
     ): Response<EnquirySubmitResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_DASHBOARD)
+    suspend fun getEmployeeDashboard(): Response<EmployeeDashboardResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_PUNCH_IN)
+    suspend fun employeePunchIn(@Body request: PunchRequest): Response<PunchResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_PUNCH_OUT)
+    suspend fun employeePunchOut(@Body request: PunchRequest): Response<PunchResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_ATTENDANCE)
+    suspend fun getEmployeeAttendance(@Query("month") month: String): Response<AttendanceListResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_MONTHLY_SUMMARY)
+    suspend fun getEmployeeMonthlySummary(@Query("month") month: String): Response<MonthlySummaryResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_PAYMENTS)
+    suspend fun getEmployeePayments(@Query("month") month: String?): Response<EmployeePaymentsResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_FACTORY_TERMS)
+    suspend fun getEmployeeFactoryTerms(): Response<FactoryTermsResponse>
 
 }

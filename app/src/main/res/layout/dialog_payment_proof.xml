@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/dialog_surface"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <TextView
+        android:id="@+id/proofTitleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Payment Proof"
+        android:textColor="@color/white"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/proofFileNameText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/gray_light_3"
+        android:textSize="12sp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp">
+
+        <ImageView
+            android:id="@+id/proofImageView"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:adjustViewBounds="true"
+            android:background="@color/black"
+            android:contentDescription="Payment proof"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/proofProgressBar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:theme="@style/ThemeOverlay.App.ProgressBarWhite"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/proofFallbackText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="24dp"
+            android:textColor="@color/gray_light_3"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/proofCloseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="14dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="10dp"
+        android:text="CLOSE"
+        android:textColor="@color/accent"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

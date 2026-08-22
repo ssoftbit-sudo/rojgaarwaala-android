@@ -54,6 +54,7 @@ class HomeFragment : Fragment() {
     private var allCategoryList: List<Category> = emptyList()
     private var allCategoryVideos: List<CategoryVideo> = emptyList()
     private var isSearchMode = false
+    private var isEmployee = false
     private var topVideosHasMore = false
     private lateinit var topVideosAdapter: TopVideosAdapter
 
@@ -115,6 +116,9 @@ class HomeFragment : Fragment() {
 
     private fun setupViewAllClickListeners() {
         binding.topVideosViewAll.setOnClickListener { openTopVideosList() }
+        binding.employeeAttendanceCard.setOnClickListener {
+            startActivity(Intent(requireContext(), AttendanceDashboardActivity::class.java))
+        }
     }
 
     private fun openTopVideosList() {
@@ -193,6 +197,10 @@ class HomeFragment : Fragment() {
         topVideos: List<TopVideo>,
         categoryVideos: List<CategoryVideo>
     ) {
+        // Attendance entry point is only for linked employees, and is irrelevant while searching
+        binding.employeeAttendanceCard.visibility =
+            if (isEmployee && !isSearchMode) View.VISIBLE else View.GONE
+
         // Check if we have any results
         val hasResults = categories.isNotEmpty() || topVideos.isNotEmpty() || categoryVideos.isNotEmpty()
         
@@ -347,6 +355,7 @@ class HomeFragment : Fragment() {
                     binding.categorySectionsContainer.visibility = View.VISIBLE
                     
                     val data = apiResponse.data?.dataObj
+                    isEmployee = data?.userDetails?.isEmployee == true
                     bannerList = orderBanners(data?.bannerList ?: emptyList())
                     setupBannerSlider()
                     

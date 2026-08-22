@@ -49,6 +49,15 @@ android {
         checkReleaseBuilds = false
     }
 
+    testOptions {
+        unitTests {
+            // Repository and parser code touches android.util.Log and org.json, neither of
+            // which is implemented in the JVM stub jar. Returning defaults keeps those calls
+            // harmless so the surrounding logic can be tested without Robolectric.
+            isReturnDefaultValues = true
+        }
+    }
+
     buildFeatures {
         buildConfig = true
         viewBinding = true
@@ -79,6 +88,12 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     testImplementation(libs.junit)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    // Exercises the Retrofit interface and Gson models against real backend payloads.
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.0")
+    // Real org.json implementation, since the stub in the Android JVM jar throws.
+    testImplementation("org.json:json:20231013")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
@@ -121,6 +136,9 @@ dependencies {
 
     // Razorpay Payment Gateway
     implementation("com.razorpay:checkout:1.6.41")
+
+    // Fused location provider for employee attendance punch in/out
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
