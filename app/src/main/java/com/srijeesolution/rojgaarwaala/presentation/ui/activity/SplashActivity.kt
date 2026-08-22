@@ -30,9 +30,14 @@ class SplashActivity : AppCompatActivity(),
     private var keepSplash = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-        super.onCreate(savedInstanceState)
-        splashScreen.setKeepOnScreenCondition { keepSplash }
+        try {
+            val splashScreen = installSplashScreen()
+            super.onCreate(savedInstanceState)
+            splashScreen.setKeepOnScreenCondition { keepSplash }
+        } catch (t: Throwable) {
+            Log.w("SplashActivity", "SplashScreen API failed; using fallback theme", t)
+            super.onCreate(savedInstanceState)
+        }
 
         lifecycleScope.launch {
             // Short timeout so low-RAM warm starts are not blocked on network.

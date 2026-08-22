@@ -12,14 +12,16 @@
 #   public *;
 #}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Preserve line numbers for readable Crashlytics stack traces in release builds.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
 -keep class com.pierfrancescosoffritti.** { *; }
+
+# Firebase Crashlytics
+-keepattributes *Annotation*
+-keep class com.google.firebase.crashlytics.** { *; }
+-dontwarn com.google.firebase.crashlytics.**
 
 # Firebase Analytics
 -keep class com.google.firebase.analytics.** { *; }

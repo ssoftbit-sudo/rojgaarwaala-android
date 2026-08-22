@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -15,9 +16,10 @@ android {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 23
         targetSdk = 36
-        versionCode = 23
-        versionName = "2.0.6"
+        versionCode = 24
+        versionName = "2.0.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndkVersion = "28.2.13676358"
     }
 
     signingConfigs {
@@ -61,6 +63,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // Google Play 16 KB page-size requirement (targetSdk 35+).
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
@@ -84,11 +93,11 @@ dependencies {
     implementation ("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
     
     // ExoPlayer for better video streaming performance
-    implementation("androidx.media3:media3-exoplayer:1.2.1")
-    implementation("androidx.media3:media3-ui:1.2.1")
-    implementation("androidx.media3:media3-common:1.2.1")
-    implementation("androidx.media3:media3-datasource:1.2.1")
-    implementation("androidx.media3:media3-session:1.2.1")
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
+    implementation("androidx.media3:media3-common:1.4.1")
+    implementation("androidx.media3:media3-datasource:1.4.1")
+    implementation("androidx.media3:media3-session:1.4.1")
     
     //implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
@@ -104,13 +113,14 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
 
     // Firebase (only used SDKs — drop unused Firestore/Storage to cut memory on low-RAM devices)
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
     // Razorpay Payment Gateway
-    implementation("com.razorpay:checkout:1.6.35")
+    implementation("com.razorpay:checkout:1.6.41")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
