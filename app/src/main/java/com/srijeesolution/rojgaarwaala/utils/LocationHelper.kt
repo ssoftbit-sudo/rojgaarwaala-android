@@ -19,7 +19,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
@@ -57,6 +59,11 @@ class LocationHelper(private val activity: ComponentActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var timeoutRunnable: Runnable? = null
 
+    /** Set while a caller other than [requestCurrentLocation] is awaiting the permission result. */
+    private var permissionRequest: ((granted: Boolean, error: Result.Error?) -> Unit)? = null
+    private var locationCallback: LocationCallback? = null
+    private var trackingCallback: ((Result) -> Unit)? = null
+
     private val fusedLocationClient by lazy {
         LocationServices.getFusedLocationProviderClient(activity)
     }
@@ -66,16 +73,22 @@ class LocationHelper(private val activity: ComponentActivity) {
     ) { grants ->
         val granted = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        when {
-            granted -> ensureLocationEnabled()
+        val error = when {
+            granted -> null
             // Once a denial has been recorded, "no rationale" means the user picked
             // "Don't ask again" (or the OS is blocking the prompt entirely).
-            shouldShowRationale() -> deliver(
-                Result.Error(Failure.PERMISSION_DENIED, MESSAGE_PERMISSION),
-            )
-            else -> deliver(
-                Result.Error(Failure.PERMISSION_PERMANENTLY_DENIED, MESSAGE_PERMISSION_SETTINGS),
-            )
+            shouldShowRationale() ->
+                Result.Error(Failure.PERMISSION_DENIED, MESSAGE_PERMISSION)
+            else ->
+                Result.Error(Failure.PERMISSION_PERMANENTLY_DENIED, MESSAGE_PERMISSION_SETTINGS)
+        }
+
+        val handler = permissionRequest
+        permissionRequest = null
+        when {
+            handler != null -> handler(granted, error)
+            granted -> ensureLocationEnabled()
+            error != null -> deliver(error)
         }
     }
 
@@ -106,6 +119,85 @@ class LocationHelper(private val activity: ComponentActivity) {
                 ),
             )
         }
+    }
+
+    /**
+     * Streams fixes so the screen can show a live distance to the factory. Asks for the
+     * permission first if it is missing, so the employee sees their position as soon as the
+     * screen opens rather than only after tapping punch.
+     *
+     * [onUpdate] is called on the main thread for every fix, and once with an
+     * [Result.Error] if tracking cannot start. Always pair with [stopLocationUpdates].
+     */
+    fun trackLocation(onUpdate: (Result) -> Unit) {
+        if (hasLocationPermission()) {
+            startLocationUpdates(onUpdate)
+            return
+        }
+        // A tracking request must not consume a punch's pending callback.
+        if (permissionRequest != null || pendingCallback != null) return
+        permissionRequest = { granted, error ->
+            if (granted) {
+                startLocationUpdates(onUpdate)
+            } else if (error != null) {
+                onUpdate(error)
+            }
+        }
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ),
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates(onUpdate: (Result) -> Unit) {
+        stopLocationUpdates()
+
+        if (!hasLocationPermission()) {
+            onUpdate(Result.Error(Failure.PERMISSION_DENIED, MESSAGE_PERMISSION))
+            return
+        }
+        if (!isLocationEnabled()) {
+            onUpdate(Result.Error(Failure.GPS_DISABLED, MESSAGE_GPS))
+            return
+        }
+
+        trackingCallback = onUpdate
+        val callback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                val location = result.lastLocation ?: return
+                trackingCallback?.invoke(
+                    Result.Success(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        accuracy = location.accuracy.toDouble(),
+                    ),
+                )
+            }
+        }
+        locationCallback = callback
+
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, TRACKING_INTERVAL_MS)
+            .setMinUpdateIntervalMillis(TRACKING_FASTEST_INTERVAL_MS)
+            .build()
+
+        try {
+            fusedLocationClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+        } catch (e: Exception) {
+            Log.w(TAG, "requestLocationUpdates failed", e)
+            locationCallback = null
+            trackingCallback = null
+            onUpdate(Result.Error(Failure.UNAVAILABLE, MESSAGE_UNAVAILABLE))
+        }
+    }
+
+    /** Safe to call when tracking was never started. */
+    fun stopLocationUpdates() {
+        locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
+        locationCallback = null
+        trackingCallback = null
     }
 
     fun hasLocationPermission(): Boolean =
@@ -148,6 +240,8 @@ class LocationHelper(private val activity: ComponentActivity) {
         cancellationTokenSource?.cancel()
         cancellationTokenSource = null
         pendingCallback = null
+        permissionRequest = null
+        stopLocationUpdates()
     }
 
     private fun shouldShowRationale(): Boolean =
@@ -257,6 +351,11 @@ class LocationHelper(private val activity: ComponentActivity) {
     companion object {
         private const val TAG = "LocationHelper"
         const val LOCATION_TIMEOUT_MS = 15_000L
+
+        // Frequent enough that walking towards the gate updates the distance promptly,
+        // slow enough not to drain a labourer's battery while the screen sits open.
+        const val TRACKING_INTERVAL_MS = 3_000L
+        const val TRACKING_FASTEST_INTERVAL_MS = 1_500L
 
         const val MESSAGE_PERMISSION = "Location permission required"
         const val MESSAGE_PERMISSION_SETTINGS =

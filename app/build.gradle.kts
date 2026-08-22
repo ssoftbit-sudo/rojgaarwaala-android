@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,6 +8,21 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+}
+
+// Read from local.properties, which is gitignored, so the Maps key never lands in the repo.
+// CI and fresh clones can pass -PMAPS_API_KEY=... or set MAPS_API_KEY in the environment.
+val mapsApiKey: String = run {
+    val local = rootProject.file("local.properties")
+    val fromLocal = if (local.exists()) {
+        Properties().apply { local.inputStream().use { load(it) } }.getProperty("MAPS_API_KEY")
+    } else {
+        null
+    }
+    fromLocal
+        ?: (project.findProperty("MAPS_API_KEY") as String?)
+        ?: System.getenv("MAPS_API_KEY")
+        ?: ""
 }
 
 android {
@@ -20,6 +37,8 @@ android {
         versionName = "2.0.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndkVersion = "28.2.13676358"
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
+        buildConfigField("boolean", "HAS_MAPS_KEY", (mapsApiKey.isNotBlank()).toString())
     }
 
     signingConfigs {
@@ -139,6 +158,8 @@ dependencies {
 
     // Fused location provider for employee attendance punch in/out
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Map + geofence circle on the attendance screen
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
