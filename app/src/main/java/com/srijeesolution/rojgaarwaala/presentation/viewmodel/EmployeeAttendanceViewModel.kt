@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
@@ -43,6 +44,9 @@ class EmployeeAttendanceViewModel @Inject constructor(
 
     private val _factoryTermsLiveData = MutableLiveData<ApiResult<FactoryTermsResponse>>()
     val factoryTermsLiveData: LiveData<ApiResult<FactoryTermsResponse>> = _factoryTermsLiveData
+
+    private val _acceptTermsLiveData = MutableLiveData<ApiResult<AcceptTermsResponse>>()
+    val acceptTermsLiveData: LiveData<ApiResult<AcceptTermsResponse>> = _acceptTermsLiveData
 
     fun loadDashboard() {
         _dashboardLiveData.value = ApiResult.Loading()
@@ -101,6 +105,15 @@ class EmployeeAttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             employeeAttendanceRepository.getFactoryTerms().collectLatest {
                 _factoryTermsLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun acceptFactoryTerms() {
+        _acceptTermsLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.acceptFactoryTerms().collectLatest {
+                _acceptTermsLiveData.postValue(it)
             }
         }
     }

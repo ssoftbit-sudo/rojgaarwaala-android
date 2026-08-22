@@ -61,6 +61,12 @@ class EmployeeAttendanceApiContractTest {
               "status": true,
               "message": "API Success",
               "data": {
+                "terms": {
+                  "acceptance_required": false,
+                  "reason": null,
+                  "accepted_at": "2026-08-20T10:15:00+05:30",
+                  "terms_count": 4
+                },
                 "employee": {
                   "id": 7,
                   "name": "Ramesh Kumar",
@@ -126,6 +132,118 @@ class EmployeeAttendanceApiContractTest {
         assertEquals(true, data.today?.canPunchOut)
         assertEquals(9250.0, data.monthSummary?.totalEarned!!, 0.0)
         assertEquals(4250.0, data.monthSummary?.remainingBalance!!, 0.0)
+        // The screen gates itself on this block, so a rename here must not read as "allowed".
+        assertEquals(false, data.terms?.acceptanceRequired)
+        assertEquals(4, data.terms?.termsCount)
+        assertEquals("2026-08-20T10:15:00+05:30", data.terms?.acceptedAt)
+        assertNull(data.terms?.reason)
+    }
+
+    @Test
+    fun `dashboard reports an outstanding acceptance and withholds the punch`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "terms": {
+                  "acceptance_required": true,
+                  "reason": "terms_changed",
+                  "accepted_at": "2026-08-01T09:00:00+05:30",
+                  "terms_count": 4
+                },
+                "today": { "can_punch_in": false, "can_punch_out": false }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getEmployeeDashboard().body()?.data
+
+        assertEquals(true, data?.terms?.acceptanceRequired)
+        assertEquals("terms_changed", data?.terms?.reason)
+        assertEquals(false, data?.today?.canPunchIn)
+    }
+
+    @Test
+    fun `a dashboard with no terms block does not read as acceptance required`() = runBlocking {
+        // An older backend omits the block entirely; defaulting to "required" would lock
+        // every employee out of attendance behind a gate with nothing to accept.
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": { "today": { "can_punch_in": true } }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getEmployeeDashboard().body()?.data
+
+        assertNull(data?.terms)
+        assertEquals(true, data?.today?.canPunchIn)
+    }
+
+    @Test
+    fun `accepting terms posts to the right path and maps the new state`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Terms and conditions accepted.",
+              "data": {
+                "terms": {
+                  "acceptance_required": false,
+                  "reason": null,
+                  "accepted_at": "2026-08-23T01:45:00+05:30",
+                  "terms_count": 4
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val response = api.acceptEmployeeFactoryTerms()
+        val request = server.takeRequest()
+
+        assertEquals("POST", request.method)
+        assertEquals("/api/employee/factory/terms/accept", request.path)
+        assertEquals(true, response.body()?.status)
+        assertEquals(false, response.body()?.data?.terms?.acceptanceRequired)
+        assertEquals("2026-08-23T01:45:00+05:30", response.body()?.data?.terms?.acceptedAt)
+    }
+
+    @Test
+    fun `factory terms carry the acceptance state alongside the list`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "factory": { "id": 3, "name": "ABC Steel" },
+                "termsList": [
+                  { "id": 1, "title": "Working Hours", "description": "9am to 6pm" }
+                ],
+                "terms": {
+                  "acceptance_required": true,
+                  "reason": "never_accepted",
+                  "accepted_at": null,
+                  "terms_count": 1
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getEmployeeFactoryTerms().body()?.data
+
+        assertEquals(1, data?.termsList?.size)
+        assertEquals(true, data?.terms?.acceptanceRequired)
+        assertEquals("never_accepted", data?.terms?.reason)
+        assertNull(data?.terms?.acceptedAt)
     }
 
     @Test

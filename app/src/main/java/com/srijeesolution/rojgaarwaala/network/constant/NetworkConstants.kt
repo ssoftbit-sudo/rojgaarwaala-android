@@ -52,5 +52,6 @@ class NetworkConstants {
         const val EMPLOYEE_MONTHLY_SUMMARY = "employee/attendance/monthly-summary"
         const val EMPLOYEE_PAYMENTS = "employee/payments"
         const val EMPLOYEE_FACTORY_TERMS = "employee/factory/terms"
+        const val EMPLOYEE_ACCEPT_FACTORY_TERMS = "employee/factory/terms/accept"
     }
 }

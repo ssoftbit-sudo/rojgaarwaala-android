@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.domain.repository
 
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
@@ -24,4 +25,6 @@ interface EmployeeAttendanceRepository {
     fun getPayments(month: String?): Flow<ApiResult<EmployeePaymentsResponse>>
 
     fun getFactoryTerms(): Flow<ApiResult<FactoryTermsResponse>>
+
+    fun acceptFactoryTerms(): Flow<ApiResult<AcceptTermsResponse>>
 }

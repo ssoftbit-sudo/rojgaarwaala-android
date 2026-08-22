@@ -170,6 +170,31 @@ class AttendanceErrorMapperTest {
     }
 
     @Test
+    fun `the terms code has its own copy and does not fall back to the server text`() {
+        val message = AttendanceErrorMapper.message(
+            AttendanceErrorMapper.TERMS_NOT_ACCEPTED,
+            "Please read and accept your factory terms and conditions before marking attendance.",
+        )
+
+        assertTrue(message.contains("accept", ignoreCase = true))
+        assertTrue(message.contains("terms", ignoreCase = true))
+    }
+
+    @Test
+    fun `only the terms code sends the employee to the terms gate`() {
+        assertTrue(AttendanceErrorMapper.requiresTermsAcceptance(AttendanceErrorMapper.TERMS_NOT_ACCEPTED))
+        assertFalse(AttendanceErrorMapper.requiresTermsAcceptance(AttendanceErrorMapper.OUTSIDE_GEOFENCE))
+        assertFalse(AttendanceErrorMapper.requiresTermsAcceptance(AttendanceErrorMapper.NO_ACTIVE_ASSIGNMENT))
+        assertFalse(AttendanceErrorMapper.requiresTermsAcceptance(null))
+    }
+
+    @Test
+    fun `the terms code does not permanently disable the punch buttons`() {
+        // Agreeing fixes it, unlike the employee-level codes.
+        assertFalse(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.TERMS_NOT_ACCEPTED))
+    }
+
+    @Test
     fun `state conflicts trigger a dashboard refresh`() {
         assertTrue(AttendanceErrorMapper.shouldRefreshDashboard(AttendanceErrorMapper.ALREADY_PUNCHED_IN))
         assertTrue(AttendanceErrorMapper.shouldRefreshDashboard(AttendanceErrorMapper.NOT_PUNCHED_IN))

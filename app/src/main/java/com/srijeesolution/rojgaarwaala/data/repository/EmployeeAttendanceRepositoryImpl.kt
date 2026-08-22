@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.data.repository
 
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
@@ -47,5 +48,9 @@ class EmployeeAttendanceRepositoryImpl @Inject constructor() :
 
     override fun getFactoryTerms(): Flow<ApiResult<FactoryTermsResponse>> = flow {
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).getEmployeeFactoryTerms() })
+    }.flowOn(Dispatchers.IO)
+
+    override fun acceptFactoryTerms(): Flow<ApiResult<AcceptTermsResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).acceptEmployeeFactoryTerms() })
     }.flowOn(Dispatchers.IO)
 }

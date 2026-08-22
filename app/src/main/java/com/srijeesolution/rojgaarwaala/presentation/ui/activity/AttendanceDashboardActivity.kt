@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -61,6 +62,21 @@ class AttendanceDashboardActivity : AppCompatActivity() {
 
     private var lastFix: LocationHelper.Result.Success? = null
     private var locationPermissionAsked = false
+
+    /** Set while the terms gate is on screen, so the dashboard does not reopen it. */
+    private var awaitingTermsAcceptance = false
+
+    private val termsGate = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        awaitingTermsAcceptance = false
+        if (result.resultCode == RESULT_OK) {
+            viewModel.loadDashboard()
+        } else {
+            // Declining is a choice to leave: attendance is unusable without the terms.
+            finish()
+        }
+    }
 
     /**
      * Set when location tracking cannot start at all (permission refused, GPS off). The punch
@@ -132,6 +148,17 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             map.uiSettings.isMapToolbarEnabled = false
             renderGeofence()
         }
+    }
+
+    private fun openTermsGate() {
+        if (awaitingTermsAcceptance) return
+        awaitingTermsAcceptance = true
+        // Stay masked so wages and attendance are never briefly readable behind the gate.
+        binding.loadingOverlay.visibility = View.VISIBLE
+        termsGate.launch(
+            Intent(this, FactoryTermsActivity::class.java)
+                .putExtra(FactoryTermsActivity.EXTRA_REQUIRE_ACCEPTANCE, true),
+        )
     }
 
     private fun startLocationTracking() {
@@ -253,6 +280,13 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.halfDaysText.text = (summary?.halfDays ?: 0).toString()
         binding.monthTotalEarnedText.text = WageFormatter.format(summary?.totalEarned)
         binding.monthRemainingBalanceText.text = WageFormatter.format(summary?.remainingBalance)
+
+        // The gate comes first: an employee who has not agreed must not see, or act on, a
+        // screen they are not yet entitled to use.
+        if (data?.terms?.acceptanceRequired == true) {
+            openTermsGate()
+            return
+        }
 
         employeeInactive = employee?.isActive == false
         todayFactory = today?.factory
@@ -505,6 +539,11 @@ class AttendanceDashboardActivity : AppCompatActivity() {
                 val parsed = AttendanceErrorParser.parse(result.message)
                 if (AttendanceErrorMapper.disablesPunchUi(parsed.errorCode)) {
                     punchBlockedByError = true
+                }
+                // The terms changed while this screen was open, so agree again before retrying.
+                if (AttendanceErrorMapper.requiresTermsAcceptance(parsed.errorCode)) {
+                    openTermsGate()
+                    return
                 }
                 showPunchMessage(parsed.message)
                 Toast.makeText(this, parsed.message, Toast.LENGTH_LONG).show()

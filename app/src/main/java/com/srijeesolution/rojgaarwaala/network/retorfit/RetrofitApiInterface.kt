@@ -17,6 +17,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskConfigResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskTutorialsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EnquirySubmitResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
@@ -261,5 +262,8 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.EMPLOYEE_FACTORY_TERMS)
     suspend fun getEmployeeFactoryTerms(): Response<FactoryTermsResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_ACCEPT_FACTORY_TERMS)
+    suspend fun acceptEmployeeFactoryTerms(): Response<AcceptTermsResponse>
 
 }

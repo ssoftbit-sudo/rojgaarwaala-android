@@ -9,10 +9,18 @@ data class EmployeeDashboardResponse(
 )
 
 data class EmployeeDashboardData(
+    @SerializedName("terms") val terms: TermsAcceptanceState? = null,
     @SerializedName("employee") val employee: EmployeeProfile? = null,
     @SerializedName("greeting") val greeting: String? = null,
     @SerializedName("today") val today: EmployeeToday? = null,
     @SerializedName("month_summary") val monthSummary: EmployeeMonthSummary? = null,
+)
+
+data class TermsAcceptanceState(
+    @SerializedName("acceptance_required") val acceptanceRequired: Boolean? = false,
+    @SerializedName("reason") val reason: String? = null,
+    @SerializedName("accepted_at") val acceptedAt: String? = null,
+    @SerializedName("terms_count") val termsCount: Int? = 0,
 )
 
 data class EmployeeProfile(
@@ -208,6 +216,17 @@ data class FactoryTermsResponse(
 data class FactoryTermsData(
     @SerializedName("factory") val factory: FactoryTermsFactory? = null,
     @SerializedName("termsList") val termsList: List<FactoryTermItem>? = emptyList(),
+    @SerializedName("terms") val terms: TermsAcceptanceState? = null,
+)
+
+data class AcceptTermsResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: AcceptTermsData? = null,
+)
+
+data class AcceptTermsData(
+    @SerializedName("terms") val terms: TermsAcceptanceState? = null,
 )
 
 data class FactoryTermsFactory(

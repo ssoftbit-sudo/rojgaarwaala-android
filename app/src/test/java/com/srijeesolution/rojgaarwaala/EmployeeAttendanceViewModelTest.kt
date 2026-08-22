@@ -1,6 +1,8 @@
 package com.srijeesolution.rojgaarwaala
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsData
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListData
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardData
@@ -16,6 +18,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.PunchAttendance
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchData
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TermsAcceptanceState
 import com.srijeesolution.rojgaarwaala.domain.repository.EmployeeAttendanceRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -66,6 +69,9 @@ class EmployeeAttendanceViewModelTest {
             ApiResult.Success(EmployeePaymentsResponse(status = true))
         var factoryTermsResult: ApiResult<FactoryTermsResponse> =
             ApiResult.Success(FactoryTermsResponse(status = true))
+        var acceptTermsResult: ApiResult<AcceptTermsResponse> =
+            ApiResult.Success(AcceptTermsResponse(status = true))
+        var acceptTermsCallCount = 0
 
         var punchInRequest: PunchRequest? = null
         var punchOutRequest: PunchRequest? = null
@@ -105,6 +111,11 @@ class EmployeeAttendanceViewModelTest {
 
         override fun getFactoryTerms(): Flow<ApiResult<FactoryTermsResponse>> =
             flowOf(factoryTermsResult)
+
+        override fun acceptFactoryTerms(): Flow<ApiResult<AcceptTermsResponse>> {
+            acceptTermsCallCount++
+            return flowOf(acceptTermsResult)
+        }
     }
 
     private lateinit var repository: FakeRepository
@@ -297,6 +308,49 @@ class EmployeeAttendanceViewModelTest {
     }
 
     @Test
+    fun `accepting terms emits loading before the repository result arrives`() = runTest(dispatcher) {
+        viewModel.acceptFactoryTerms()
+
+        assertTrue(viewModel.acceptTermsLiveData.value is ApiResult.Loading)
+    }
+
+    @Test
+    fun `accepting terms publishes the refreshed acceptance state`() = runTest(dispatcher) {
+        repository.acceptTermsResult = ApiResult.Success(
+            AcceptTermsResponse(
+                status = true,
+                data = AcceptTermsData(
+                    terms = TermsAcceptanceState(acceptanceRequired = false, termsCount = 3),
+                ),
+            )
+        )
+
+        viewModel.acceptFactoryTerms()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val result = viewModel.acceptTermsLiveData.value
+        assertTrue(result is ApiResult.Success)
+        assertEquals(
+            false,
+            (result as ApiResult.Success).data?.data?.terms?.acceptanceRequired,
+        )
+        assertEquals(1, repository.acceptTermsCallCount)
+    }
+
+    @Test
+    fun `a failed acceptance is surfaced rather than swallowed`() = runTest(dispatcher) {
+        repository.acceptTermsResult = ApiResult.Error(
+            message = ApiError(statusCode = 422, errorMsg = "nope", errorBody = ""),
+            data = null,
+        )
+
+        viewModel.acceptFactoryTerms()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.acceptTermsLiveData.value is ApiResult.Error)
+    }
+
+    @Test
     fun `each stream stays independent of the others`() = runTest(dispatcher) {
         viewModel.loadDashboard()
         dispatcher.scheduler.advanceUntilIdle()
@@ -306,5 +360,6 @@ class EmployeeAttendanceViewModelTest {
         assertNull(viewModel.monthlySummaryLiveData.value)
         assertNull(viewModel.paymentsLiveData.value)
         assertNull(viewModel.factoryTermsLiveData.value)
+        assertNull(viewModel.acceptTermsLiveData.value)
     }
 }

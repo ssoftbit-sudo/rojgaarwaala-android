@@ -11,6 +11,7 @@ object AttendanceErrorMapper {
     const val NOT_AN_EMPLOYEE = "not_an_employee"
     const val EMPLOYEE_INACTIVE = "employee_inactive"
     const val NO_ACTIVE_ASSIGNMENT = "no_active_assignment"
+    const val TERMS_NOT_ACCEPTED = "terms_not_accepted"
     const val ALREADY_PUNCHED_IN = "already_punched_in"
     const val NOT_PUNCHED_IN = "not_punched_in"
     const val ALREADY_PUNCHED_OUT = "already_punched_out"
@@ -31,6 +32,8 @@ object AttendanceErrorMapper {
             NOT_AN_EMPLOYEE -> fallback ?: "You are not registered as an employee."
             EMPLOYEE_INACTIVE -> fallback ?: "Your employee account is inactive."
             NO_ACTIVE_ASSIGNMENT -> "You are not assigned to any factory today"
+            TERMS_NOT_ACCEPTED ->
+                "Please read and accept your factory terms and conditions to mark attendance."
             ALREADY_PUNCHED_IN -> "Attendance already marked today"
             NOT_PUNCHED_IN -> fallback ?: "You have not punched in yet today."
             ALREADY_PUNCHED_OUT -> fallback ?: "You have already punched out today."
@@ -46,6 +49,9 @@ object AttendanceErrorMapper {
     /** Punch buttons stay hidden for these — retrying can never succeed for this user. */
     fun disablesPunchUi(errorCode: String?): Boolean =
         errorCode == NOT_AN_EMPLOYEE || errorCode == EMPLOYEE_INACTIVE
+
+    /** The employee has to agree to the factory's terms before this punch can be retried. */
+    fun requiresTermsAcceptance(errorCode: String?): Boolean = errorCode == TERMS_NOT_ACCEPTED
 
     /** The backend already moved on, so the screen has to re-sync with it. */
     fun shouldRefreshDashboard(errorCode: String?): Boolean =
