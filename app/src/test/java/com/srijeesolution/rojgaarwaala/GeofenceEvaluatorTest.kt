@@ -119,12 +119,13 @@ class GeofenceEvaluatorTest {
 
     @Test
     fun `treats the radius boundary as inside just like the backend`() {
-        // The backend rejects only when distance > radius, so exactly on the line is allowed.
+        // The backend rejects only when distance > radius, so exactly on the line is
+        // allowed. A perfect fix isolates the distance check from the uncertainty one.
         val onLine = GeofenceEvaluator.evaluate(
             factory(radius = 100),
             19.076899,
             MUMBAI_LNG,
-            10.0,
+            0.0,
         )
         assertEquals(GeofenceEvaluator.Status.INSIDE, onLine.status)
 
@@ -132,9 +133,25 @@ class GeofenceEvaluatorTest {
             factory(radius = 99),
             19.076899,
             MUMBAI_LNG,
-            10.0,
+            0.0,
         )
         assertEquals(GeofenceEvaluator.Status.OUTSIDE, justOutside.status)
+    }
+
+    @Test
+    fun `shrinks the usable area by the accuracy, which is the point of the rule`() {
+        // Standing on the boundary with a 10m fix can no longer be confirmed as inside:
+        // the true position may be up to 109.96m out of a 100m geofence. This is the
+        // deliberate cost of only crediting attendance the fix can actually prove.
+        val result = GeofenceEvaluator.evaluate(
+            factory(radius = 100),
+            19.076899,
+            MUMBAI_LNG,
+            10.0,
+        )
+
+        assertEquals(GeofenceEvaluator.Status.POOR_ACCURACY, result.status)
+        assertFalse(result.allowed)
     }
 
     @Test
@@ -148,9 +165,10 @@ class GeofenceEvaluatorTest {
     }
 
     @Test
-    fun `rejects a poor fix before judging the distance, as the backend does`() {
-        // Standing right on the factory, but with an accuracy worse than the threshold.
-        val result = GeofenceEvaluator.evaluate(factory(accuracyThreshold = 50), MUMBAI_LAT, MUMBAI_LNG, 80.0)
+    fun `rejects a fix whose uncertainty reaches past the radius`() {
+        // Standing right on the factory, but the fix could be anywhere within 250m,
+        // which the 200m geofence cannot contain.
+        val result = GeofenceEvaluator.evaluate(factory(radius = 200), MUMBAI_LAT, MUMBAI_LNG, 250.0)
 
         assertEquals(GeofenceEvaluator.Status.POOR_ACCURACY, result.status)
         assertFalse(result.allowed)
@@ -159,8 +177,43 @@ class GeofenceEvaluatorTest {
     }
 
     @Test
-    fun `accepts an accuracy exactly on the threshold`() {
-        val result = GeofenceEvaluator.evaluate(factory(accuracyThreshold = 50), MUMBAI_LAT, MUMBAI_LNG, 50.0)
+    fun `accepts a vague fix that the radius can still contain`() {
+        // The case that used to fail: near the gate on network positioning only, where the
+        // handset reports 100m. 99.96 + 100 fits inside 200, and the old fixed 50m cutoff
+        // refused it even though the geofence proves the position.
+        val result = GeofenceEvaluator.evaluate(factory(radius = 200), 19.076899, MUMBAI_LNG, 100.0)
+
+        assertEquals(GeofenceEvaluator.Status.INSIDE, result.status)
+        assertTrue(result.allowed)
+    }
+
+    @Test
+    fun `treats an uncertainty that lands exactly on the radius as inside`() {
+        // Standing on the factory itself, so distance is exactly 0 and the sum is exactly
+        // the radius: the backend rejects only when the sum exceeds it.
+        val result = GeofenceEvaluator.evaluate(factory(radius = 200), MUMBAI_LAT, MUMBAI_LNG, 200.0)
+
+        assertEquals(GeofenceEvaluator.Status.INSIDE, result.status)
+    }
+
+    @Test
+    fun `reports outside rather than weak GPS when the position itself is too far`() {
+        // Distance alone breaks the geofence, so the employee needs to move, not wait
+        // for a better fix. The backend orders the checks the same way.
+        val result = GeofenceEvaluator.evaluate(factory(radius = 200), 19.0895, MUMBAI_LNG, 500.0)
+
+        assertEquals(GeofenceEvaluator.Status.OUTSIDE, result.status)
+    }
+
+    @Test
+    fun `ignores the accuracy threshold column now that the radius bounds the fix`() {
+        // A tight threshold no longer blocks a punch the geofence can prove.
+        val result = GeofenceEvaluator.evaluate(
+            factory(radius = 200, accuracyThreshold = 5),
+            MUMBAI_LAT,
+            MUMBAI_LNG,
+            120.0,
+        )
 
         assertEquals(GeofenceEvaluator.Status.INSIDE, result.status)
     }

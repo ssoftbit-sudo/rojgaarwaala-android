@@ -29,17 +29,23 @@ object GeofenceEvaluator {
     /** Mirrors config('attendance.default_geofence_radius'). */
     const val DEFAULT_RADIUS_METRES = 200
 
-    /** Mirrors config('attendance.default_accuracy_threshold'). */
+    /**
+     * Mirrors config('attendance.default_accuracy_threshold'). Reported to the caller for
+     * reference only; like the backend, it no longer decides whether a punch is allowed.
+     */
     const val DEFAULT_ACCURACY_THRESHOLD_METRES = 50
 
     enum class Status {
         /** Inside the allowed radius with a good enough fix: punching should succeed. */
         INSIDE,
 
-        /** A trustworthy fix that falls outside the radius. */
+        /** A fix whose position falls outside the radius. */
         OUTSIDE,
 
-        /** The fix is too imprecise to judge, so the server would reject it. */
+        /**
+         * Inside the radius by position, but the fix is too vague to prove it, so the
+         * server would reject it.
+         */
         POOR_ACCURACY,
 
         /** The factory has no coordinates, so no punch can ever be verified. */
@@ -140,22 +146,10 @@ object GeofenceEvaluator {
         }
 
         val distance = distanceInMetres(latitude, longitude, factoryLat, factoryLng)
-
-        if (accuracy != null && accuracy > threshold) {
-            return Evaluation(
-                status = Status.POOR_ACCURACY,
-                distanceMetres = distance,
-                radiusMetres = radius,
-                accuracyThresholdMetres = threshold,
-                label = "Weak GPS",
-                message = "GPS signal is weak. Move to an open area, away from buildings, and wait a moment.",
-            )
-        }
-
         val factoryName = factory.name?.takeIf { it.isNotBlank() } ?: "the factory"
 
-        return if (distance > radius) {
-            Evaluation(
+        if (distance > radius) {
+            return Evaluation(
                 status = Status.OUTSIDE,
                 distanceMetres = distance,
                 radiusMetres = radius,
@@ -164,17 +158,34 @@ object GeofenceEvaluator {
                 message = "You are ${formatDistance(distance)} away from $factoryName. " +
                     "Move within $radius meters of the factory to mark attendance.",
             )
-        } else {
-            Evaluation(
-                status = Status.INSIDE,
+        }
+
+        // Matches GeofenceService: the fix is trusted only when its circle of uncertainty
+        // sits entirely inside the geofence, so the radius bounds how vague a fix may be.
+        val uncertainty = accuracy ?: 0.0
+
+        if (distance + uncertainty > radius) {
+            return Evaluation(
+                status = Status.POOR_ACCURACY,
                 distanceMetres = distance,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "Inside area",
-                message = "You are ${formatDistance(distance)} from $factoryName, " +
-                    "inside the allowed $radius meter area. You can mark attendance.",
+                label = "Weak GPS",
+                message = "Your location is only accurate to within ${formatDistance(uncertainty)}, " +
+                    "which cannot confirm you are inside the $radius meter area. " +
+                    "Move to an open area, away from buildings, and wait a moment.",
             )
         }
+
+        return Evaluation(
+            status = Status.INSIDE,
+            distanceMetres = distance,
+            radiusMetres = radius,
+            accuracyThresholdMetres = threshold,
+            label = "Inside area",
+            message = "You are ${formatDistance(distance)} from $factoryName, " +
+                "inside the allowed $radius meter area. You can mark attendance.",
+        )
     }
 
     /** Mirrors GeofenceService::formatDistance. */
