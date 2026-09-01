@@ -367,6 +367,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             evaluation.status == GeofenceEvaluator.Status.LOCATING
         val enabled = evaluation.allowed || locationUndetermined
 
+        // Both punches are gated the same way because AttendanceService enforces the
+        // geofence on both: an employee leaves by the gate they entered.
         applyPunchButtonState(binding.punchInButton, visible = serverCanPunchIn, enabled = enabled)
         applyPunchButtonState(binding.punchOutButton, visible = serverCanPunchOut, enabled = enabled)
 
