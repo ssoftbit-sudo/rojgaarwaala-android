@@ -34,13 +34,12 @@ class ApplyViewModel @Inject constructor(
   private val _applicationId = MutableLiveData<String>()
   val applicationId: LiveData<String> = _applicationId
 
-  private val _razorpayKeyId = MutableLiveData<String>()
-  val razorpayKeyId: LiveData<String> = _razorpayKeyId
-
   private val _amountPaise = MutableLiveData<Int>()
   val amountPaise: LiveData<Int> = _amountPaise
 
-  private val _requiresPayment = MutableLiveData(true)
+  // Free unless the server says otherwise, so a stale or partial response can
+  // never push a user into checkout.
+  private val _requiresPayment = MutableLiveData(false)
   val requiresPayment: LiveData<Boolean> = _requiresPayment
 
   private val _errorMessage = MutableLiveData<String>()
@@ -94,9 +93,8 @@ class ApplyViewModel @Inject constructor(
                 _submitResult.value = false
               } else {
                 _applicationId.value = appId.toString()
-                _requiresPayment.value = data?.requiresPayment ?: true
-                _razorpayKeyId.value = data?.razorpayKeyId.orEmpty()
-                _amountPaise.value = data?.amountPaise ?: data?.application?.amountPaise ?: 10000
+                _requiresPayment.value = data?.requiresPayment ?: false
+                _amountPaise.value = data?.amountPaise ?: data?.application?.amountPaise ?: 0
                 _submitResult.value = true
               }
             }

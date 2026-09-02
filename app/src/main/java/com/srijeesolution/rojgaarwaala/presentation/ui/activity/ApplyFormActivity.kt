@@ -104,8 +104,20 @@ class ApplyFormActivity : AppCompatActivity() {
 
       if (success) {
         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.JOB_STATUS_UPDATE_PENDING, true))
-        val intent = Intent(this, ApplicationStatusActivity::class.java)
-        intent.putExtra("application_id", viewModel.applicationId.value)
+
+        // Only paid listings route through checkout; everything else is already
+        // submitted by the time the server replies.
+        val intent = if (viewModel.requiresPayment.value == true) {
+          Intent(this, PaymentActivity::class.java).apply {
+            putExtra(PaymentActivity.EXTRA_APPLICATION_ID, viewModel.applicationId.value)
+            putExtra(PaymentActivity.EXTRA_AMOUNT_PAISE, viewModel.amountPaise.value ?: 0)
+          }
+        } else {
+          Intent(this, ApplicationStatusActivity::class.java).apply {
+            putExtra("application_id", viewModel.applicationId.value)
+          }
+        }
+
         startActivity(intent)
         finish()
       } else {

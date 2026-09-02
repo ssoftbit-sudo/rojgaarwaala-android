@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/app_background"
@@ -68,6 +69,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/priceText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -81,24 +83,27 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="Secure payment powered by Razorpay"
+                    android:text="You will pay on a secure page in your browser. Card details are never stored in the app."
                     android:textColor="@color/gray_light_3"
                     android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/paymentModeHint"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:background="@drawable/bg_theme_chip"
+                    android:gravity="center"
                     android:paddingStart="12dp"
                     android:paddingTop="6dp"
                     android:paddingEnd="12dp"
                     android:paddingBottom="6dp"
-                    android:text="Demo / Test Payment Mode"
                     android:textColor="@color/accent"
                     android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="Payment was not completed."
+                    tools:visibility="visible" />
 
                 <TextView
                     android:id="@+id/payButton"

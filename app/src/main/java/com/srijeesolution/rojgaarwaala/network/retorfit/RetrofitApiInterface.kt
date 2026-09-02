@@ -12,7 +12,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
-import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskConfigResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskTutorialsResponse
@@ -196,10 +196,10 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.JOB_APPLICATION_ORDER)
     suspend fun createJobApplicationOrder(@Path("id") id: Int): Response<JobApplicationApiResponse>
 
-    @POST(NetworkConstants.JOB_APPLICATION_CONFIRM)
-    suspend fun confirmJobApplicationPayment(
+    @POST(NetworkConstants.JOB_APPLICATION_VERIFY)
+    suspend fun verifyJobApplicationPayment(
         @Path("id") id: Int,
-        @Body request: ConfirmPaymentRequest,
+        @Body request: VerifyPaymentRequest,
     ): Response<JobApplicationApiResponse>
 
     @POST(NetworkConstants.JOB_APPLICATION_FAILED)

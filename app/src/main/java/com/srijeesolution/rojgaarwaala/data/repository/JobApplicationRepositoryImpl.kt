@@ -1,6 +1,6 @@
 package com.srijeesolution.rojgaarwaala.data.repository
 
-import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls.Companion.BASE_URL
@@ -39,18 +39,18 @@ class JobApplicationRepositoryImpl @Inject constructor() : JobApplicationReposit
         })
     }.flowOn(Dispatchers.IO)
 
-    override fun createRazorpayOrder(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>> = flow {
+    override fun createPaymentOrder(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>> = flow {
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).createJobApplicationOrder(applicationId)
         })
     }.flowOn(Dispatchers.IO)
 
-    override fun confirmPayment(
+    override fun verifyPayment(
         applicationId: Int,
-        request: ConfirmPaymentRequest,
+        request: VerifyPaymentRequest,
     ): Flow<ApiResult<JobApplicationApiResponse>> = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).confirmJobApplicationPayment(applicationId, request)
+            RetrofitApiService.create(BASE_URL).verifyJobApplicationPayment(applicationId, request)
         })
     }.flowOn(Dispatchers.IO)
 

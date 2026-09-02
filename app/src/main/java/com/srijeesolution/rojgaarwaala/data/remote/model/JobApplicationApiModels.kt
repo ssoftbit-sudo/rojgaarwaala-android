@@ -11,12 +11,21 @@ data class JobApplicationApiResponse(
 data class JobApplicationApiData(
     @SerializedName("application") val application: JobApplicationDto? = null,
     @SerializedName("applications") val applications: List<JobApplicationDto>? = null,
-    @SerializedName("requires_payment") val requiresPayment: Boolean? = true,
-    @SerializedName("razorpay_key_id") val razorpayKeyId: String? = null,
+    // Defaults to free: an app that has not heard otherwise should never send a
+    // user to a payment screen.
+    @SerializedName("requires_payment") val requiresPayment: Boolean? = false,
     @SerializedName("amount_paise") val amountPaise: Int? = null,
-    @SerializedName("order_id") val orderId: String? = null,
     @SerializedName("currency") val currency: String? = null,
     @SerializedName("application_id") val applicationId: Int? = null,
+    // Hosted payment page details returned by the order endpoint.
+    @SerializedName("order_id") val orderId: String? = null,
+    @SerializedName("transaction_id") val transactionId: String? = null,
+    @SerializedName("payment_link") val paymentLink: String? = null,
+    @SerializedName("already_paid") val alreadyPaid: Boolean? = false,
+    // Verify endpoint result.
+    @SerializedName("paid") val paid: Boolean? = false,
+    @SerializedName("status") val paymentState: String? = null,
+    @SerializedName("reason") val reason: String? = null,
 )
 
 data class JobApplicationDto(
@@ -41,7 +50,6 @@ data class JobApplicationTimelineEntry(
     @SerializedName("at") val at: String? = null,
 )
 
-data class ConfirmPaymentRequest(
-    @SerializedName("razorpay_payment_id") val razorpayPaymentId: String,
-    @SerializedName("razorpay_order_id") val razorpayOrderId: String? = null,
+data class VerifyPaymentRequest(
+    @SerializedName("order_id") val orderId: String? = null,
 )

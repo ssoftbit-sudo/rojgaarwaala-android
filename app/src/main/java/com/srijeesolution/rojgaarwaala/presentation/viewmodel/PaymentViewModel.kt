@@ -4,94 +4,163 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Drives the hosted payment page flow.
+ *
+ * The app only ever asks the server what happened; it never decides that a
+ * payment succeeded on its own. The redirect back from the gateway is a hint to
+ * go and check, nothing more.
+ */
 @HiltViewModel
 class PaymentViewModel @Inject constructor(
   private val repository: JobApplicationRepository,
 ) : ViewModel() {
 
-  private val _updateResult = MutableLiveData<Boolean>()
-  val updateResult: LiveData<Boolean> = _updateResult
+  private val _state = MutableLiveData<PaymentState>(PaymentState.Idle)
+  val state: LiveData<PaymentState> = _state
 
-  private val _orderReady = MutableLiveData<PaymentOrderState?>()
-  val orderReady: LiveData<PaymentOrderState?> = _orderReady
+  /** Set once the order call succeeds, so a resumed screen knows what to verify. */
+  var currentOrderId: String? = null
+    private set
 
-  private val _isLoading = MutableLiveData<Boolean>()
-  val isLoading: LiveData<Boolean> = _isLoading
+  /** True between opening the payment page and settling the outcome. */
+  var awaitingGatewayResult: Boolean = false
+    private set
 
-  private val _errorMessage = MutableLiveData<String>()
-  val errorMessage: LiveData<String> = _errorMessage
+  fun startPayment(applicationId: Int) {
+    if (_state.value is PaymentState.Preparing) return
 
-  fun createRazorpayOrder(applicationId: Int) {
-    _isLoading.value = true
+    _state.value = PaymentState.Preparing
     viewModelScope.launch {
-      repository.createRazorpayOrder(applicationId).collectLatest { result ->
+      repository.createPaymentOrder(applicationId).collectLatest { result ->
         when (result) {
+          is ApiResult.Loading -> Unit
+
           is ApiResult.Success -> {
-            val data = result.data?.data
-            if (result.data?.status == true && !data?.orderId.isNullOrBlank()) {
-              _orderReady.value = PaymentOrderState(
-                orderId = data?.orderId.orEmpty(),
-                razorpayKeyId = data?.razorpayKeyId.orEmpty(),
-                amountPaise = data?.amountPaise ?: 10000,
-              )
-            } else {
-              _errorMessage.value = result.data?.message ?: "Could not start payment."
-              _orderReady.value = null
+            val body = result.data
+            val data = body?.data
+
+            when {
+              body?.status != true -> {
+                _state.value = PaymentState.Error(body?.message ?: "Could not start the payment.")
+              }
+
+              data?.alreadyPaid == true -> {
+                _state.value = PaymentState.Paid
+              }
+
+              !data?.paymentLink.isNullOrBlank() -> {
+                currentOrderId = data?.orderId
+                awaitingGatewayResult = true
+                _state.value = PaymentState.OpenPaymentPage(data?.paymentLink.orEmpty())
+              }
+
+              else -> {
+                _state.value = PaymentState.Error("Payment page is unavailable right now.")
+              }
             }
           }
-          is ApiResult.Loading -> Unit
+
           is ApiResult.Error -> {
-            _errorMessage.value = "Could not create payment order."
-            _orderReady.value = null
+            _state.value = PaymentState.Error(serverErrorMessage(result.message?.errorBody))
           }
         }
-        _isLoading.value = false
       }
     }
   }
 
-  fun updateApplicationAfterPayment(
-    applicationId: Int,
-    paymentId: String?,
-    orderId: String?,
-  ) {
-    if (paymentId.isNullOrBlank()) {
-      _updateResult.value = false
-      return
-    }
+  /**
+   * Asks the server for the real outcome. Retried a few times because the
+   * customer can return before the gateway has finished settling.
+   */
+  fun verifyPayment(applicationId: Int, attempt: Int = 1) {
+    if (_state.value is PaymentState.Verifying && attempt == 1) return
 
-    _isLoading.value = true
+    _state.value = PaymentState.Verifying
     viewModelScope.launch {
-      repository.confirmPayment(
-        applicationId,
-        ConfirmPaymentRequest(
-          razorpayPaymentId = paymentId,
-          razorpayOrderId = orderId,
-        ),
-      ).collectLatest { result ->
-        _updateResult.value = result is ApiResult.Success && result.data?.status == true
-        _isLoading.value = false
+      repository.verifyPayment(applicationId, VerifyPaymentRequest(currentOrderId))
+        .collectLatest { result ->
+          val data = (result as? ApiResult.Success)?.data?.data
+          val reachedServer = result is ApiResult.Success
+
+          if (data?.paid == true) {
+            awaitingGatewayResult = false
+            currentOrderId = null
+            _state.value = PaymentState.Paid
+            return@collectLatest
+          }
+
+          if (attempt < MAX_VERIFY_ATTEMPTS) {
+            delay(VERIFY_RETRY_DELAY_MS)
+            verifyPayment(applicationId, attempt + 1)
+            return@collectLatest
+          }
+
+          awaitingGatewayResult = false
+          _state.value = if (reachedServer) {
+            PaymentState.NotPaid(data?.reason)
+          } else {
+            PaymentState.Error("Could not confirm the payment. Check My Applications in a minute.")
+          }
+        }
+    }
+  }
+
+  /** The customer dismissed the payment page without a redirect. */
+  fun onPaymentPageDismissed() {
+    if (_state.value is PaymentState.OpenPaymentPage) {
+      _state.value = PaymentState.Idle
+    }
+  }
+
+  fun onPaymentPageLaunched() {
+    if (_state.value is PaymentState.OpenPaymentPage) {
+      _state.value = PaymentState.AwaitingResult
+    }
+  }
+
+  sealed interface PaymentState {
+    data object Idle : PaymentState
+
+    data object Preparing : PaymentState
+
+    /** One-shot instruction to open the hosted page in a Custom Tab. */
+    data class OpenPaymentPage(val url: String) : PaymentState
+
+    data object AwaitingResult : PaymentState
+
+    data object Verifying : PaymentState
+
+    data object Paid : PaymentState
+
+    data class NotPaid(val reason: String?) : PaymentState
+
+    data class Error(val message: String) : PaymentState
+  }
+
+  private fun serverErrorMessage(errorBody: String?): String {
+    if (!errorBody.isNullOrBlank()) {
+      try {
+        val parsed = org.json.JSONObject(errorBody)
+        val message = parsed.optString("message")
+        if (message.isNotBlank()) return message
+      } catch (_: Exception) {
       }
     }
+    return "Could not reach the payment service."
   }
 
-  fun updatePaymentFailure(applicationId: Int) {
-    viewModelScope.launch {
-      repository.markPaymentFailed(applicationId).collectLatest { }
-    }
+  private companion object {
+    const val MAX_VERIFY_ATTEMPTS = 3
+    const val VERIFY_RETRY_DELAY_MS = 2500L
   }
-
-  data class PaymentOrderState(
-    val orderId: String,
-    val razorpayKeyId: String,
-    val amountPaise: Int,
-  )
 }

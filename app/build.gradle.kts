@@ -153,8 +153,9 @@ dependencies {
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
-    // Razorpay Payment Gateway
-    implementation("com.razorpay:checkout:1.6.41")
+    // Chrome Custom Tabs host the Vegaah payment page. Keeping checkout in the
+    // browser rather than a WebView means card data never enters this app.
+    implementation("androidx.browser:browser:1.8.0")
 
     // Fused location provider for employee attendance punch in/out
     implementation("com.google.android.gms:play-services-location:21.3.0")

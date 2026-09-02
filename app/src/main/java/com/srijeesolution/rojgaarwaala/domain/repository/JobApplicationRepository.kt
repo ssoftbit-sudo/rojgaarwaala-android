@@ -1,6 +1,6 @@
 package com.srijeesolution.rojgaarwaala.domain.repository
 
-import com.srijeesolution.rojgaarwaala.data.remote.model.ConfirmPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
@@ -18,9 +18,9 @@ interface JobApplicationRepository {
         resume: MultipartBody.Part,
     ): Flow<ApiResult<JobApplicationApiResponse>>
 
-    fun createRazorpayOrder(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>>
+    fun createPaymentOrder(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>>
 
-    fun confirmPayment(applicationId: Int, request: ConfirmPaymentRequest): Flow<ApiResult<JobApplicationApiResponse>>
+    fun verifyPayment(applicationId: Int, request: VerifyPaymentRequest): Flow<ApiResult<JobApplicationApiResponse>>
 
     fun markPaymentFailed(applicationId: Int): Flow<ApiResult<JobApplicationApiResponse>>
 

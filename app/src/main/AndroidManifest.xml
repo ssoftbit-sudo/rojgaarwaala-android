@@ -158,8 +158,19 @@
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
             android:name=".presentation.ui.activity.PaymentActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoSplash"
-            android:windowSoftInputMode="adjustPan|stateHidden"/>
+            android:windowSoftInputMode="adjustPan|stateHidden">
+            <!-- The gateway receipt page bounces the browser back here. singleTop
+                 keeps the waiting screen instead of stacking a second copy. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="rojgaarwaala" android:host="payment" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".presentation.ui.activity.ApplicationStatusActivity"
             android:theme="@style/AppTheme.NoSplash"
