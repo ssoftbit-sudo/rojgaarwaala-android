@@ -27,6 +27,7 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
             Log.w("RojgaarwalaApplication", "Firebase init failed; continuing", t)
         }
 
+        registerActivityLifecycleCallbacks(SecureWindowLifecycleCallbacks())
         registerActivityLifecycleCallbacks(EdgeToEdgeLifecycleCallbacks())
     }
 
