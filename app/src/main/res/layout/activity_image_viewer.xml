@@ -1,93 +1,372 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Full-bleed image below toolbar; detail/actions in a capped-height NestedScrollView. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/imageViewerRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/black">
 
-    <!-- Toolbar -->
-
-    <!-- Full Screen Image Container -->
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:orientation="vertical">
 
-        <!-- Full Screen Image -->
-        <com.srijeesolution.rojgaarwaala.presentation.ui.activity.ZoomableImageView
-            android:id="@+id/fullScreenImageView"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/topBar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/black" />
+            android:layout_height="56dp"
+            android:background="@color/black"
+            app:navigationIcon="@drawable/ic_back_arrow"
+            app:title="@string/image_detail_title"
+            app:titleTextColor="@color/white" />
 
-        <!-- Left Navigation Arrow -->
-        <ImageButton
-            android:id="@+id/leftArrowButton"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="bottom|start"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/arrow_button_background"
-            android:src="@drawable/ic_chevron_left"
-            android:contentDescription="Previous image"
-            android:visibility="gone"
-            android:tint="@color/white"
-            android:padding="12dp"
-            android:layout_marginBottom="100dp"/>
+        <FrameLayout
+            android:id="@+id/imageViewerFrame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/black"
+            android:elevation="4dp">
 
-        <!-- Right Navigation Arrow -->
-        <ImageButton
-            android:id="@+id/rightArrowButton"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/arrow_button_background"
-            android:src="@drawable/ic_chevron_right"
-            android:contentDescription="Next image"
-            android:visibility="gone"
-            android:tint="@color/white"
-            android:padding="12dp"
-            android:layout_marginBottom="100dp"/>
+            <com.srijeesolution.rojgaarwaala.presentation.ui.activity.ZoomableImageView
+                android:id="@+id/fullScreenImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/black" />
 
-        <!-- Image Info Container -->
-        <LinearLayout
-            android:id="@+id/imageInfoContainer"
+            <!-- Same ring + accent stroke as Share row (bg_action_circle_outline) -->
+            <FrameLayout
+                android:id="@+id/leftArrowButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_action_circle_outline"
+                android:clickable="true"
+                android:contentDescription="@string/previous_image"
+                android:elevation="8dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_chevron_left"
+                    app:tint="@color/white" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/rightArrowButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_action_circle_outline"
+                android:clickable="true"
+                android:contentDescription="@string/next_image"
+                android:elevation="8dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/white" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:orientation="vertical"
-            android:background="@drawable/gradient_overlay"
-            android:padding="16dp"
-            android:visibility="gone">
+            android:clipToPadding="false"
+            android:fillViewport="false"
+            android:maxHeight="@dimen/image_viewer_detail_max_height"
+            android:overScrollMode="never">
 
-            <!-- Title -->
-            <TextView
-                android:id="@+id/imageTitle"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Image Title"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="8dp" />
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
 
-            <!-- Description -->
-            <TextView
-                android:id="@+id/imageDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Image Description"
-                android:textColor="@color/gray_light_3"
-                android:textSize="14sp"
-                android:maxLines="3"
-                android:ellipsize="end" />
+                <TextView
+                    android:id="@+id/videoDetailTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:text="Image title" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/videoSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/gray_light_3"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Category"
+                    tools:visibility="visible" />
 
-        <!-- Share Button -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="8dp">
+
+                    <TextView
+                        android:id="@+id/uploadTimeLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/gray_light_3"
+                        android:textSize="13sp"
+                        tools:text="2 days ago" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/videoLocationLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/gray_light_3"
+                    android:textSize="14sp"
+                    tools:text="Tendua"
+                    tools:visibility="visible" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="8dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp">
+
+                        <LinearLayout
+                            android:id="@+id/likeColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/likeButton"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_thumb_up_outline"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/likeCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="0"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/dislikeColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/dislikeButton"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_thumb_down_outline"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:id="@+id/dislikeCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="0"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/shareButton"
+                                    android:layout_width="26dp"
+                                    android:layout_height="26dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_share"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/action_share"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/inlineCallColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/inlineCallButton"
+                                    android:layout_width="26dp"
+                                    android:layout_height="26dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@string/call_now"
+                                    android:src="@drawable/ic_phone"
+                                    app:tint="@color/accent" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/call_now"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/inlineApplyColumn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="10dp">
+
+                            <FrameLayout
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
+                                android:background="@drawable/bg_action_circle_outline">
+
+                                <ImageView
+                                    android:id="@+id/inlineApplyButton"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@string/apply_now"
+                                    android:src="@drawable/ic_apply_job"
+                                    app:tint="@color/accent" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/apply_now"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
     </FrameLayout>
 
-</LinearLayout> 
+</FrameLayout>

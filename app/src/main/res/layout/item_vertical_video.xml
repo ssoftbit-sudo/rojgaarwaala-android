@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -30,16 +31,31 @@
                 android:scaleType="centerCrop"
                 android:background="@color/gray_light_3" />
 
+            <TextView
+                android:id="@+id/videoNewTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="6dp"
+                android:background="@drawable/bg_video_new_tag"
+                android:elevation="4dp"
+                android:text="NEW"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <!-- Play Icon Overlay -->
             <ImageView
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_media_play"
-                android:tint="@color/white"
                 android:background="@drawable/circle_background"
                 android:padding="8dp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:tint="@color/white" />
 
         </FrameLayout>
 
@@ -68,18 +84,30 @@
             android:lineSpacingExtra="2dp"
             android:layout_marginBottom="8dp" />
 
-        <!-- Video Description -->
+        <TextView
+            android:id="@+id/videoMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:textColor="@color/gray_light_3"
+            android:textSize="12sp"
+            tools:text="12K views • 1 day ago" />
+
+        <!-- Optional snippet (hidden for compact Up next list) -->
         <TextView
             android:id="@+id/videoDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Video Description"
+            android:alpha="0.8"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-light"
+            android:maxLines="2"
             android:textColor="@color/white"
             android:textSize="12sp"
-            android:alpha="0.8"
-            android:fontFamily="sans-serif-light"
-            android:maxLines="3"
-            android:ellipsize="end"
+            android:visibility="gone"
             android:lineSpacingExtra="4dp" />
 
     </LinearLayout>
@@ -90,7 +118,7 @@
         android:layout_height="28dp"
         android:layout_gravity="center_vertical"
         android:src="@android:drawable/ic_media_play"
-        android:tint="@color/white"
-        android:layout_marginStart="12dp" />
+        android:layout_marginStart="12dp"
+        app:tint="@color/white" />
 
 </LinearLayout>

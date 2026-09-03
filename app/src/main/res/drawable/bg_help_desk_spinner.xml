@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/modern_edit_text_background" />
+    <item
+        android:width="18dp"
+        android:height="18dp"
+        android:drawable="@drawable/ic_chevron_down_white"
+        android:gravity="end|center_vertical"
+        android:right="14dp" />
+</layer-list>

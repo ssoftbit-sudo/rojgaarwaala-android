@@ -75,6 +75,37 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         }.flowOn(Dispatchers.IO)
     }
 
+    override fun updateProfileMultipart(
+        name: String,
+        mobile: String,
+        email: String,
+        city: String,
+        state: String,
+        pincode: String,
+        district: String,
+        colony: String,
+        preferredJobCategory: String,
+        resumePart: MultipartBody.Part?,
+    ): Flow<ApiResult<HomePagBaseApiModel>> {
+        val text = "text/plain".toMediaTypeOrNull()
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).updateProfileMultipart(
+                    name = name.toRequestBody(text),
+                    mobile = mobile.toRequestBody(text),
+                    email = email.toRequestBody(text),
+                    city = city.toRequestBody(text),
+                    state = state.toRequestBody(text),
+                    pincode = pincode.toRequestBody(text),
+                    district = district.toRequestBody(text),
+                    colony = colony.toRequestBody(text),
+                    preferredJobCategory = preferredJobCategory.toRequestBody(text),
+                    resume = resumePart,
+                )
+            })
+        }.flowOn(Dispatchers.IO)
+    }
+
     override fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall{
@@ -90,18 +121,22 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String>,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
                 RetrofitApiService.create(BASE_URL).onSubmitJobWithFiles(
-                    jobTitle =  jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    jobTitle = jobTitle.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobDescription = jobDescription.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobCategory = jobCategory.toRequestBody("text/plain".toMediaTypeOrNull()),
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
-                    logo = logoFile
+                    logo = logoFile,
+                    locations = locations.map { location ->
+                        MultipartBody.Part.createFormData("locations[]", location)
+                    },
                 )
             })
         }.flowOn(Dispatchers.IO)
@@ -111,6 +146,14 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         return flow {
             emit(safeApiCall {
                 RetrofitApiService.create(BASE_URL).getCategoriesData()
+            })
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>> {
+        return flow {
+            emit(safeApiCall {
+                RetrofitApiService.create(BASE_URL).getCityList()
             })
         }.flowOn(Dispatchers.IO)
     }
@@ -127,9 +170,15 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         })
     }.flowOn(Dispatchers.IO)
 
-    override fun getCategoryVideos(id: Int) = flow {
+    override fun getCategoryVideos(id: Int, page: Int, perPage: Int) = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).getCategoryVideos(id)
+            RetrofitApiService.create(BASE_URL).getCategoryVideos(id, page, perPage)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getTopVideos(page: Int, perPage: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getTopVideos(page, perPage)
         })
     }.flowOn(Dispatchers.IO)
 
@@ -146,6 +195,14 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         request["video_id"] = videoId
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).unlikeVideo(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun removeVideoReaction(videoId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["video_id"] = videoId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).removeVideoReaction(request)
         })
     }.flowOn(Dispatchers.IO)
 
@@ -177,7 +234,8 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String>,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
@@ -189,7 +247,10 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     jobResponsibility = jobResponsibility.toRequestBody("text/plain".toMediaTypeOrNull()),
                     pdf = pdfFile,
                     image = imageFile,
-                    logo = logoFile
+                    logo = logoFile,
+                    locations = locations.map { location ->
+                        MultipartBody.Part.createFormData("locations[]", location)
+                    },
                 )
             })
         }.flowOn(Dispatchers.IO)
@@ -210,6 +271,40 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
     override fun getSectionStoriesGrouped() = flow {
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).getSectionStoriesGrouped()
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getActiveStories(deviceKey: String) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getActiveStories(deviceKey)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun markStoryViewed(storyId: Int, deviceKey: String) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).markStoryViewed(storyId, deviceKey)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun likeStory(storyId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["story_id"] = storyId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).likeStory(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun unlikeStory(storyId: Int) = flow {
+        val request = HashMap<String, Any>()
+        request["story_id"] = storyId
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).unlikeStory(request)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getStoryLikeStatus(storyId: Int) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getStoryLikeStatus(storyId)
         })
     }.flowOn(Dispatchers.IO)
 }

@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
+import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.utils.RojgaarwalaApplication
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import okhttp3.OkHttpClient
@@ -7,14 +8,23 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 object RetrofitApiService {
     @JvmStatic
     fun create(baseUrl: String): RetrofitApiInterface {
         val httpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
             .addInterceptor(HeaderInterceptor(SharedPrefs(RojgaarwalaApplication.getAppContext())))
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    })
+                }
+            }
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)

@@ -23,7 +23,13 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentImagesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesCategoryAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.ImageLocationFilter
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ImagesFragment : Fragment() {
@@ -31,6 +37,10 @@ class ImagesFragment : Fragment() {
     private var _binding: FragmentImagesBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: HomePageViewModel
+    private lateinit var mainToolbarViewModel: MainToolbarViewModel
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
     private var imagesAdapter: ImagesCategoryAdapter? = null
     
     // Search related variables
@@ -50,10 +60,36 @@ class ImagesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         viewModel = ViewModelProvider(requireActivity())[HomePageViewModel::class.java]
+        mainToolbarViewModel = ViewModelProvider(requireActivity())[MainToolbarViewModel::class.java]
         setupViews()
         setupSearch()
+        observeMainToolbarLocation()
         setupObservers()
         loadImages()
+    }
+
+    private fun observeMainToolbarLocation() {
+        mainToolbarViewModel.selectedLocation.observe(viewLifecycleOwner) {
+            if (allCategories.isNotEmpty()) {
+                applyFilters(binding.searchBar.text?.toString()?.trim().orEmpty())
+            }
+        }
+    }
+
+    private fun districtFilterQuery(): String {
+        val loc = mainToolbarViewModel.selectedLocation.value.orEmpty().trim()
+        return if (HomeLocationDefaults.skipsDistrictFilter(loc)) "" else loc
+    }
+
+    private fun applyFilters(textQuery: String) {
+        val locationQuery = districtFilterQuery()
+        if (textQuery.isEmpty() && locationQuery.isEmpty()) {
+            isSearchMode = false
+            showAllContent()
+        } else {
+            isSearchMode = true
+            filterContent(textQuery, locationQuery)
+        }
     }
 
     private fun setupViews() {
@@ -81,17 +117,9 @@ class ImagesFragment : Fragment() {
             
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString()?.trim() ?: ""
-                if (query.isEmpty()) {
-                    // Show all content when search is empty
-                    isSearchMode = false
-                    binding.clearSearchButton.visibility = View.GONE
-                    showAllContent()
-                } else {
-                    // Filter content based on search query
-                    isSearchMode = true
-                    binding.clearSearchButton.visibility = View.VISIBLE
-                    filterContent(query)
-                }
+                binding.clearSearchButton.visibility =
+                    if (query.isEmpty() && districtFilterQuery().isEmpty()) View.GONE else View.VISIBLE
+                applyFilters(query)
             }
         })
         
@@ -127,23 +155,27 @@ class ImagesFragment : Fragment() {
         viewModel.getScheduledImages()
     }
 
-    private fun filterContent(query: String) {
+    private fun filterContent(query: String, locationQuery: String = "") {
         val lowerQuery = query.lowercase()
-        
-        // Filter categories and their images
+        val hasSearch = query.isNotEmpty()
+        val hasLocation = locationQuery.isNotEmpty()
+
         val filteredCategories = allCategories.mapNotNull { category ->
             val filteredImages = category.images?.filter { image ->
-                image.title?.lowercase()?.contains(lowerQuery) == true ||
-                image.description?.lowercase()?.contains(lowerQuery) == true ||
-                category.title?.lowercase()?.contains(lowerQuery) == true
+                val searchOk = !hasSearch || image.title?.lowercase()?.contains(lowerQuery) == true ||
+                    image.description?.lowercase()?.contains(lowerQuery) == true ||
+                    category.title?.lowercase()?.contains(lowerQuery) == true
+                val locationOk = !hasLocation || ImageLocationFilter.matches(image, locationQuery)
+                searchOk && locationOk
             } ?: emptyList()
-            
+
             if (filteredImages.isNotEmpty()) {
                 category.copy(images = filteredImages)
-            } else null
+            } else {
+                null
+            }
         }
-        
-        // Update UI with filtered results
+
         updateUIWithFilteredContent(filteredCategories)
     }
 
@@ -192,19 +224,14 @@ class ImagesFragment : Fragment() {
         // Filter categories that have images
         val categoriesWithImages = categories.filter { it.images?.isNotEmpty() == true }
         
-        // Store all categories for search functionality
         allCategories = categoriesWithImages
-        
-        if (categoriesWithImages.isNotEmpty()) {
-            imagesAdapter = ImagesCategoryAdapter(
-                categoriesWithImages,
-                onImageClick = { category, imageIndex -> onImageClick(category, imageIndex) },
-                onViewAllClick = { category -> onViewAllClick(category) }
-            )
-            binding.imagesRecyclerView.adapter = imagesAdapter
-        } else {
+
+        if (categoriesWithImages.isEmpty()) {
             showEmptyState()
+            return
         }
+
+        applyFilters(binding.searchBar.text?.toString()?.trim().orEmpty())
     }
 
     private fun showEmptyState() {
@@ -230,16 +257,19 @@ class ImagesFragment : Fragment() {
                     title = imageData.title,
                     description = imageData.description,
                     imagePath = imageData.imageUrl,
+                    location = imageData.location,
                     publishDate = imageData.publishDate,
                     status = null,
-                    createdAt = null,
-                    updatedAt = null
+                    createdAt = imageData.createdAt,
+                    updatedAt = null,
+                    phoneNumber = imageData.phoneNumber
                 )
             }
             
             // Pass the list and current index
             intent.putParcelableArrayListExtra("scheduled_images", ArrayList(scheduledImages))
             intent.putExtra("current_index", imageIndex)
+            intent.putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, category.title)
             startActivity(intent)
         }
     }
@@ -249,6 +279,7 @@ class ImagesFragment : Fragment() {
         val intent = Intent(context, ImagesListActivity::class.java)
         intent.putExtra("category_id", category.id)
         intent.putExtra("category_title", category.title)
+        intent.putExtra("filter_location", districtFilterQuery())
         startActivity(intent)
     }
 

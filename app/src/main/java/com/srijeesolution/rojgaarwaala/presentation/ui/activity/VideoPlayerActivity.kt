@@ -1,13 +1,19 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -15,6 +21,8 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.EdgeToEdgeHelper
+import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -30,7 +38,6 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
-import android.view.WindowManager
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -40,6 +47,8 @@ import android.graphics.BitmapFactory
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.VideoOptimizationUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
 
 // ExoPlayer imports
 import androidx.media3.common.MediaItem
@@ -56,13 +65,12 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.common.C
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoVerticalAdapter
-import android.animation.ValueAnimator
-import android.view.animation.DecelerateInterpolator
 import androidx.core.widget.NestedScrollView
 
 @AndroidEntryPoint
 @UnstableApi
-class VideoPlayerActivity : AppCompatActivity() {
+class VideoPlayerActivity : AppCompatActivity(),
+    com.srijeesolution.rojgaarwaala.utils.ManualEdgeToEdge {
 
     private lateinit var binding: ActivityVideoPlayerBinding
     private val viewModel: HomePageViewModel by viewModels()
@@ -72,11 +80,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var hasIncrementedView = false
     private var currentVideoTitle: String? = null
     private var currentVideoUrl: String? = null
+    private var pendingPlaybackFallbackUrl: String? = null
+    private var currentPlayingUrl: String? = null
     private var currentVideoThumbnail: String? = null
+    private var currentContactNumber: String? = null
     private var isFullscreen = false
     private var videoDuration = 0L
     private var isSeeking = false
+    private var isSeekingOverlay = false
     private var isPlaying = false
+    private var descriptionExpanded = false
     
     // Store previous state for rollback on API error
     private var previousLikeState = false
@@ -86,13 +99,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val progressHandler = Handler(Looper.getMainLooper())
     private val progressRunnable = object : Runnable {
         override fun run() {
-            updateVideoProgress()
-            progressHandler.postDelayed(this, 1000) // Update every second
+            updatePlaybackProgress()
+            progressHandler.postDelayed(this, 500)
         }
     }
     private val autoHideHandler = Handler(Looper.getMainLooper())
+    private var controlsVisible = true
     private val autoHideRunnable = Runnable {
-        binding.playPauseButton.visibility = View.GONE
+        if (exoPlayer?.isPlaying == true) {
+            hidePlayerControls()
+        }
     }
     
     // ExoPlayer components
@@ -105,12 +121,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var initialY = 0f
     private var isGestureInProgress = false
     
-    // Video player scroll zoom variables
-    private val minVideoPlayerHeight = 300 // dp
-    private val scrollThreshold = 200 // scroll pixels to trigger full transition
-    private var maxVideoPlayerHeight = 520 // dp - will be set from layout
-    private var currentVideoPlayerHeight = 520 // dp - will be set from layout
-    private var heightAnimator: ValueAnimator? = null
+    private var maxVideoPlayerHeight = 260 // dp — updated when compact height applied
+    private var currentVideoPlayerHeight = 260
+    private var preFullscreenVideoHeightPx: Int = 0
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -120,8 +133,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Prevent screenshots and screen recording
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        applySystemBarInsets()
+        updatePictureInPictureParams()
 
         // Initialize ExoPlayer components
         initializeExoPlayer()
@@ -130,6 +143,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         val toolbar: Toolbar = binding.topBar
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+        toolbar.inflateMenu(R.menu.menu_video_player)
+        toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_search) {
+                startActivity(
+                    Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                )
+                true
+            } else false
+        }
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         videoId = intent.getIntExtra("video_id", -1)
@@ -159,6 +183,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         setupRelatedVideosRecycler()
         setupActionRow()
+        setupPlaybackOverlay()
         setupCustomVideoPlayerControls()
         setupGestureDetector()
         setupScrollZoomEffect()
@@ -211,12 +236,18 @@ class VideoPlayerActivity : AppCompatActivity() {
                         
                         // Get video duration
                         videoDuration = exoPlayer?.duration ?: 0
+                        updatePlayPauseIcon()
+                        progressHandler.post(progressRunnable)
                         
                         // Increment view count
                         if (!hasIncrementedView) {
                             viewModel.incrementVideoView(videoId)
+                            VideoNewTagUtils.markViewed(sharedPrefs, videoId)
                             hasIncrementedView = true
                         }
+
+                        showPlayerControls()
+                        startAutoHideTimer()
                     }
                     Player.STATE_BUFFERING -> {
                         binding.progressBar.visibility = View.VISIBLE
@@ -225,6 +256,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                         isPlaying = false
                         progressHandler.removeCallbacks(progressRunnable)
                         autoHideHandler.removeCallbacks(autoHideRunnable)
+                        showPlayerControls()
+                        updatePlayPauseIcon()
                     }
                     Player.STATE_IDLE -> {
                         binding.progressBar.visibility = View.GONE
@@ -234,28 +267,37 @@ class VideoPlayerActivity : AppCompatActivity() {
             
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 Log.e("VideoPlayerActivity", "Player error: ${error.message}")
+                val fallback = pendingPlaybackFallbackUrl?.takeIf {
+                    it.isNotBlank() && it != currentPlayingUrl
+                }
+                if (fallback != null) {
+                    pendingPlaybackFallbackUrl = null
+                    Log.w("VideoPlayerActivity", "Retrying playback with fallback URL")
+                    startVideoWithCacheCheck(fallback)
+                    return
+                }
                 binding.progressBar.visibility = View.GONE
                 Toast.makeText(this@VideoPlayerActivity, "Error playing video. Please try again.", Toast.LENGTH_SHORT).show()
             }
             
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 this@VideoPlayerActivity.isPlaying = isPlaying
+                updatePlayPauseIcon()
+                if (isPlaying) {
+                    progressHandler.post(progressRunnable)
+                    startAutoHideTimer()
+                } else {
+                    progressHandler.removeCallbacks(progressRunnable)
+                    autoHideHandler.removeCallbacks(autoHideRunnable)
+                    showPlayerControls()
+                }
             }
         })
         
-        // Attach player to PlayerView
+        // Attach player to PlayerView (custom overlay controls; XML sets use_controller=false)
         binding.customVideoView.player = exoPlayer
-        
-        // Configure PlayerView to show controls on tap and auto-hide after 2 seconds
-        binding.customVideoView.controllerShowTimeoutMs = 2000
-        binding.customVideoView.useController = true
-        
-        // Ensure PlayerView is clickable and can receive touch events
-        binding.customVideoView.isClickable = true
-        binding.customVideoView.isFocusable = true
-        
-        // Hide settings button from PlayerView controller
-        binding.customVideoView.findViewById<View>(androidx.media3.ui.R.id.exo_settings)?.visibility = View.GONE
+        binding.customVideoView.useController = false
+        binding.customVideoView.setShowBuffering(androidx.media3.ui.PlayerView.SHOW_BUFFERING_NEVER)
         
         // Optimize for cached content
         optimizeForCachedContent()
@@ -299,6 +341,132 @@ class VideoPlayerActivity : AppCompatActivity() {
     //    Toast.makeText(this, "Video quality: $qualityText", Toast.LENGTH_SHORT).show()
     }
 
+    private fun setupPlaybackOverlay() {
+        binding.playPauseOverlay.setOnClickListener {
+            val p = exoPlayer ?: return@setOnClickListener
+            if (p.playbackState == Player.STATE_ENDED) {
+                p.seekTo(0)
+                p.play()
+                showPlayerControls()
+                startAutoHideTimer()
+            } else if (p.isPlaying) {
+                p.pause()
+            } else {
+                p.play()
+            }
+        }
+        binding.skipBackButton.setOnClickListener {
+            exoPlayer?.let {
+                val t = (it.currentPosition - 10_000L).coerceAtLeast(0L)
+                it.seekTo(t)
+            }
+            showPlayerControls()
+            startAutoHideTimer()
+        }
+        binding.skipForwardButton.setOnClickListener {
+            exoPlayer?.let {
+                val d = it.duration
+                val t = it.currentPosition + 10_000L
+                val end = if (d > 0 && d != C.TIME_UNSET) d else t
+                it.seekTo(t.coerceAtMost(end))
+            }
+            showPlayerControls()
+            startAutoHideTimer()
+        }
+        binding.videoSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    val dur = exoPlayer?.duration ?: return
+                    if (dur > 0 && dur != C.TIME_UNSET) {
+                        val pos = (progress / 1000.0 * dur).toLong()
+                        binding.currentTimeText.text = formatTime(pos.toInt().coerceAtLeast(0))
+                    }
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                isSeekingOverlay = true
+                autoHideHandler.removeCallbacks(autoHideRunnable)
+                showPlayerControls()
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                isSeekingOverlay = false
+                val dur = exoPlayer?.duration ?: return
+                if (dur > 0 && dur != C.TIME_UNSET) {
+                    val pos = (binding.videoSeekBar.progress / 1000.0 * dur).toLong()
+                    exoPlayer?.seekTo(pos)
+                }
+                startAutoHideTimer()
+            }
+        })
+    }
+
+    private fun updatePlayPauseIcon() {
+        val playing = exoPlayer?.isPlaying == true
+        binding.playPauseOverlay.setImageResource(
+            if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        )
+    }
+
+    private fun updatePlaybackProgress() {
+        val player = exoPlayer ?: return
+        val duration = player.duration
+        if (duration <= 0 || duration == C.TIME_UNSET) return
+        if (!isSeekingOverlay) {
+            val pos = player.currentPosition
+            val prog = ((pos * 1000L) / duration).toInt().coerceIn(0, 1000)
+            binding.videoSeekBar.progress = prog
+            binding.currentTimeText.text = formatTime(pos.toInt().coerceAtLeast(0))
+            binding.totalTimeText.text = formatTime(duration.toInt().coerceAtLeast(0))
+        }
+    }
+
+    private fun formatCompactViews(count: Int): String = when {
+        count >= 1_000_000 -> {
+            val v = count / 1_000_000.0
+            if (v >= 10) "${v.toInt()}M" else String.format("%.1fM", v).replace(".0M", "M")
+        }
+        count >= 1_000 -> {
+            val v = count / 1_000.0
+            if (v >= 10) "${v.toInt()}K" else String.format("%.1fK", v).replace(".0K", "K")
+        }
+        else -> count.toString()
+    }
+
+    private fun toggleDescriptionExpanded() {
+        descriptionExpanded = !descriptionExpanded
+        if (descriptionExpanded) {
+            binding.videoDetailDescription.maxLines = Int.MAX_VALUE
+            binding.expandDescriptionButton.text = "Less"
+        } else {
+            binding.videoDetailDescription.maxLines = 3
+            binding.expandDescriptionButton.text = "More Details"
+        }
+    }
+
+    private fun openApplyForVideo() {
+        if (videoId <= 0) {
+            Toast.makeText(this, "Video details are loading", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val applyIntent = Intent(this, ApplyFormActivity::class.java)
+        applyIntent.putExtra("video_id", videoId)
+        applyIntent.putExtra("video_title", currentVideoTitle ?: "Job Opportunity")
+        startActivity(applyIntent)
+    }
+
+    private fun dialPosterPhone() {
+        val phoneNumber = currentContactNumber
+        if (phoneNumber.isNullOrBlank()) {
+            Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(
+            Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:$phoneNumber") }
+        )
+    }
+
     private fun setupActionRow() {
         binding.likeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
@@ -326,7 +494,11 @@ class VideoPlayerActivity : AppCompatActivity() {
             shareVideo()
         }
 
-        // Setup fullscreen action controls with synchronized functionality
+        binding.fullscreenApplyButton.setOnClickListener { openApplyForVideo() }
+        binding.fullscreenCallButton.setOnClickListener { dialPosterPhone() }
+        binding.inlineApplyColumn.setOnClickListener { openApplyForVideo() }
+        binding.inlineCallColumn.setOnClickListener { dialPosterPhone() }
+
         binding.fullscreenLikeButton.setOnClickListener {
             if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
                 handleLikeAction()
@@ -352,6 +524,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.fullscreenShareButton.setOnClickListener {
             shareVideo()
         }
+
+        binding.expandDescriptionButton.setOnClickListener { toggleDescriptionExpanded() }
     }
     
     /**
@@ -390,8 +564,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Update UI immediately
         updateLikeDislikeCounts()
         updateLikeDislikeUI()
-        // Make API call in background
-        viewModel.likeVideo(videoId)
+        if (wasLiked) {
+            viewModel.removeVideoReaction(videoId)
+        } else {
+            viewModel.likeVideo(videoId)
+        }
     }
     
     /**
@@ -428,8 +605,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         updateLikeDislikeCounts()
         updateLikeDislikeUI()
         
-        // Make API call in background
-        viewModel.unlikeVideo(videoId)
+        if (wasDisliked) {
+            viewModel.removeVideoReaction(videoId)
+        } else {
+            viewModel.unlikeVideo(videoId)
+        }
     }
 
     private fun updateLikeDislikeCounts() {
@@ -502,49 +682,56 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun observeLikeDislikeActions() {
-        // Observe like video action
         viewModel.likeVideoLiveData.observe(this, Observer { result ->
             when (result) {
-                is ApiResult.Success<*> -> {
-                    // API call succeeded - optimistic update was correct
-                    // No need to refresh video details, UI already updated
-                    // This prevents video from restarting
-                }
-                is ApiResult.Error -> {
-                    // Rollback optimistic update on error
-                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
-                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
-                    likeCount = previousLikeCount
-                    dislikeCount = previousDislikeCount
-                    updateLikeDislikeCounts()
-                    updateLikeDislikeUI()
-                    //Toast.makeText(this, "Failed to like video", Toast.LENGTH_SHORT).show()
-                }
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
                 else -> {}
             }
         })
-
-        // Observe unlike video action
         viewModel.unlikeVideoLiveData.observe(this, Observer { result ->
             when (result) {
-                is ApiResult.Success<*> -> {
-                    // API call succeeded - optimistic update was correct
-                    // No need to refresh video details, UI already updated
-                    // This prevents video from restarting
-                }
-                is ApiResult.Error -> {
-                    // Rollback optimistic update on error
-                    sharedPrefs.setVideoLiked(videoId, previousLikeState)
-                    sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
-                    likeCount = previousLikeCount
-                    dislikeCount = previousDislikeCount
-                    updateLikeDislikeCounts()
-                    updateLikeDislikeUI()
-                    //Toast.makeText(this, "Failed to dislike video", Toast.LENGTH_SHORT).show()
-                }
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
                 else -> {}
             }
         })
+        viewModel.removeVideoReactionLiveData.observe(this, Observer { result ->
+            when (result) {
+                is ApiResult.Success -> applyReactionFromApi(result.data?.data)
+                is ApiResult.Error -> handleReactionError(result)
+                else -> {}
+            }
+        })
+    }
+
+    private fun handleReactionError(result: ApiResult.Error<*>) {
+        rollbackReaction()
+        if (result.message?.statusCode == 401) {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false))
+            sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
+            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+    }
+
+    private fun applyReactionFromApi(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoReactionData?) {
+        data ?: return
+        data.likeCount?.let { likeCount = it }
+        data.unlikeCount?.let { dislikeCount = it }
+        data.isLiked?.let { sharedPrefs.setVideoLiked(videoId, it) }
+        data.isUnliked?.let { sharedPrefs.setVideoDisliked(videoId, it) }
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
+    }
+
+    private fun rollbackReaction() {
+        sharedPrefs.setVideoLiked(videoId, previousLikeState)
+        sharedPrefs.setVideoDisliked(videoId, previousDislikeState)
+        likeCount = previousLikeCount
+        dislikeCount = previousDislikeCount
+        updateLikeDislikeCounts()
+        updateLikeDislikeUI()
     }
 
     private fun bindVideoDetails(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData) {
@@ -559,24 +746,72 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             binding.videoThumbnailOverlay.visibility = View.GONE
         }
-        // Play video (decoder-safe mode: disable extra preload players to avoid NO_MEMORY on some devices).
-        if (data.videoUrl != null) {
-            // Reset view count flag for new video
+        val playbackUrl = preferredPlaybackUrl(data)
+        if (playbackUrl != null) {
             hasIncrementedView = false
-            startVideoWithCacheCheck(data.videoUrl)
+            val stream = data.stream_url?.trim().orEmpty()
+            val direct = data.videoUrl?.trim().orEmpty()
+            pendingPlaybackFallbackUrl = when (playbackUrl) {
+                stream -> direct.takeIf { it.isNotEmpty() && it != stream }
+                else -> stream.takeIf { it.isNotEmpty() && it != direct }
+            }
+            startVideoWithCacheCheck(playbackUrl)
         }
         // Like/Dislike/Share/Views
         likeCount = data.likes ?: 0
         dislikeCount = data.unlikes ?: 0
         updateLikeDislikeCounts()
         updateLikeDislikeUI()
-        binding.viewsCount.text = "${data.views ?: 0} views"
-        binding.fullscreenViewsCount.text = "${data.views ?: 0} views"
+        val relativeUploadTime = TimeUtils.getRelativeTimeSpanString(this, data.createdAt)
+        val vCompact = formatCompactViews(data.views ?: 0)
+        val metaLine = if (relativeUploadTime.isNotEmpty()) {
+            "$vCompact views • $relativeUploadTime"
+        } else {
+            "$vCompact views"
+        }
+        binding.uploadTimeLabel.text = metaLine
+        binding.fullscreenViewsCount.text = metaLine
+        binding.viewsCount.text = metaLine
+
+        binding.videoDetailTitle.text = data.title.orEmpty()
+        val cat = data.category?.title?.trim().orEmpty()
+        val descFirst = data.description?.lineSequence()?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }.orEmpty()
+        when {
+            cat.isNotEmpty() -> {
+                binding.videoSubtitle.visibility = View.VISIBLE
+                binding.videoSubtitle.text = cat
+            }
+            descFirst.isNotEmpty() && descFirst != data.title?.trim() -> {
+                binding.videoSubtitle.visibility = View.VISIBLE
+                binding.videoSubtitle.text = descFirst
+            }
+            else -> binding.videoSubtitle.visibility = View.GONE
+        }
+        val location = LocationDisplayUtils.formatForDisplay(
+            data.location?.takeIf { it.isNotBlank() } ?: data.locationHint
+        )
+        if (location.isNotEmpty()) {
+            binding.videoLocationLabel.visibility = View.VISIBLE
+            binding.videoLocationLabel.text = location
+        } else {
+            binding.videoLocationLabel.visibility = View.GONE
+        }
+        binding.videoDetailDescription.text = data.description.orEmpty()
+        val hasDesc = !data.description.isNullOrBlank()
+        binding.videoDetailDescription.visibility = if (hasDesc) View.VISIBLE else View.GONE
+        val needsExpand = hasDesc && data.description.orEmpty().trim().lines().size > 3
+        binding.expandDescriptionButton.visibility =
+            if (needsExpand) View.VISIBLE else View.GONE
+        descriptionExpanded = false
+        binding.videoDetailDescription.maxLines = 3
+        binding.expandDescriptionButton.text = "More Details"
+
         // Related videos
         val related = data.relatedVideos ?: emptyList()
         Log.d("VideoPlayerActivity", "Related videos count: ${related.size}")
         
         // Always show related videos section (it will show empty list if no data)
+        binding.relatedVideosLabel.setText(R.string.up_next)
         binding.relatedVideosLabel.visibility = View.VISIBLE
         binding.relatedVideosRecyclerView.visibility = View.VISIBLE
         
@@ -593,8 +828,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             Log.d("VideoPlayerActivity", "No related videos available - showing empty list")
         }
         currentVideoTitle = data.title
-        currentVideoUrl = data.stream_url?:data.videoUrl
+        currentVideoUrl = data.videoUrl?.takeIf { it.isNotBlank() } ?: data.stream_url
         currentVideoThumbnail = data.thumbnail
+        currentContactNumber = data.phoneNumber?.takeIf { it.isNotBlank() }
     }
 
     /**
@@ -624,88 +860,18 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Setup scroll-based zoom effect for video player
-     */
+    /** ~34% of screen height (mockup: video ~30%), at least [R.dimen.video_player_min_height]. */
     private fun setupScrollZoomEffect() {
-        // Get the actual height from layout
-        binding.videoPlayerFrame.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                binding.videoPlayerFrame.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                
-                // Get the actual height in dp from the layout
-                val heightInPixels = binding.videoPlayerFrame.height
-                maxVideoPlayerHeight = (heightInPixels / resources.displayMetrics.density).toInt()
-                currentVideoPlayerHeight = maxVideoPlayerHeight
-                
-                // Initialize spacer height to show some content initially
-                // Use 80% of video height so related videos are partially visible
-                val initialSpacerHeight = (heightInPixels * 0.08).toInt()
-                val spacerLayoutParams = binding.spacerView.layoutParams
-                spacerLayoutParams.height = initialSpacerHeight
-                binding.spacerView.layoutParams = spacerLayoutParams
-                
-                // Initially show fullscreen button since video is at full size
-                binding.fullscreenButton.visibility = View.VISIBLE
-            }
-        })
-        
-        binding.nestedScrollView.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
-            if (isFullscreen) return@setOnScrollChangeListener // Don't apply zoom in fullscreen
-            
-            // Calculate scroll progress (0.0 to 1.0)
-            val scrollProgress = (scrollY.toFloat() / scrollThreshold).coerceIn(0f, 1f)
-            
-            // Calculate target height based on scroll progress
-            val targetHeight = (maxVideoPlayerHeight - (maxVideoPlayerHeight - minVideoPlayerHeight) * scrollProgress).toInt()
-            
-            // Control fullscreen button visibility based on video size
-            // Show when video is large (near top), hide when video is small (scrolled down)
-            val shouldShowFullscreenButton = targetHeight >= (maxVideoPlayerHeight * 0.8) // Show when video is 80% or larger
-            binding.fullscreenButton.visibility = if (shouldShowFullscreenButton) View.VISIBLE else View.GONE
-            
-            // Only animate if the target height has changed significantly
-            if (kotlin.math.abs(targetHeight - currentVideoPlayerHeight) > 5) {
-                animateVideoPlayerHeight(targetHeight)
-            }
-        }
-    }
-    
-    /**
-     * Animate video player height with smooth transition
-     */
-    private fun animateVideoPlayerHeight(targetHeight: Int) {
-        // Cancel any running animation
-        heightAnimator?.cancel()
-        
-        val startHeight = currentVideoPlayerHeight
-        
-        heightAnimator = ValueAnimator.ofInt(startHeight, targetHeight).apply {
-            duration = 200 // Smooth but quick animation
-            interpolator = DecelerateInterpolator()
-            
-            addUpdateListener { animator ->
-                val animatedHeight = animator.animatedValue as Int
-                currentVideoPlayerHeight = animatedHeight
-                
-                val densityPixels = (animatedHeight * resources.displayMetrics.density).toInt()
-                
-                // Update the video player frame height
-                val videoLayoutParams = binding.videoPlayerFrame.layoutParams
-                videoLayoutParams.height = densityPixels
-                binding.videoPlayerFrame.layoutParams = videoLayoutParams
-                
-                // Update the spacer height - use a percentage to keep some content visible
-                // When video is full size (520dp), spacer is 80% so content shows
-                // When video is minimized (300dp), spacer is smaller so more content shows
-                val spacerHeightPercentage = if (animatedHeight > minVideoPlayerHeight + 50) 0.08 else 0.08
-                val spacerHeight = (densityPixels * spacerHeightPercentage).toInt()
-                val spacerLayoutParams = binding.spacerView.layoutParams
-                spacerLayoutParams.height = spacerHeight
-                binding.spacerView.layoutParams = spacerLayoutParams
-            }
-            
-            start()
+        binding.videoPlayerFrame.post {
+            val minPx = resources.getDimensionPixelSize(R.dimen.video_player_min_height)
+            val targetPx =
+                (resources.displayMetrics.heightPixels * 0.34f).toInt().coerceAtLeast(minPx)
+            val lp = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+            lp.height = targetPx
+            binding.videoPlayerFrame.layoutParams = lp
+            maxVideoPlayerHeight = (targetPx / resources.displayMetrics.density).toInt()
+            currentVideoPlayerHeight = maxVideoPlayerHeight
+            binding.fullscreenButton.visibility = View.VISIBLE
         }
     }
 
@@ -798,20 +964,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Setup fullscreen button for custom fullscreen handling
         fullscreenButton.setOnClickListener {
             toggleFullscreen()
+            showPlayerControls()
+            startAutoHideTimer()
         }
 
-        // Smart touch handling for video area with gesture detection
+        binding.playerControlsOverlay.setOnClickListener {
+            onVideoAreaTapped()
+        }
+
         binding.customVideoView.setOnTouchListener { _, event ->
-            // Handle gestures for fullscreen
-            val gestureHandled = gestureDetector.onTouchEvent(event)
-            
-            // Always return false to let ExoPlayer handle regular taps
-            // Only consume events if a specific gesture was detected
-            if (gestureHandled) {
-                true // Consume the event only if gesture was handled
-            } else {
-                false // Let the event pass through to ExoPlayer for tap-to-show controls
-            }
+            gestureDetector.onTouchEvent(event)
+            true
         }
     }
 
@@ -820,7 +983,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             override fun onDown(e: MotionEvent): Boolean {
                 initialY = e.y
                 isGestureInProgress = false
-                return false // Don't consume the down event
+                return true
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (!isGestureInProgress) {
+                    onVideoAreaTapped()
+                }
+                return true
             }
 
             override fun onScroll(
@@ -884,11 +1054,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateVideoProgress() {
-        // This method is no longer needed since ExoPlayer handles progress tracking
-        // Keeping it for potential future use
-    }
-
     private fun formatTime(milliseconds: Int): String {
         val seconds = (milliseconds / 1000).toLong()
         val minutes = seconds / 60
@@ -906,22 +1071,24 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun enterFullscreen() {
-        // Hide UI elements
+        preFullscreenVideoHeightPx = binding.videoPlayerFrame.layoutParams.height
+
+        binding.nestedScrollView.visibility = View.GONE
         binding.topBar.visibility = View.GONE
         binding.actionRow.visibility = View.GONE
         binding.viewsCount.visibility = View.GONE
         binding.relatedVideosLabel.visibility = View.GONE
         binding.relatedVideosRecyclerView.visibility = View.GONE
-        
-        // Hide normal video progress controls (fullscreen controls are hidden since ExoPlayer has built-in controls)
-        binding.videoSeekBar.visibility = View.GONE
-        binding.currentTimeText.visibility = View.GONE
-        binding.totalTimeText.visibility = View.GONE
+
         binding.fullscreenProgressControls.visibility = View.GONE
-        
-        // Show fullscreen action controls
-        binding.fullscreenActionControls.visibility = View.VISIBLE
-        
+        binding.videoSeekBar.visibility = View.VISIBLE
+        binding.currentTimeText.visibility = View.VISIBLE
+        binding.totalTimeText.visibility = View.VISIBLE
+        binding.playerControlsOverlay.visibility = View.VISIBLE
+
+        // Hide side action buttons in fullscreen for now (like, dislike, apply, call)
+        binding.fullscreenActionControls.visibility = View.GONE
+
         // Make video player frame take full screen
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
         frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT
@@ -936,38 +1103,38 @@ class VideoPlayerActivity : AppCompatActivity() {
         layoutParams.gravity = android.view.Gravity.CENTER
         binding.customVideoView.layoutParams = layoutParams
         
-        // Hide system UI
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        
-        // Change fullscreen button icon
+        EdgeToEdgeHelper.hideSystemBars(this, binding.root)
         binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen_exit)
     }
 
     private fun exitFullscreen() {
-        // Show UI elements
+        binding.nestedScrollView.visibility = View.VISIBLE
         binding.topBar.visibility = View.VISIBLE
-        binding.actionRow.visibility = View.GONE // Keep hidden
-        binding.viewsCount.visibility = View.VISIBLE
-        
-        // Refresh related videos display
+        binding.actionRow.visibility = View.GONE
+        binding.viewsCount.visibility = View.GONE
+
         refreshRelatedVideosDisplay()
-        
-        // Show normal video progress controls and hide fullscreen ones
+
         binding.videoSeekBar.visibility = View.VISIBLE
         binding.currentTimeText.visibility = View.VISIBLE
         binding.totalTimeText.visibility = View.VISIBLE
         binding.fullscreenProgressControls.visibility = View.GONE
-        
-        // Keep fullscreen action controls visible
-        binding.fullscreenActionControls.visibility = View.VISIBLE
+        binding.playerControlsOverlay.visibility = View.VISIBLE
+
+        binding.fullscreenActionControls.visibility = View.GONE
         
         // Restore video player frame to original size
         val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
-        frameParams.height = 260.dpToPx()
+        frameParams.height = if (preFullscreenVideoHeightPx > 0) {
+            preFullscreenVideoHeightPx
+        } else {
+            260.dpToPx()
+        }
         frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
         binding.videoPlayerFrame.layoutParams = frameParams
+
+        // Sync scroll-zoom state with restored height so UI stays consistent.
+        currentVideoPlayerHeight = (frameParams.height / resources.displayMetrics.density).toInt()
         
         // Restore video player size with proper centering
         val layoutParams = FrameLayout.LayoutParams(
@@ -977,11 +1144,102 @@ class VideoPlayerActivity : AppCompatActivity() {
         layoutParams.gravity = android.view.Gravity.CENTER
         binding.customVideoView.layoutParams = layoutParams
         
-        // Show system UI
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-        
-        // Change fullscreen button icon
+        EdgeToEdgeHelper.showSystemBars(this, binding.root)
         binding.fullscreenButton.setImageResource(R.drawable.ic_fullscreen)
+    }
+
+    private fun applySystemBarInsets() {
+        val toolbar = binding.topBar
+        val toolbarStart = toolbar.paddingLeft
+        val toolbarTop = toolbar.paddingTop
+        val toolbarEnd = toolbar.paddingRight
+        val toolbarBottom = toolbar.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            if (!isInPictureInPictureMode) {
+                toolbar.setPadding(
+                    toolbarStart + insets.left,
+                    toolbarTop + insets.top,
+                    toolbarEnd + insets.right,
+                    toolbarBottom
+                )
+            }
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(binding.root)
+    }
+
+    private fun updatePictureInPictureParams() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val params = PictureInPictureParams.Builder()
+            .setAspectRatio(Rational(16, 9))
+            .build()
+        setPictureInPictureParams(params)
+    }
+
+    private fun enterPictureInPictureIfPossible(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        if (exoPlayer?.isPlaying != true) return false
+        return try {
+            updatePictureInPictureParams()
+            enterPictureInPictureMode(PictureInPictureParams.Builder()
+                .setAspectRatio(Rational(16, 9))
+                .build())
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        enterPictureInPictureIfPossible()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        }
+        applyPictureInPictureUi(isInPictureInPictureMode)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            applyPictureInPictureUi(isInPictureInPictureMode)
+        }
+    }
+
+    private fun applyPictureInPictureUi(inPip: Boolean) {
+        val chromeVisibility = if (inPip) View.GONE else View.VISIBLE
+        binding.topBar.visibility = chromeVisibility
+        binding.nestedScrollView.visibility = if (inPip) View.GONE else View.VISIBLE
+        binding.playerControlsOverlay.visibility = if (inPip) View.GONE else View.VISIBLE
+        binding.actionRow.visibility = View.GONE
+        binding.fullscreenActionControls.visibility = View.GONE
+        if (inPip) {
+            val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+            frameParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.videoPlayerFrame.layoutParams = frameParams
+        } else if (isFullscreen) {
+            enterFullscreen()
+        } else {
+            val frameParams = binding.videoPlayerFrame.layoutParams as LinearLayout.LayoutParams
+            frameParams.height = if (preFullscreenVideoHeightPx > 0) {
+                preFullscreenVideoHeightPx
+            } else {
+                260.dpToPx()
+            }
+            frameParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.videoPlayerFrame.layoutParams = frameParams
+            binding.topBar.visibility = View.VISIBLE
+            binding.nestedScrollView.visibility = View.VISIBLE
+            binding.playerControlsOverlay.visibility = View.VISIBLE
+        }
     }
     
     private fun Int.dpToPx(): Int {
@@ -1085,7 +1343,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Pause video when activity is paused
+        // Keep playback running while in picture-in-picture
+        if (isInPictureInPictureMode) return
         exoPlayer?.pause()
         isPlaying = false
         progressHandler.removeCallbacks(progressRunnable)
@@ -1094,6 +1353,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        if (isInPictureInPictureMode) return
         // Resume video if it was playing before pause
         if (exoPlayer?.isPlaying == false && isPlaying) {
             exoPlayer?.play()
@@ -1107,10 +1367,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         progressHandler.removeCallbacks(progressRunnable)
         autoHideHandler.removeCallbacks(autoHideRunnable)
         
-        // Cancel height animation
-        heightAnimator?.cancel()
-        heightAnimator = null
-        
         // Release ExoPlayer resources
         exoPlayer?.release()
         exoPlayer = null
@@ -1119,9 +1375,31 @@ class VideoPlayerActivity : AppCompatActivity() {
         // It will be automatically cleaned up when the app is killed
     }
 
+    private fun showPlayerControls() {
+        binding.playerControlsOverlay.visibility = View.VISIBLE
+        controlsVisible = true
+    }
+
+    private fun hidePlayerControls() {
+        binding.playerControlsOverlay.visibility = View.GONE
+        controlsVisible = false
+    }
+
+    private fun onVideoAreaTapped() {
+        if (controlsVisible) {
+            autoHideHandler.removeCallbacks(autoHideRunnable)
+            hidePlayerControls()
+        } else {
+            showPlayerControls()
+            startAutoHideTimer()
+        }
+    }
+
     private fun startAutoHideTimer() {
         autoHideHandler.removeCallbacks(autoHideRunnable)
-        autoHideHandler.postDelayed(autoHideRunnable, 3000) // Auto-hide after 3 seconds
+        if (exoPlayer?.isPlaying == true) {
+            autoHideHandler.postDelayed(autoHideRunnable, 3000)
+        }
     }
 
     /**
@@ -1167,9 +1445,16 @@ class VideoPlayerActivity : AppCompatActivity() {
     /**
      * Start video with cache status check
      */
+    private fun preferredPlaybackUrl(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsData): String? {
+        val stream = data.stream_url?.trim().orEmpty()
+        val direct = data.videoUrl?.trim().orEmpty()
+        return stream.takeIf { it.isNotEmpty() } ?: direct.takeIf { it.isNotEmpty() }
+    }
+
     private fun startVideoWithCacheCheck(videoUrl: String) {
         try {
             stopCurrentVideo()
+            currentPlayingUrl = videoUrl
             
             // Check if video is cached
             val isCached = VideoCacheManager.isVideoCached(videoUrl)
@@ -1177,7 +1462,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             
             // Show cache status to user
             if (isCached) {
-                Toast.makeText(this, "Playing from cache", Toast.LENGTH_SHORT).show()
+                Log.i("VideoPlayerActivity", "Playing from cache")
             }
             
             val mediaItem = MediaItem.Builder().setUri(videoUrl).build()

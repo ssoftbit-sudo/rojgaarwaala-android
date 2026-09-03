@@ -2,6 +2,8 @@ package com.srijeesolution.rojgaarwaala.utils
 
 import android.Manifest
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -13,8 +15,26 @@ import com.google.firebase.messaging.FirebaseMessaging
 object NotificationUtils {
     private const val TAG = "NotificationUtils"
     private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+    const val CHANNEL_ID = "rojgaarwaala_channel"
+    private const val LEGACY_CHANNEL_ID = "default_channel"
+
+    fun ensureNotificationChannels(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        listOf(
+            CHANNEL_ID to "Rojgaarwaala Notifications",
+            LEGACY_CHANNEL_ID to "Rojgaarwaala Notifications (legacy)",
+        ).forEach { (id, name) ->
+            val channel = NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Notifications from Rojgaarwaala app"
+                enableVibration(true)
+            }
+            manager.createNotificationChannel(channel)
+        }
+    }
 
     fun requestNotificationPermission(activity: Activity) {
+        ensureNotificationChannels(activity)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     activity,

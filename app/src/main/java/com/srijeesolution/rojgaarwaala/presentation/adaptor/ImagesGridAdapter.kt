@@ -22,12 +22,6 @@ class ImagesGridAdapter(
         
         fun bind(image: ImageData) {
             binding.apply {
-                // Set title
-                imageTitle.text = image.title ?: ""
-                
-                // Set relative time
-                imageTime.text = TimeUtils.getRelativeTimeSpanString(root.context, image.publishDate)
-                
                 // Load image using Glide with optimizations for smooth scrolling
                 val imageUrl = image.imageUrl ?: ""
                 if (imageUrl.isNotEmpty()) {
@@ -42,25 +36,6 @@ class ImagesGridAdapter(
                 } else {
                     // Set placeholder if no image
                     imageView.setImageResource(R.drawable.no_image_placeholder)
-                }
-
-                // Apply button click
-                applyButton.setOnClickListener {
-                    val intent = Intent(root.context, ApplyFormActivity::class.java)
-                    intent.putExtra("video_id", image.id)
-                    intent.putExtra("video_title", image.title)
-                    root.context.startActivity(intent)
-                }
-
-                // Call button click
-                callButton.setOnClickListener {
-                    val phoneNumber = image.phoneNumber ?: image.user?.mobile
-                    if (!phoneNumber.isNullOrEmpty()) {
-                        val intent = Intent(Intent.ACTION_DIAL).apply {
-                            data = Uri.parse("tel:$phoneNumber")
-                        }
-                        root.context.startActivity(intent)
-                    }
                 }
                 
                 // Set click listener

@@ -1,7 +1,7 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -11,51 +11,53 @@ import com.bumptech.glide.Glide
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ItemTopVideoBinding
-import com.srijeesolution.rojgaarwaala.presentation.ui.activity.ApplyFormActivity
+import com.srijeesolution.rojgaarwaala.databinding.ItemViewMoreVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
-import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoListUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
-class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHolder>(DIFF_CALLBACK) {
+class TopVideosAdapter(
+    private val onViewMoreClick: (() -> Unit)? = null,
+) : ListAdapter<TopVideo, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+
     class TopVideoViewHolder(val binding: ItemTopVideoBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewMoreViewHolder(val binding: ItemViewMoreVideoBinding) : RecyclerView.ViewHolder(binding.root)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopVideoViewHolder {
-        val binding = ItemTopVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return TopVideoViewHolder(binding)
+    override fun getItemViewType(position: Int): Int {
+        return if (VideoListUtils.isViewMoreItem(getItem(position))) VIEW_TYPE_VIEW_MORE else VIEW_TYPE_VIDEO
     }
 
-    override fun onBindViewHolder(holder: TopVideoViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == VIEW_TYPE_VIEW_MORE) {
+            ViewMoreViewHolder(
+                ItemViewMoreVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
+        } else {
+            TopVideoViewHolder(
+                ItemTopVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val video = getItem(position)
+        if (holder is ViewMoreViewHolder) {
+            holder.binding.root.setOnClickListener { onViewMoreClick?.invoke() }
+            return
+        }
+
+        holder as TopVideoViewHolder
+        val sharedPrefs = SharedPrefs(holder.binding.root.context)
         with(holder.binding) {
-            topVideoTitle.text = video.title
-
-            // Set relative time
-            topVideoTime.text = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
-
             Glide.with(topVideoThumbnail.context)
                 .load(video.thumbnail)
                 .placeholder(R.drawable.no_image_placeholder)
                 .into(topVideoThumbnail)
 
-            // Apply button click
-            applyButton.setOnClickListener {
-                val intent = Intent(root.context, ApplyFormActivity::class.java)
-                intent.putExtra("video_id", video.id)
-                intent.putExtra("video_title", video.title)
-                root.context.startActivity(intent)
-            }
+            VideoNewTagUtils.bindNewTagBadge(videoNewTag, video, sharedPrefs)
 
-            // Call button click
-            callButton.setOnClickListener {
-                val phoneNumber = video.phoneNumber ?: video.user?.mobile
-                if (!phoneNumber.isNullOrEmpty()) {
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        data = Uri.parse("tel:$phoneNumber")
-                    }
-                    root.context.startActivity(intent)
-                }
-            }
-
-            // Video thumbnail click
             root.setOnClickListener {
                 val intent = Intent(root.context, VideoPlayerActivity::class.java)
                 intent.putExtra("video_url", video.videoUrl)
@@ -66,6 +68,9 @@ class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHold
     }
 
     companion object {
+        private const val VIEW_TYPE_VIDEO = 0
+        private const val VIEW_TYPE_VIEW_MORE = 1
+
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TopVideo>() {
             override fun areItemsTheSame(oldItem: TopVideo, newItem: TopVideo): Boolean {
                 return oldItem.id == newItem.id
@@ -76,4 +81,4 @@ class TopVideosAdapter : ListAdapter<TopVideo, TopVideosAdapter.TopVideoViewHold
             }
         }
     }
-} 
+}

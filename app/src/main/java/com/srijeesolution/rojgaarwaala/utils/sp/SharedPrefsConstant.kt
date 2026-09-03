@@ -6,4 +6,24 @@ object SharedPrefsConstant {
     const val USER_SKIP_STATUS = "user_skip_status"
     const val USER_LOGIN_SKIP_STATUS = "user_log_in_skip_status"
     const val FCM_TOKEN = "fcm_token"
+    /** Set when a push is shown; cleared when user taps the bell in MainActivity. */
+    const val NOTIFICATION_BADGE_PENDING = "notification_badge_pending"
+    /** Persisted district / location label for home filters. */
+    const val HOME_SELECTED_LOCATION = "home_selected_location"
+    /** Anonymous device id for story seen state. */
+    const val DEVICE_KEY = "device_key"
+    /** Locally played videos — hide NEW tag immediately after playback. */
+    const val VIEWED_VIDEO_IDS = "viewed_video_ids_for_new_tag"
+    /** True when admin updates application status or user submits a new application. */
+    const val JOB_STATUS_UPDATE_PENDING = "job_status_update_pending"
+    /** Cached force-update flag from /api/app-config (speeds warm start). */
+    const val CACHED_FORCE_UPDATE = "cached_force_update"
+    /**
+     * Min version code the cached flag was computed against. Prefs survive app
+     * updates, so the flag alone would keep blocking an already-updated build.
+     */
+    const val CACHED_MIN_VERSION_CODE = "cached_min_version_code"
+    const val CACHED_FORCE_UPDATE_TITLE = "cached_force_update_title"
+    const val CACHED_FORCE_UPDATE_MESSAGE = "cached_force_update_message"
+    const val CACHED_FORCE_UPDATE_STORE_URL = "cached_force_update_store_url"
 }

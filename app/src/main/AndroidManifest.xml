@@ -2,17 +2,48 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Keep optional so Play does not filter tablets / Wi‑Fi-only / no-SIM devices -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.faketouch"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
-        android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_DOCUMENTS" />
+    <!-- Photo/resume uploads use system pickers only. Explicitly strip any
+         broad media permissions merged from dependencies (Play policy). -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <!-- Foreground-only location, used to geo-verify employee attendance punches. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Declared explicitly for Firebase Analytics (Play AD_ID policy / targetSdk 33+) -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     
     <application
         android:name=".utils.RojgaarwalaApplication"
@@ -27,8 +58,22 @@
         tools:targetApi="31"
         android:usesCleartextTraffic="true">
 
-        <!-- Firebase Messaging Service -->
+        <service
+            android:name=".utils.FirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
+        <!-- Injected from MAPS_API_KEY in local.properties so the key stays out of git. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsApiKey}" />
 
         <activity
             android:name=".presentation.ui.activity.SplashActivity"
@@ -39,6 +84,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".presentation.ui.activity.LocationPickerActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash" />
         <activity
             android:name=".presentation.ui.activity.MainActivity"
             android:exported="true"
@@ -68,10 +117,17 @@
             android:name=".presentation.ui.activity.ProfileActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.HelpDeskActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
 
         <activity
             android:name=".presentation.ui.activity.VideoPlayerActivity"
             android:theme="@style/AppTheme.NoSplash"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".presentation.ui.activity.OtpActivity"
@@ -92,21 +148,61 @@
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
+            android:name=".presentation.ui.activity.StoryViewerActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
             android:name=".presentation.ui.activity.ApplyFormActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
             android:name=".presentation.ui.activity.PaymentActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden">
+            <!-- The gateway receipt page bounces the browser back here. singleTop
+                 keeps the waiting screen instead of stacking a second copy. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="rojgaarwaala" android:host="payment" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".presentation.ui.activity.ApplicationStatusActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
-            android:name=".presentation.ui.activity.ApplicationStatusActivity"
+            android:name=".presentation.ui.activity.AppliedJobsActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.AttendanceDashboardActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.AttendanceHistoryActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.MonthlyWageActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.PaymentHistoryActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.FactoryTermsActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default_channel" />
+            android:value="rojgaarwaala_channel" />
 
         <!-- FileProvider for sharing images -->
         <provider

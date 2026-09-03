@@ -1,302 +1,469 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="@color/black"
-    android:id="@+id/mainLayout">
+    android:background="@color/app_background"
+>
 
-    <!-- ScrollView to handle content overflow -->
-    <ScrollView
-        android:id="@+id/profileScrollView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonLayout"
-        android:layout_alignParentTop="true"
-        android:paddingBottom="20dp"
-        android:padding="24dp"
-        android:fillViewport="true">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp">
 
-            <!-- Header Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginBottom="32dp">
+            <ImageButton
+                android:id="@+id/profileBackButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_action_circle_outline"
+                android:contentDescription="Back"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="10dp"
+                android:src="@drawable/ic_chevron_left"
+                app:tint="@color/white" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Update Profile"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:textSize="28sp"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Keep your information up to date"
-                    android:textColor="@color/gray_light_3"
-                    android:textSize="16sp"
-                    android:gravity="center" />
-
-            </LinearLayout>
-
-            <!-- First Name Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="First Name"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/firstNameEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your first name"
-                    android:inputType="textPersonName"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- Mobile Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mobile Number"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/mobileEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your mobile number"
-                    android:maxLength="10"
-                    android:inputType="phone"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- Email Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Email Address"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/emailEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your email address"
-                    android:inputType="textEmailAddress"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- City Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="City"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/cityEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your city"
-                    android:inputType="textPersonName"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- State Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="State"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/stateEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your state"
-                    android:inputType="textPersonName"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- Pincode Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pincode"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/pincodeEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@drawable/modern_edit_text_background"
-                    android:hint="Enter your pincode"
-                    android:inputType="number"
-                    android:maxLength="6"
-                    android:textColorHint="@color/gray_light_3"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp" />
-
-            </LinearLayout>
-
-            <!-- Status TextView (hidden by default) -->
             <TextView
-                android:id="@+id/statusTextView"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@android:color/holo_green_dark"
-                android:visibility="gone"
-                android:gravity="center"
-                android:layout_marginTop="16dp" />
-
-            <!-- ProgressBar (hidden by default) -->
-            <ProgressBar
-                android:id="@+id/profileProgressBar"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:visibility="gone"
-                android:layout_marginTop="16dp"
-                android:theme="@style/ThemeOverlay.App.ProgressBarWhite" />
-
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:text="Profile"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
         </LinearLayout>
-    </ScrollView>
 
-    <!-- Button Layout containing Update Profile and Logout buttons -->
-    <LinearLayout
-        android:id="@+id/buttonLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="24dp">
-
-        <!-- Update Profile Button -->
-        <Button
-            android:id="@+id/updateProfileButton"
+        <ScrollView
+            android:id="@+id/profileScrollView"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/modern_button_background"
-            android:text="Update Profile"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:stateListAnimator="@null"
-            android:elevation="8dp" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:paddingStart="16dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
 
-        <!-- Logout Button -->
-        <TextView
-            android:id="@+id/logoutButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Logout"
-            android:textColor="@color/gray_light_3"
-            android:gravity="center"
-            android:textSize="16sp"
-            android:background="?android:attr/selectableItemBackground"
-            android:padding="16dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="Update your details"
+                        android:textColor="@color/white"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Keep your contact information ready so employers can reach you faster."
+                        android:textColor="@color/gray_light_3"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="First Name"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/firstNameEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your first name"
+                        android:inputType="textPersonName"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Mobile Number"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/mobileEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your mobile number"
+                        android:inputType="phone"
+                        android:maxLength="10"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Email Address"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/emailEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your email address"
+                        android:inputType="textEmailAddress"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="City"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/cityEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your city"
+                        android:inputType="textCapWords"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="State"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/stateEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your state"
+                        android:inputType="textCapWords"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Pincode"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/pincodeEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Enter your pincode"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Colony / Area (Optional)"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <AutoCompleteTextView
+                        android:id="@+id/colonyEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Type or choose colony / area (optional)"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp"
+                        android:completionThreshold="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_theme_panel"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/job_preferences_section_title"
+                        android:textColor="@color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/job_preferences_section_hint"
+                        android:textColor="@color/gray_light_3"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="Preferred Job Category"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <AutoCompleteTextView
+                        android:id="@+id/preferredJobCategoryEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:hint="Tap to choose job category"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp"
+                        android:focusable="false"
+                        android:clickable="true"
+                        android:cursorVisible="false" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="District"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/districtEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:gravity="center_vertical"
+                        android:hint="Tap to choose district"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/search_hint"
+                        android:textSize="16sp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Resume"
+                                android:textColor="@color/white"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="@string/resume_format_hint"
+                                android:textColor="@color/gray_light_3"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/uploadProfileResumeBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_theme_chip"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:text="Choose"
+                            android:textColor="@color/accent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/profileResumeFileName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:padding="12dp"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/statusTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:textColor="@android:color/holo_green_dark"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/updateProfileButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="22dp"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="56dp"
+                        android:paddingStart="16dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="10dp"
+                        android:text="Update Profile"
+                        android:textAllCaps="false"
+                        android:textColor="@color/accent"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/logoutButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="52dp"
+                        android:paddingStart="16dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="10dp"
+                        android:text="Logout"
+                        android:textColor="@color/accent"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/appVersionText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center"
+                        android:textColor="@color/gray_light_3"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
 
-</RelativeLayout>
+    <ProgressBar
+        android:id="@+id/profileProgressBar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:theme="@style/ThemeOverlay.App.ProgressBarWhite"
+        android:visibility="gone" />
+
+</FrameLayout>

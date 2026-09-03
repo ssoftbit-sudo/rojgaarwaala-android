@@ -2,9 +2,12 @@ package com.srijeesolution.rojgaarwaala.utils
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
-import dagger.hilt.android.HiltAndroidApp
 import com.google.firebase.FirebaseApp
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.srijeesolution.rojgaarwaala.BuildConfig
+import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
@@ -13,14 +16,19 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
         super<Application>.onCreate()
         instance = this
 
-        // Initialize Firebase
-        FirebaseApp.initializeApp(this)
+        try {
+            FirebaseApp.initializeApp(this)
+            FirebaseCrashlytics.getInstance().apply {
+                setCustomKey("app_version", BuildConfig.VERSION_NAME)
+                setCustomKey("version_code", BuildConfig.VERSION_CODE)
+            }
+        } catch (t: Throwable) {
+            // Never block app launch if Firebase/Crashlytics fails on an OEM build.
+            Log.w("RojgaarwalaApplication", "Firebase init failed; continuing", t)
+        }
 
-        // Initialize the default uncaught exception handler
-        mDefaultUEH = Thread.getDefaultUncaughtExceptionHandler()
-
-        // Set your custom uncaught exception handler
-        Thread.setDefaultUncaughtExceptionHandler(mCaughtExceptionHandler)
+        registerActivityLifecycleCallbacks(SecureWindowLifecycleCallbacks())
+        registerActivityLifecycleCallbacks(EdgeToEdgeLifecycleCallbacks())
     }
 
     companion object {
@@ -29,25 +37,16 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
         var instance: RojgaarwalaApplication? = null
             private set
 
-        // Context function to access the context throughout the app
         @JvmStatic
         fun getAppContext(): Context {
-            return instance!!.applicationContext
+            return checkNotNull(instance) { "Application not initialized yet" }.applicationContext
         }
 
         var isActivityVisible = false
             private set
 
-        private var mDefaultUEH: Thread.UncaughtExceptionHandler? = null
-
         @JvmField
         var isAppInBackground = false
-
-        private val mCaughtExceptionHandler =
-            Thread.UncaughtExceptionHandler { thread, ex -> // Custom logic goes here
-                // This will make Crashlytics do its job
-                mDefaultUEH?.uncaughtException(thread, ex)
-            }
 
         @JvmStatic
         fun activityVisible() {

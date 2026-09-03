@@ -6,5 +6,84 @@
     <string name="navigation_drawer_close">Close Navigation</string>
     <string name="skip"><u>Skip</u></string>
     <string name="no_videos_found">No videos found</string>
+    <string name="search">Search</string>
+    <string name="video_detail_title">Video</string>
+    <string name="image_detail_title">Image</string>
+    <string name="previous_image">Previous image</string>
+    <string name="next_image">Next image</string>
+    <string name="up_next">Up next</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="subscribers_placeholder">Community</string>
+    <string name="download_started">Download started</string>
+    <string name="save_poster">Save</string>
+    <string name="channel_placeholder">Rojgaarwaala</string>
+    <string name="action_share">Share</string>
+    <string name="download">Download</string>
+    <string name="call_now">Call</string>
+    <string name="apply_now">Apply</string>
+    <string name="profile">Profile</string>
+    <string name="home">Home</string>
+    <string name="add_job">Add Job</string>
+    <string name="categories">Categories</string>
+    <string name="images">Images</string>
+    <string name="free_job">Free Job</string>
+    <string name="resume_format_hint">Photo (JPG/PNG) or PDF — choose one</string>
+    <string name="stories">Stories</string>
+    <string name="choose_location">Choose location</string>
+    <string name="search_jobs_categories_hint">Search jobs, categories…</string>
+    <string name="location_picker_title">Select District</string>
+    <string name="location_picker_multi_title">Select Job Locations</string>
+    <string name="done_selecting_locations">Done</string>
+    <string name="job_locations_label">Job Locations</string>
+    <string name="add_job_location">+ Add Location</string>
+    <string name="job_locations_hint">Select one or more districts where this job is available.</string>
+    <string name="job_preferences_section_title">Job Preferences</string>
+    <string name="job_preferences_section_hint">Set the kind of work and location you want. Employers can match you using this profile.</string>
+    <string name="job_preferences_hint">Update your preferred job category, location and resume in My Profile.</string>
+    <string name="field_is_required">%1$s is required</string>
+    <string name="notifications">Notifications</string>
+    <string name="close_search">Close search</string>
+    <string name="more_options">More options</string>
+    <string name="search_location">Search location</string>
+    <string name="change_location">Change location</string>
+    <string name="clear_location">Clear location</string>
+    <string name="reset_all_chhattisgarh">All Chhattisgarh</string>
+    <string name="location_reset_all_cg">Showing all Chhattisgarh</string>
+    <string name="clear_search">Clear search</string>
+    <string name="location_cleared">Location cleared</string>
+    <string name="help_desk">Help Desk</string>
+    <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="submit_query">Submit Query</string>
+    <string name="your_name">Your name</string>
+    <string name="your_email">Your email</string>
+    <string name="your_mobile">Mobile number</string>
+    <string name="subject">Subject</string>
+    <string name="your_message">Describe your issue</string>
+    <string name="help_desk_empty">No FAQs available right now.</string>
+    <string name="enquiry_submitted">Your query has been submitted. We will contact you soon.</string>
+    <string name="required_field">Required</string>
+    <string name="invalid_mobile">Enter a valid 10-digit mobile number</string>
+    <string name="quick_support">Quick Support</string>
+    <string name="whatsapp_now">WhatsApp Now</string>
+    <string name="select_issue_category">Select issue category</string>
+    <string name="search_faq_hint">Search question or keyword</string>
+    <string name="suggested_answers">Suggested answers</string>
+    <string name="watch_tutorials">Step-by-step video guides</string>
+    <string name="watch_tutorial">Watch video</string>
+    <string name="listen_audio">Listen audio</string>
+    <string name="no_tutorials">No tutorials available yet.</string>
+    <string name="upload_screenshot">Upload screenshot</string>
+    <string name="photo_selected">Photo selected</string>
+    <string name="view_more_videos">View More</string>
+    <string name="tap_to_view_more">Tap to see all</string>
+    <string name="loading_more_videos">Loading more videos…</string>
+
+    <string-array name="help_desk_problems">
+        <item>Fake job / scam</item>
+        <item>Payment issue</item>
+        <item>App bug / crash</item>
+        <item>Account / login issue</item>
+        <item>Other complaint</item>
+    </string-array>
 
 </resources>

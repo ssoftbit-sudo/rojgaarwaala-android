@@ -24,8 +24,27 @@ data class HomePageData(
     val topVideos: ArrayList<TopVideo>? = ArrayList(),
     @SerializedName("categoryVideos")
     val categoryVideos: ArrayList<CategoryVideo>? = ArrayList(),
+    @SerializedName("top_videos_total")
+    val topVideosTotal: Int? = null,
+    @SerializedName("top_videos_has_more")
+    val topVideosHasMore: Boolean? = null,
     @SerializedName("userDetails")
     val userDetails: UserData? = null,
+    @SerializedName("cityList")
+    val cityList: ArrayList<CityItem>? = ArrayList(),
+    @SerializedName("otp")
+    val otp: String? = null,
+    @SerializedName("mobile")
+    val mobile: String? = null,
+    @SerializedName("expires_at")
+    val expiresAt: String? = null,
+)
+
+data class CityItem(
+    @SerializedName("id")
+    val id: Int? = null,
+    @SerializedName("name")
+    val name: String? = null,
 )
 
 data class BannerList(
@@ -33,6 +52,8 @@ data class BannerList(
     val id: Int? = null,
     @SerializedName("url")
     val imageUrl: String? = null,
+    @SerializedName("position")
+    val position: Int? = null,
 )
 
 data class TopVideo(
@@ -56,6 +77,14 @@ data class TopVideo(
     val phoneNumber: String? = null,
     @SerializedName("sort_order")
     val sortOrder: Int? = null,
+    @SerializedName("views")
+    val views: Int? = null,
+    @SerializedName("location")
+    val location: String? = null,
+    @SerializedName("location_hint")
+    val locationHint: String? = null,
+    @SerializedName("show_new")
+    val showNew: Boolean? = null,
 )
 
 data class Category(
@@ -76,6 +105,10 @@ data class CategoryVideo(
     val iconFile: String? = null,
     @SerializedName("videos")
     val videos: ArrayList<TopVideo>? = ArrayList(),
+    @SerializedName("video_total")
+    val videoTotal: Int? = null,
+    @SerializedName("has_more")
+    val hasMore: Boolean? = null,
 )
 
 data class UserData(
@@ -91,6 +124,18 @@ data class UserData(
     val state: String? = null,
     @SerializedName("pincode")
     val pincode: String? = null,
+    @SerializedName("district")
+    val district: String? = null,
+    @SerializedName("colony")
+    val colony: String? = null,
+    @SerializedName("preferred_job_category")
+    val preferredJobCategory: String? = null,
+    @SerializedName("resume_url")
+    val resumeUrl: String? = null,
+    @SerializedName("candidate_profile_complete")
+    val candidateProfileComplete: Boolean? = null,
+    @SerializedName("is_employee")
+    val isEmployee: Boolean? = false,
 )
 
 data class VideoDetailsResponse(
@@ -133,8 +178,36 @@ data class VideoDetailsData(
     val user: UserData? = null,
     @SerializedName("category")
     val category: Category? = null,
+    @SerializedName("location")
+    val location: String? = null,
+    @SerializedName("location_hint")
+    val locationHint: String? = null,
+    @SerializedName("phone_number")
+    val phoneNumber: String? = null,
     @SerializedName("related_videos")
     val relatedVideos: List<TopVideo>? = null
+)
+
+data class VideoLikeApiModel(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: VideoReactionData? = null
+)
+
+data class VideoReactionData(
+    @SerializedName("video_id")
+    val videoId: Int? = null,
+    @SerializedName("like_count")
+    val likeCount: Int? = null,
+    @SerializedName("unlike_count")
+    val unlikeCount: Int? = null,
+    @SerializedName("is_liked")
+    val isLiked: Boolean? = null,
+    @SerializedName("is_unliked")
+    val isUnliked: Boolean? = null
 )
 
 data class JobListResponse(
@@ -193,7 +266,36 @@ data class CategoryVideosData(
     @SerializedName("category")
     val category: Category? = null,
     @SerializedName("videos")
-    val videos: List<TopVideo>? = null
+    val videos: List<TopVideo>? = null,
+    @SerializedName("pagination")
+    val pagination: VideoPagination? = null,
+)
+
+data class TopVideosListResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: TopVideosListData? = null,
+)
+
+data class TopVideosListData(
+    @SerializedName("topVideos")
+    val topVideos: List<TopVideo>? = null,
+    @SerializedName("pagination")
+    val pagination: VideoPagination? = null,
+)
+
+data class VideoPagination(
+    @SerializedName("current_page")
+    val currentPage: Int? = null,
+    @SerializedName("per_page")
+    val perPage: Int? = null,
+    @SerializedName("total")
+    val total: Int? = null,
+    @SerializedName("has_more")
+    val hasMore: Boolean? = null,
 )
 
 data class ImageListResponse(
@@ -230,8 +332,12 @@ data class ImageData(
     val description: String? = null,
     @SerializedName("image_url")
     val imageUrl: String? = null,
+    @SerializedName("location")
+    val location: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
+    @SerializedName("created_at")
+    val createdAt: String? = null,
     @SerializedName("user")
     val user: UserData? = null,
     @SerializedName("phone_number")
@@ -272,14 +378,24 @@ data class Story(
     val title: String? = null,
     @SerializedName("description")
     val description: String? = null,
+    @SerializedName("media_type")
+    val mediaType: String? = null,
     @SerializedName("image_url")
     val imageUrl: String? = null,
+    @SerializedName("video_url")
+    val videoUrl: String? = null,
+    @SerializedName("link_url")
+    val linkUrl: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
     @SerializedName("position")
     val position: Int? = null,
     @SerializedName("created_by")
     val createdBy: String? = null,
+    @SerializedName("like_count")
+    val likeCount: Int? = 0,
+    @SerializedName("is_liked")
+    val isLiked: Boolean? = false,
     @SerializedName("created_at")
     val createdAt: String? = null
 )

@@ -1,12 +1,30 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideosListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationApiResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskFaqsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskConfigResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.HelpDeskTutorialsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EnquirySubmitResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -14,6 +32,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Path
+import retrofit2.http.Header
 import retrofit2.http.DELETE
 import retrofit2.http.Multipart
 import retrofit2.http.Part
@@ -48,6 +67,21 @@ interface RetrofitApiInterface {
     @POST(NetworkConstants.UPDATE_PROFILE)
     suspend fun updateProfileLiveData(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
+    @Multipart
+    @POST(NetworkConstants.UPDATE_PROFILE)
+    suspend fun updateProfileMultipart(
+        @Part("name") name: RequestBody,
+        @Part("mobile") mobile: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("city") city: RequestBody,
+        @Part("state") state: RequestBody,
+        @Part("pincode") pincode: RequestBody,
+        @Part("district") district: RequestBody,
+        @Part("colony") colony: RequestBody,
+        @Part("preferred_job_category") preferredJobCategory: RequestBody,
+        @Part resume: MultipartBody.Part? = null,
+    ): Response<HomePagBaseApiModel>
+
     @POST(NetworkConstants.JOB_SUBMIT)
     suspend fun onSubmitJob(@Body email: HashMap<String, String>): Response<HomePagBaseApiModel>
 
@@ -60,11 +94,15 @@ interface RetrofitApiInterface {
         @Part("job_responsibility") jobResponsibility: RequestBody,
         @Part pdf: MultipartBody.Part? = null,
         @Part image: MultipartBody.Part? = null,
-        @Part logo: MultipartBody.Part? = null
+        @Part logo: MultipartBody.Part? = null,
+        @Part locations: List<MultipartBody.Part> = emptyList(),
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.CATEGORIES_LIST)
     suspend fun getCategoriesData(): Response<HomePagBaseApiModel>
+
+    @GET(NetworkConstants.CITY_LIST)
+    suspend fun getCityList(@Query("q") query: String = ""): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.VIDEO_DETAILS)
     suspend fun getVideoDetails(@Path("id") id: Int): Response<VideoDetailsResponse>
@@ -73,13 +111,26 @@ interface RetrofitApiInterface {
     suspend fun getJobList(): Response<JobListResponse>
 
     @GET(NetworkConstants.CATEGORY_VIDEOS)
-    suspend fun getCategoryVideos(@Path("id") id: Int): Response<CategoryVideosResponse>
+    suspend fun getCategoryVideos(
+        @Path("id") id: Int,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): Response<CategoryVideosResponse>
+
+    @GET(NetworkConstants.TOP_VIDEOS)
+    suspend fun getTopVideos(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): Response<TopVideosListResponse>
 
     @POST(NetworkConstants.VIDEO_LIKE)
-    suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
+    suspend fun likeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
 
     @POST(NetworkConstants.VIDEO_UNLIKE)
-    suspend fun unlikeVideo(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
+    suspend fun unlikeVideo(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
+
+    @POST(NetworkConstants.VIDEO_REMOVE_REACTION)
+    suspend fun removeVideoReaction(@Body request: HashMap<String, Any>): Response<VideoLikeApiModel>
 
     @POST(NetworkConstants.VIDEO_INCREMENT_VIEW)
     suspend fun incrementVideoView(@Body request: HashMap<String, Any>): Response<HomePagBaseApiModel>
@@ -100,7 +151,8 @@ interface RetrofitApiInterface {
         @Part("job_responsibility") jobResponsibility: RequestBody,
         @Part pdf: MultipartBody.Part? = null,
         @Part image: MultipartBody.Part? = null,
-        @Part logo: MultipartBody.Part? = null
+        @Part logo: MultipartBody.Part? = null,
+        @Part locations: List<MultipartBody.Part> = emptyList(),
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_GROUPED)
@@ -110,5 +162,108 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.SECTION_STORIES_GROUPED)
     suspend fun getSectionStoriesGrouped(): Response<StoriesResponse>
+
+    @GET(NetworkConstants.STORIES_ACTIVE)
+    suspend fun getActiveStories(@Header("X-Device-Key") deviceKey: String): Response<ActiveStoriesResponse>
+
+    @POST(NetworkConstants.STORIES_VIEW)
+    suspend fun markStoryViewed(
+        @Path("id") id: Int,
+        @Header("X-Device-Key") deviceKey: String
+    ): Response<StoriesResponse>
+
+    @POST(NetworkConstants.STORY_LIKE)
+    suspend fun likeStory(@Body request: HashMap<String, Any>): Response<StoryLikeApiModel>
+
+    @POST(NetworkConstants.STORY_UNLIKE)
+    suspend fun unlikeStory(@Body request: HashMap<String, Any>): Response<StoryLikeApiModel>
+
+    @GET(NetworkConstants.STORY_LIKE_STATUS)
+    suspend fun getStoryLikeStatus(@Query("story_id") storyId: Int): Response<StoryLikeApiModel>
+
+    @Multipart
+    @POST(NetworkConstants.JOB_APPLICATIONS)
+    suspend fun submitJobApplication(
+        @Part("full_name") fullName: RequestBody,
+        @Part("phone") phone: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("video_id") videoId: RequestBody? = null,
+        @Part("scheduled_image_id") scheduledImageId: RequestBody? = null,
+        @Part("job_title") jobTitle: RequestBody? = null,
+        @Part resume: MultipartBody.Part,
+    ): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_ORDER)
+    suspend fun createJobApplicationOrder(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_VERIFY)
+    suspend fun verifyJobApplicationPayment(
+        @Path("id") id: Int,
+        @Body request: VerifyPaymentRequest,
+    ): Response<JobApplicationApiResponse>
+
+    @POST(NetworkConstants.JOB_APPLICATION_FAILED)
+    suspend fun markJobApplicationPaymentFailed(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @GET(NetworkConstants.JOB_APPLICATION_DETAIL)
+    suspend fun getJobApplication(@Path("id") id: Int): Response<JobApplicationApiResponse>
+
+    @GET(NetworkConstants.JOB_APPLICATIONS_MY)
+    suspend fun getMyJobApplications(): Response<JobApplicationApiResponse>
+
+    @GET(NetworkConstants.APP_CONFIG)
+    suspend fun getAppConfig(
+        @Query("version_code") versionCode: Int,
+    ): Response<com.srijeesolution.rojgaarwaala.data.remote.model.AppConfigResponse>
+
+    @GET(NetworkConstants.HELP_DESK_CONFIG)
+    suspend fun getHelpDeskConfig(): Response<HelpDeskConfigResponse>
+
+    @GET(NetworkConstants.HELP_DESK_FAQS)
+    suspend fun getHelpDeskFaqs(
+        @Query("category") category: String?,
+        @Query("issue_type") issueType: String?,
+        @Query("search") search: String?,
+    ): Response<HelpDeskFaqsResponse>
+
+    @GET(NetworkConstants.HELP_DESK_TUTORIALS)
+    suspend fun getHelpDeskTutorials(@Query("issue_type") issueType: String): Response<HelpDeskTutorialsResponse>
+
+    @Multipart
+    @POST(NetworkConstants.ENQUIRY_SUBMIT)
+    suspend fun submitEnquiryWithPhoto(
+        @Part("name") name: RequestBody,
+        @Part("subject") subject: RequestBody,
+        @Part("message") message: RequestBody,
+        @Part("issue_type") issueType: RequestBody,
+        @Part("problem") problem: RequestBody? = null,
+        @Part("email") email: RequestBody? = null,
+        @Part("mobile") mobile: RequestBody? = null,
+        @Part photo: MultipartBody.Part? = null,
+    ): Response<EnquirySubmitResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_DASHBOARD)
+    suspend fun getEmployeeDashboard(): Response<EmployeeDashboardResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_PUNCH_IN)
+    suspend fun employeePunchIn(@Body request: PunchRequest): Response<PunchResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_PUNCH_OUT)
+    suspend fun employeePunchOut(@Body request: PunchRequest): Response<PunchResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_ATTENDANCE)
+    suspend fun getEmployeeAttendance(@Query("month") month: String): Response<AttendanceListResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_MONTHLY_SUMMARY)
+    suspend fun getEmployeeMonthlySummary(@Query("month") month: String): Response<MonthlySummaryResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_PAYMENTS)
+    suspend fun getEmployeePayments(@Query("month") month: String?): Response<EmployeePaymentsResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_FACTORY_TERMS)
+    suspend fun getEmployeeFactoryTerms(): Response<FactoryTermsResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_ACCEPT_FACTORY_TERMS)
+    suspend fun acceptEmployeeFactoryTerms(): Response<AcceptTermsResponse>
 
 }

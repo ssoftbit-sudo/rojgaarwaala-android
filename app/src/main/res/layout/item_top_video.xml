@@ -19,67 +19,39 @@
             android:scaleType="centerCrop"
             android:background="@color/black" />
 
-        <!-- Action Buttons Overlay -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/videoNewTag"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:gravity="end">
+            android:layout_gravity="top|start"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_video_new_tag"
+            android:elevation="4dp"
+            android:text="NEW"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-            <ImageButton
-                android:id="@+id/callButton"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@android:drawable/ic_menu_call"
-                android:background="@drawable/circle_background"
-                android:tint="@color/white"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="Call" />
-
-            <Button
-                android:id="@+id/applyButton"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="Apply"
-                android:textSize="12sp"
-                android:textColor="@color/white"
-                android:background="@drawable/rounded_button_primary"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
-
-        </LinearLayout>
-
-        <!-- Bottom Info Overlay -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:orientation="vertical"
-            android:background="#CC000000"
-            android:padding="8dp">
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/topVideoTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/topVideoTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="10sp"
-                android:alpha="0.7"
-                android:layout_marginTop="4dp" />
+                android:visibility="gone" />
 
         </LinearLayout>
 

@@ -1,12 +1,16 @@
 package com.srijeesolution.rojgaarwaala.domain.repository
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.HomePagBaseApiModel
+import com.srijeesolution.rojgaarwaala.data.remote.model.VideoLikeApiModel
 import com.srijeesolution.rojgaarwaala.data.remote.model.VideoDetailsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideosResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideosListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageListResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImagesApiResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.StoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.ActiveStoriesResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.StoryLikeApiModel
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
@@ -20,6 +24,18 @@ interface HomePageRepository {
     fun getHomePageData(searchTerm:String): Flow<ApiResult<HomePagBaseApiModel>>
     fun getProfileData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateProfileLiveData(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
+    fun updateProfileMultipart(
+        name: String,
+        mobile: String,
+        email: String,
+        city: String,
+        state: String,
+        pincode: String,
+        district: String,
+        colony: String,
+        preferredJobCategory: String,
+        resumePart: MultipartBody.Part?,
+    ): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJobWithFiles(
         jobTitle: String,
@@ -28,20 +44,29 @@ interface HomePageRepository {
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
+    fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getVideoDetails(id: Int): Flow<ApiResult<VideoDetailsResponse>>
     fun getJobList(): Flow<ApiResult<JobListResponse>>
-    fun getCategoryVideos(id: Int): Flow<ApiResult<CategoryVideosResponse>>
-    fun likeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
-    fun unlikeVideo(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
+    fun getCategoryVideos(id: Int, page: Int = 1, perPage: Int = 20): Flow<ApiResult<CategoryVideosResponse>>
+    fun getTopVideos(page: Int = 1, perPage: Int = 20): Flow<ApiResult<TopVideosListResponse>>
+    fun likeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
+    fun unlikeVideo(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
+    fun removeVideoReaction(videoId: Int): Flow<ApiResult<VideoLikeApiModel>>
     fun incrementVideoView(videoId: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun getScheduledImagesGrouped(): Flow<ApiResult<ImagesApiResponse>>
     fun getScheduledImages(): Flow<ApiResult<ImageListResponse>>
     fun getSectionStoriesGrouped(): Flow<ApiResult<StoriesResponse>>
+    fun getActiveStories(deviceKey: String): Flow<ApiResult<ActiveStoriesResponse>>
+    fun markStoryViewed(storyId: Int, deviceKey: String): Flow<ApiResult<StoriesResponse>>
+    fun likeStory(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
+    fun unlikeStory(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
+    fun getStoryLikeStatus(storyId: Int): Flow<ApiResult<StoryLikeApiModel>>
     fun updateJobWithFiles(
         id: Int,
         jobTitle: String,
@@ -50,6 +75,7 @@ interface HomePageRepository {
         jobResponsibility: String,
         pdfFile: MultipartBody.Part?,
         imageFile: MultipartBody.Part?,
-        logoFile: MultipartBody.Part?
+        logoFile: MultipartBody.Part?,
+        locations: List<String> = emptyList(),
     ): Flow<ApiResult<HomePagBaseApiModel>>
 }

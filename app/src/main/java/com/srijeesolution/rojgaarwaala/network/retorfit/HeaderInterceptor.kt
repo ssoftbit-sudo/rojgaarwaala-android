@@ -1,8 +1,10 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import android.util.Log
+import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -23,9 +25,19 @@ class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs
             var requestBuilder: Request.Builder? = null
             requestBuilder = original.newBuilder()
                 .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, ""))
-                .header("fcm_token", sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "")?:"")
-                .method(original.method, original.body)
+            val authToken = sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, "").orEmpty().trim()
+            if (authToken.isNotEmpty()) {
+                requestBuilder.header("Authorization", "Bearer $authToken")
+            }
+            val fcmToken = sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "").orEmpty().trim()
+            if (fcmToken.isNotEmpty()) {
+                requestBuilder.header("fcm_token", fcmToken)
+            }
+            val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+            requestBuilder.header("X-Device-Key", deviceKey)
+            requestBuilder.header("X-App-Version-Code", BuildConfig.VERSION_CODE.toString())
+            requestBuilder.header("X-App-Version-Name", BuildConfig.VERSION_NAME)
+            requestBuilder.method(original.method, original.body)
             response = chain.proceed(requestBuilder.build())
             return response
         } catch (e: Exception) {

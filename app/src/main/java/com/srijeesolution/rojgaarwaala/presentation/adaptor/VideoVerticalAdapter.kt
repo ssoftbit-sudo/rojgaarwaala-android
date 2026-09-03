@@ -1,8 +1,10 @@
 package com.srijeesolution.rojgaarwaala.presentation.adaptor
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -11,6 +13,9 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.databinding.ItemVerticalVideoBinding
 import com.srijeesolution.rojgaarwaala.databinding.ItemVideoBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.VideoPlayerActivity
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
+import com.srijeesolution.rojgaarwaala.utils.VideoNewTagUtils
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
 class VideoVerticalAdapter(
     private val videos: List<TopVideo>,
@@ -25,14 +30,20 @@ class VideoVerticalAdapter(
         return VideoViewHolder(binding)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val video = videos[position]
+        val sharedPrefs = SharedPrefs(holder.binding.root.context)
         with(holder.binding) {
             // Set video title
             videoTitle.text = video.title ?: "Video Title"
 
-            // Set video description
-            videoDescription.text = video.description ?: "Video Description"
+            val viewsPart = video.views?.takeIf { it > 0 }?.let { formatViewCount(it) + " views" }
+            val timePart = TimeUtils.getRelativeTimeSpanString(root.context, video.createdAt)
+                .takeIf { it.isNotBlank() }
+            videoMeta.text = listOfNotNull(viewsPart, timePart).joinToString(" • ")
+                .ifBlank { root.context.getString(com.srijeesolution.rojgaarwaala.R.string.channel_placeholder) }
+            videoDescription.visibility = View.GONE
 
             // Load thumbnail using Glide
             Glide.with(videoThumbnail.context)
@@ -40,6 +51,8 @@ class VideoVerticalAdapter(
                 .placeholder(R.drawable.thumbnail_background)
                 .centerCrop()
                 .into(videoThumbnail)
+
+            VideoNewTagUtils.bindNewTagBadge(videoNewTag, video, sharedPrefs)
 
             root.setOnClickListener {
                 Log.d("MANISH_JAIN","YES="+video.id+"NO ="+video.videoUrl)
@@ -58,7 +71,17 @@ class VideoVerticalAdapter(
         }
     }
     
-
-
     override fun getItemCount(): Int = videos.size
+
+    private fun formatViewCount(n: Int): String = when {
+        n >= 1_000_000 -> {
+            val v = n / 1_000_000.0
+            if (v >= 10) "${(v).toInt()}M" else String.format("%.1fM", v).replace(".0M", "M")
+        }
+        n >= 1_000 -> {
+            val v = n / 1_000.0
+            if (v >= 10) "${v.toInt()}K" else String.format("%.1fK", v).replace(".0K", "K")
+        }
+        else -> n.toString()
+    }
 }

@@ -27,19 +27,17 @@ class StoriesCategoryAdapter(
                 }
                 
                 // Setup nested RecyclerView for stories with GridLayoutManager
-                storiesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
-                
-                // Add spacing decoration similar to top videos list
-                storiesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
-                
-                // Optimize for smooth scrolling
-                storiesRecyclerView.setHasFixedSize(true)
-                storiesRecyclerView.isNestedScrollingEnabled = false
-                
+                if (storiesRecyclerView.layoutManager == null) {
+                    storiesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
+                    storiesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
+                    storiesRecyclerView.setHasFixedSize(true)
+                    storiesRecyclerView.isNestedScrollingEnabled = false
+                }
+
                 val storiesAdapter = StoriesGridAdapter(timeGroup.stories ?: emptyList()) { story ->
                     onStoryClick(story)
                 }
-                
+
                 storiesRecyclerView.adapter = storiesAdapter
             }
         }
