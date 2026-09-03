@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.utils.PaymentErrorMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -71,7 +72,7 @@ class PaymentViewModel @Inject constructor(
           }
 
           is ApiResult.Error -> {
-            _state.value = PaymentState.Error(serverErrorMessage(result.message?.errorBody))
+            _state.value = PaymentState.Error(PaymentErrorMapper.message(result.message))
           }
         }
       }
@@ -145,18 +146,6 @@ class PaymentViewModel @Inject constructor(
     data class NotPaid(val reason: String?) : PaymentState
 
     data class Error(val message: String) : PaymentState
-  }
-
-  private fun serverErrorMessage(errorBody: String?): String {
-    if (!errorBody.isNullOrBlank()) {
-      try {
-        val parsed = org.json.JSONObject(errorBody)
-        val message = parsed.optString("message")
-        if (message.isNotBlank()) return message
-      } catch (_: Exception) {
-      }
-    }
-    return "Could not reach the payment service."
   }
 
   private companion object {

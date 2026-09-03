@@ -8,10 +8,15 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 object RetrofitApiService {
     @JvmStatic
     fun create(baseUrl: String): RetrofitApiInterface {
         val httpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
             .addInterceptor(HeaderInterceptor(SharedPrefs(RojgaarwalaApplication.getAppContext())))
             .apply {
                 if (BuildConfig.DEBUG) {
