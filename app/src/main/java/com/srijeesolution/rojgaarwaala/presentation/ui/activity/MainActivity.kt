@@ -237,6 +237,19 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
     }
 
+    private fun openPaidApplicationsScreen() {
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            startActivity(
+                Intent(this, AppliedJobsActivity::class.java).apply {
+                    putExtra(AppliedJobsActivity.EXTRA_PAID_ONLY, true)
+                },
+            )
+        } else {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to view paid applications", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun updateJobStatusBadge(count: Int) {
         if (count > 0) {
             toolbarNotificationBadge.visibility = View.VISIBLE
@@ -261,14 +274,15 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         val popup = PopupMenu(this, toolbarOverflow)
         popup.menu.add(0, MENU_PROFILE, 0, getString(R.string.profile))
         popup.menu.add(0, MENU_HELP_DESK, 1, getString(R.string.help_desk))
+        popup.menu.add(0, MENU_PAID_APPLICATIONS, 2, "Paid applications")
 
-        popup.menu.add(0, MENU_LOCATION, 2, getString(R.string.change_location))
+        popup.menu.add(0, MENU_LOCATION, 3, getString(R.string.change_location))
 
         val isDefaultLocation = HomeLocationDefaults.skipsDistrictFilter(
             mainToolbarViewModel.selectedLocation.value,
         )
         if (!isDefaultLocation) {
-            popup.menu.add(0, MENU_CLEAR_LOCATION, 3, getString(R.string.reset_all_chhattisgarh))
+            popup.menu.add(0, MENU_CLEAR_LOCATION, 4, getString(R.string.reset_all_chhattisgarh))
         }
 
         popup.setOnMenuItemClickListener { item ->
@@ -279,6 +293,10 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 }
                 MENU_HELP_DESK -> {
                     startActivity(Intent(this, HelpDeskActivity::class.java))
+                    true
+                }
+                MENU_PAID_APPLICATIONS -> {
+                    openPaidApplicationsScreen()
                     true
                 }
                 MENU_LOCATION -> {
@@ -587,6 +605,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     companion object {
         private const val MENU_PROFILE = 1
         private const val MENU_HELP_DESK = 4
+        private const val MENU_PAID_APPLICATIONS = 5
         private const val MENU_LOCATION = 2
         private const val MENU_CLEAR_LOCATION = 3
     }

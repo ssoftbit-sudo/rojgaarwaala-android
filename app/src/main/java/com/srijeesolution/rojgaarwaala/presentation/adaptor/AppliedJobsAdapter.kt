@@ -3,8 +3,10 @@ package com.srijeesolution.rojgaarwaala.presentation.adaptor
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import android.view.View
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.databinding.ItemAppliedJobBinding
+import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
 
 class AppliedJobsAdapter(
     private var applications: List<JobApplicationDto>,
@@ -30,6 +32,17 @@ class AppliedJobsAdapter(
                     append("Applied $it")
                 }
             }.ifBlank { formatStatus(application.status) }
+
+            val badge = ApplicationPaymentCopy.listBadge(
+                application.paymentStatus,
+                application.amountPaise,
+            )
+            if (badge.isNullOrBlank()) {
+                binding.appliedJobPaymentBadge.visibility = View.GONE
+            } else {
+                binding.appliedJobPaymentBadge.visibility = View.VISIBLE
+                binding.appliedJobPaymentBadge.text = badge
+            }
 
             binding.root.setOnClickListener {
                 onItemClick(application)

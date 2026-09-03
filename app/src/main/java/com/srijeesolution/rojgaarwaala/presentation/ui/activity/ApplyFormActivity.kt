@@ -3,12 +3,15 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.databinding.ActivityApplyFormBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.ApplyViewModel
+import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +26,7 @@ class ApplyFormActivity : AppCompatActivity() {
   private var videoId: Int = 0
   private var scheduledImageId: Int = 0
   private var jobTitle: String = ""
+  private var existingApplication: JobApplicationDto? = null
 
   @Inject
   lateinit var sharedPrefs: SharedPrefs
@@ -51,6 +55,14 @@ class ApplyFormActivity : AppCompatActivity() {
     observeViewModel()
   }
 
+  override fun onResume() {
+    super.onResume()
+    viewModel.loadExistingForListing(
+      videoId = videoId.takeIf { it > 0 },
+      scheduledImageId = scheduledImageId.takeIf { it > 0 },
+    )
+  }
+
   private fun setupClickListeners() {
     binding.backButton.setOnClickListener { finish() }
 
@@ -60,6 +72,15 @@ class ApplyFormActivity : AppCompatActivity() {
 
     binding.submitButton.setOnClickListener {
       submitApplication()
+    }
+
+    binding.viewStatusButton.setOnClickListener {
+      existingApplication?.id?.let { openStatus(it) }
+    }
+
+    binding.payNowButton.setOnClickListener {
+      val application = existingApplication ?: return@setOnClickListener
+      openPayment(application.id, application.amountPaise)
     }
   }
 
@@ -98,6 +119,16 @@ class ApplyFormActivity : AppCompatActivity() {
   }
 
   private fun observeViewModel() {
+    viewModel.existingApplication.observe(this) { application ->
+      existingApplication = application
+      showExistingApplication(application)
+    }
+
+    viewModel.checkingExisting.observe(this) { checking ->
+      binding.existingCheckProgress.visibility =
+        if (checking && existingApplication == null) View.VISIBLE else View.GONE
+    }
+
     viewModel.submitResult.observe(this) { success ->
       binding.submitButton.isEnabled = true
       binding.submitButton.text = "Submit Application"
@@ -105,20 +136,12 @@ class ApplyFormActivity : AppCompatActivity() {
       if (success) {
         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.JOB_STATUS_UPDATE_PENDING, true))
 
-        // Only paid listings route through checkout; everything else is already
-        // submitted by the time the server replies.
-        val intent = if (viewModel.requiresPayment.value == true) {
-          Intent(this, PaymentActivity::class.java).apply {
-            putExtra(PaymentActivity.EXTRA_APPLICATION_ID, viewModel.applicationId.value)
-            putExtra(PaymentActivity.EXTRA_AMOUNT_PAISE, viewModel.amountPaise.value ?: 0)
-          }
+        val applicationId = viewModel.applicationId.value?.toIntOrNull()
+        if (viewModel.requiresPayment.value == true) {
+          openPayment(applicationId, viewModel.amountPaise.value)
         } else {
-          Intent(this, ApplicationStatusActivity::class.java).apply {
-            putExtra("application_id", viewModel.applicationId.value)
-          }
+          openStatus(applicationId)
         }
-
-        startActivity(intent)
         finish()
       } else {
         Toast.makeText(
@@ -133,6 +156,47 @@ class ApplyFormActivity : AppCompatActivity() {
       binding.submitButton.isEnabled = !loading
       binding.submitButton.text = if (loading) "Submitting..." else "Submit Application"
     }
+  }
+
+  private fun showExistingApplication(application: JobApplicationDto?) {
+    if (application == null) {
+      binding.alreadyAppliedPanel.visibility = View.GONE
+      binding.applyFormFields.visibility = View.VISIBLE
+      return
+    }
+
+    binding.applyFormFields.visibility = View.GONE
+    binding.alreadyAppliedPanel.visibility = View.VISIBLE
+    binding.alreadyAppliedTitle.text = ApplicationPaymentCopy.alreadyAppliedTitle()
+    binding.alreadyAppliedPayment.text = ApplicationPaymentCopy.applyPaymentDetail(
+      application.paymentStatus,
+      application.amountPaise,
+    )
+    binding.payNowButton.visibility =
+      if (ApplicationPaymentCopy.needsPayment(application.paymentStatus, application.amountPaise)) {
+        View.VISIBLE
+      } else {
+        View.GONE
+      }
+  }
+
+  private fun openStatus(applicationId: Int?) {
+    if (applicationId == null || applicationId <= 0) return
+    startActivity(
+      Intent(this, ApplicationStatusActivity::class.java).apply {
+        putExtra("application_id", applicationId.toString())
+      },
+    )
+  }
+
+  private fun openPayment(applicationId: Int?, amountPaise: Int?) {
+    if (applicationId == null || applicationId <= 0) return
+    startActivity(
+      Intent(this, PaymentActivity::class.java).apply {
+        putExtra(PaymentActivity.EXTRA_APPLICATION_ID, applicationId.toString())
+        putExtra(PaymentActivity.EXTRA_AMOUNT_PAISE, amountPaise ?: 0)
+      },
+    )
   }
 
   private fun getFileNameFromUri(uri: Uri): String? {

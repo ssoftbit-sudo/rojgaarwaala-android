@@ -6,9 +6,11 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.databinding.ActivityApplicationStatusBinding
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ApplicationTimelineAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.StatusViewModel
+import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -34,12 +36,25 @@ class ApplicationStatusActivity : AppCompatActivity() {
 
         setupClickListeners()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
         loadStatus()
     }
 
     private fun setupClickListeners() {
         binding.backButton.setOnClickListener { finish() }
         binding.checkStatusButton.setOnClickListener { loadStatus() }
+        binding.payNowButton.setOnClickListener {
+            val application = viewModel.applicationDetails.value ?: return@setOnClickListener
+            startActivity(
+                Intent(this, PaymentActivity::class.java).apply {
+                    putExtra(PaymentActivity.EXTRA_APPLICATION_ID, application.id?.toString().orEmpty())
+                    putExtra(PaymentActivity.EXTRA_AMOUNT_PAISE, application.amountPaise ?: 0)
+                },
+            )
+        }
     }
 
     private fun loadStatus() {
@@ -60,7 +75,7 @@ class ApplicationStatusActivity : AppCompatActivity() {
                 "Applied on $it"
             } ?: "Application submitted"
 
-            updateStatusDisplay(application.status.orEmpty())
+            updateStatusDisplay(application)
 
             val timeline = application.timeline.orEmpty()
             timelineAdapter.updateEntries(timeline)
@@ -74,17 +89,25 @@ class ApplicationStatusActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateStatusDisplay(status: String) {
-        val statusText = when (status.lowercase()) {
-            "applied" -> "Congratulations! Your application has been submitted successfully."
-            "under_review" -> "Your application is under review."
-            "interview_scheduled" -> "Interview scheduled. HR will contact you."
-            "selected" -> "Congratulations! You are selected."
-            "rejected" -> "Application not selected this time."
-            "pending_payment" -> "Your application has been submitted successfully."
-            "failed" -> "There was an issue with your application. Please contact support."
-            else -> "Status: ${status.replace('_', ' ')}"
+    private fun updateStatusDisplay(application: JobApplicationDto) {
+        binding.statusText.text = ApplicationPaymentCopy.applicationStatusCopy(application.status)
+
+        val paymentLine = ApplicationPaymentCopy.statusPaymentLine(
+            application.paymentStatus,
+            application.amountPaise,
+        )
+        if (paymentLine.isBlank()) {
+            binding.paymentStatusText.visibility = View.GONE
+        } else {
+            binding.paymentStatusText.visibility = View.VISIBLE
+            binding.paymentStatusText.text = paymentLine
         }
-        binding.statusText.text = statusText
+
+        binding.payNowButton.visibility =
+            if (ApplicationPaymentCopy.needsPayment(application.paymentStatus, application.amountPaise)) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
     }
 }

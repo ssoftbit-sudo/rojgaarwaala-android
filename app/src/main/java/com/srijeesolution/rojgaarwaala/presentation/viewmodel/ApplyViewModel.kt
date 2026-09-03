@@ -8,8 +8,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.collectLatest
@@ -44,6 +46,37 @@ class ApplyViewModel @Inject constructor(
 
   private val _errorMessage = MutableLiveData<String>()
   val errorMessage: LiveData<String> = _errorMessage
+
+  private val _existingApplication = MutableLiveData<JobApplicationDto?>()
+  val existingApplication: LiveData<JobApplicationDto?> = _existingApplication
+
+  private val _checkingExisting = MutableLiveData(false)
+  val checkingExisting: LiveData<Boolean> = _checkingExisting
+
+  fun loadExistingForListing(videoId: Int?, scheduledImageId: Int?) {
+    val video = videoId?.takeIf { it > 0 }
+    val image = scheduledImageId?.takeIf { it > 0 }
+    if (video == null && image == null) {
+      _existingApplication.value = null
+      return
+    }
+
+    _checkingExisting.value = true
+    viewModelScope.launch {
+      repository.getMyApplications().collectLatest { result ->
+        when (result) {
+          is ApiResult.Success -> {
+            val match = result.data?.data?.applications.orEmpty().firstOrNull { application ->
+              ApplicationPaymentCopy.matchesListing(application, video, image)
+            }
+            _existingApplication.value = match
+          }
+          else -> Unit
+        }
+        _checkingExisting.value = false
+      }
+    }
+  }
 
   fun submitApplication(
     videoId: Int?,

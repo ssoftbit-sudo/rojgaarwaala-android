@@ -21,6 +21,7 @@ data class JobApplicationApiData(
     @SerializedName("order_id") val orderId: String? = null,
     @SerializedName("transaction_id") val transactionId: String? = null,
     @SerializedName("payment_link") val paymentLink: String? = null,
+    @SerializedName("already_applied") val alreadyApplied: Boolean? = false,
     @SerializedName("already_paid") val alreadyPaid: Boolean? = false,
     // Verify endpoint result.
     @SerializedName("paid") val paid: Boolean? = false,
@@ -30,6 +31,8 @@ data class JobApplicationApiData(
 
 data class JobApplicationDto(
     @SerializedName("id") val id: Int? = null,
+    @SerializedName("video_id") val videoId: Int? = null,
+    @SerializedName("scheduled_image_id") val scheduledImageId: Int? = null,
     @SerializedName("job_title") val jobTitle: String? = null,
     @SerializedName("category_name") val categoryName: String? = null,
     @SerializedName("full_name") val fullName: String? = null,
