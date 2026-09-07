@@ -72,7 +72,8 @@ class EmployeeAttendanceApiContractTest {
                   "name": "Ramesh Kumar",
                   "employee_code": "EMP0007",
                   "joining_date": "2026-01-15",
-                  "is_active": true
+                  "is_active": true,
+                  "can_bulk_attendance": false
                 },
                 "greeting": "Good Morning",
                 "today": {
@@ -86,7 +87,9 @@ class EmployeeAttendanceApiContractTest {
                     "latitude": 21.2514,
                     "longitude": 81.6296,
                     "geofence_radius": 200,
-                    "gps_accuracy_threshold": 50
+                    "gps_accuracy_threshold": 50,
+                    "duty_start": "09:00",
+                    "duty_end": "18:00"
                   },
                   "daily_wage": 500.0,
                   "has_active_assignment": true,
@@ -97,7 +100,9 @@ class EmployeeAttendanceApiContractTest {
                   "punch_out_at": null,
                   "can_punch_in": false,
                   "can_punch_out": true,
-                  "earned_wage": 500.0
+                  "earned_wage": 500.0,
+                  "can_request_ot": true,
+                  "can_request_missed_punch": true
                 },
                 "month_summary": {
                   "month": "2026-08",
@@ -130,6 +135,10 @@ class EmployeeAttendanceApiContractTest {
         assertNull(data.today?.punchOutAt)
         assertEquals(false, data.today?.canPunchIn)
         assertEquals(true, data.today?.canPunchOut)
+        assertEquals(false, data.employee?.canBulkAttendance)
+        assertEquals("09:00", data.today?.factory?.dutyStart)
+        assertEquals("18:00", data.today?.factory?.dutyEnd)
+        assertEquals(true, data.today?.canRequestOt)
         assertEquals(9250.0, data.monthSummary?.totalEarned!!, 0.0)
         assertEquals(4250.0, data.monthSummary?.remainingBalance!!, 0.0)
         // The screen gates itself on this block, so a rename here must not read as "allowed".

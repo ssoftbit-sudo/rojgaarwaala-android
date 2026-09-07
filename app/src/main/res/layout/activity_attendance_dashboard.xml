@@ -353,7 +353,7 @@
                     android:textSize="14sp"
                     android:visibility="gone" />
 
-                <TextView
+                <LinearLayout
                     android:id="@+id/punchInButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -363,15 +363,28 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
+                    android:orientation="horizontal"
                     android:paddingTop="18dp"
                     android:paddingBottom="18dp"
-                    android:text="PUNCH IN"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:visibility="gone">
 
-                <TextView
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="आ गए"
+                        android:src="@drawable/ic_punch_sun" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="आ गए"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/punchOutButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -381,13 +394,26 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
+                    android:orientation="horizontal"
                     android:paddingTop="18dp"
                     android:paddingBottom="18dp"
-                    android:text="PUNCH OUT"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="घर जा रहे"
+                        android:src="@drawable/ic_punch_moon" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="घर जा रहे"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/dayCompleteText"
@@ -590,6 +616,28 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp" />
+
+                <include
+                    android:id="@+id/otRow"
+                    layout="@layout/item_attendance_nav_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp" />
+
+                <include
+                    android:id="@+id/missedPunchRow"
+                    layout="@layout/item_attendance_nav_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp" />
+
+                <include
+                    android:id="@+id/bulkAttendanceRow"
+                    layout="@layout/item_attendance_nav_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone" />
 
                 <include
                     android:id="@+id/termsRow"

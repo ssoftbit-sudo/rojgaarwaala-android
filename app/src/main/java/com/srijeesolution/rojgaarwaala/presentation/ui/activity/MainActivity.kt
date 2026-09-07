@@ -542,6 +542,19 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                     }
                     jobApplicationsViewModel.notifyJobStatusUpdated()
                 }
+                "attendance_punch_out_reminder",
+                "attendance_missed_punch",
+                "attendance_geofence_arrival" -> {
+                    val punch = if (notificationType == "attendance_punch_out_reminder") {
+                        AttendanceDashboardActivity.PUNCH_OUT
+                    } else {
+                        AttendanceDashboardActivity.PUNCH_IN
+                    }
+                    startActivity(
+                        Intent(this, AttendanceDashboardActivity::class.java)
+                            .putExtra(AttendanceDashboardActivity.EXTRA_PUNCH, punch),
+                    )
+                }
                 else -> selectTab(0)
             }
 

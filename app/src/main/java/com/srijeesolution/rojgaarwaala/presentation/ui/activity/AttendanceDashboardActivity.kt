@@ -1,8 +1,11 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -30,6 +33,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorMapper
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
+import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import com.srijeesolution.rojgaarwaala.utils.GeofenceEvaluator
 import com.srijeesolution.rojgaarwaala.utils.LocationHelper
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
@@ -37,6 +41,20 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class AttendanceDashboardActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_PUNCH = "extra_punch"
+        const val PUNCH_IN = "in"
+        const val PUNCH_OUT = "out"
+
+        val COLOR_INSIDE_STROKE = Color.argb(255, 76, 175, 80)
+        val COLOR_INSIDE_FILL = Color.argb(60, 76, 175, 80)
+        val COLOR_OUTSIDE_STROKE = Color.argb(255, 229, 57, 53)
+        val COLOR_OUTSIDE_FILL = Color.argb(50, 229, 57, 53)
+
+        const val FACTORY_ONLY_ZOOM = 16f
+        const val MAP_BOUNDS_PADDING_PX = 80
+    }
 
     private lateinit var binding: ActivityAttendanceDashboardBinding
     private val viewModel: EmployeeAttendanceViewModel by viewModels()
@@ -66,6 +84,15 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     /** Set while the terms gate is on screen, so the dashboard does not reopen it. */
     private var awaitingTermsAcceptance = false
 
+    private var pendingPunchAction: String? = null
+    private var pendingPunchConsumed = false
+
+    private val backgroundLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) FactoryGeofenceMonitor.register(this, todayFactory)
+    }
+
     private val termsGate = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -91,6 +118,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupNavigationRows()
+
+        pendingPunchAction = intent.getStringExtra(EXTRA_PUNCH)
 
         binding.backButton.setOnClickListener { finish() }
         binding.refreshButton.setOnClickListener { viewModel.loadDashboard() }
@@ -212,6 +241,30 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.termsRow.root.setOnClickListener {
             startActivity(Intent(this, FactoryTermsActivity::class.java))
         }
+
+        binding.otRow.navRowTitle.text = "Request OT"
+        binding.otRow.navRowSubtitle.text = "Overtime hours for supervisor approval"
+        binding.otRow.root.setOnClickListener {
+            startActivity(
+                Intent(this, AttendanceRequestActivity::class.java)
+                    .putExtra(AttendanceRequestActivity.EXTRA_MODE, AttendanceRequestActivity.MODE_OT),
+            )
+        }
+
+        binding.missedPunchRow.navRowTitle.text = "Missed Punch"
+        binding.missedPunchRow.navRowSubtitle.text = "Forgot to punch? Send a request"
+        binding.missedPunchRow.root.setOnClickListener {
+            startActivity(
+                Intent(this, AttendanceRequestActivity::class.java)
+                    .putExtra(AttendanceRequestActivity.EXTRA_MODE, AttendanceRequestActivity.MODE_MISSED),
+            )
+        }
+
+        binding.bulkAttendanceRow.navRowTitle.text = "Bulk Attendance"
+        binding.bulkAttendanceRow.navRowSubtitle.text = "Mark workers who do not have a phone"
+        binding.bulkAttendanceRow.root.setOnClickListener {
+            startActivity(Intent(this, BulkAttendanceActivity::class.java))
+        }
     }
 
     private fun observeDashboard() {
@@ -295,6 +348,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         attendanceMarked = today?.attendanceMarked == true
         dashboardLoaded = true
 
+        binding.bulkAttendanceRow.root.visibility =
+            if (employee?.canBulkAttendance == true) View.VISIBLE else View.GONE
+
         if (employeeInactive) {
             showPunchMessage("Your employee account is inactive.")
         } else if (today?.hasActiveAssignment == false) {
@@ -304,6 +360,35 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         }
 
         renderGeofence()
+        requestBackgroundLocationIfNeeded()
+        maybeStartPendingPunch()
+    }
+
+    private fun requestBackgroundLocationIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            return
+        }
+        FactoryGeofenceMonitor.register(this, todayFactory)
+    }
+
+    private fun maybeStartPendingPunch() {
+        if (pendingPunchConsumed || punchInProgress || employeeInactive) return
+        when (pendingPunchAction) {
+            PUNCH_IN -> if (serverCanPunchIn) {
+                pendingPunchConsumed = true
+                startPunchFlow(isPunchIn = true)
+            }
+            PUNCH_OUT -> if (serverCanPunchOut) {
+                pendingPunchConsumed = true
+                startPunchFlow(isPunchIn = false)
+            }
+        }
     }
 
     /**
@@ -570,15 +655,5 @@ class AttendanceDashboardActivity : AppCompatActivity() {
 
     private fun hidePunchMessage() {
         binding.punchMessageText.visibility = View.GONE
-    }
-
-    private companion object {
-        val COLOR_INSIDE_STROKE = Color.argb(255, 76, 175, 80)
-        val COLOR_INSIDE_FILL = Color.argb(60, 76, 175, 80)
-        val COLOR_OUTSIDE_STROKE = Color.argb(255, 229, 57, 53)
-        val COLOR_OUTSIDE_FILL = Color.argb(50, 229, 57, 53)
-
-        const val FACTORY_ONLY_ZOOM = 16f
-        const val MAP_BOUNDS_PADDING_PX = 80
     }
 }

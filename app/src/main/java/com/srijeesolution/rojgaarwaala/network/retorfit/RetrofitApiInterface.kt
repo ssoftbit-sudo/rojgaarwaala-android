@@ -25,6 +25,13 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
 import retrofit2.http.Body
@@ -265,5 +272,23 @@ interface RetrofitApiInterface {
 
     @POST(NetworkConstants.EMPLOYEE_ACCEPT_FACTORY_TERMS)
     suspend fun acceptEmployeeFactoryTerms(): Response<AcceptTermsResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_TEAM)
+    suspend fun getEmployeeTeam(): Response<TeamResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_BULK_PUNCH_IN)
+    suspend fun employeeBulkPunchIn(@Body request: BulkPunchRequest): Response<BulkPunchResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_OT_REQUESTS)
+    suspend fun submitOtRequest(@Body body: OtRequestBody): Response<OtRequestResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_OT_REQUESTS)
+    suspend fun getOtRequests(): Response<OtRequestResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_MISSED_PUNCHES)
+    suspend fun submitMissedPunch(@Body body: MissedPunchBody): Response<MissedPunchResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_MISSED_PUNCHES)
+    suspend fun getMissedPunches(): Response<MissedPunchResponse>
 
 }

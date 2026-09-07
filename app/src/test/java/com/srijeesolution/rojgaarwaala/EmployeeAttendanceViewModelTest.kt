@@ -5,6 +5,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsData
 import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListData
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardData
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsData
@@ -12,12 +14,17 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsRespons
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeToday
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsData
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryData
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchAttendance
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchData
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TermsAcceptanceState
 import com.srijeesolution.rojgaarwaala.domain.repository.EmployeeAttendanceRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
@@ -116,6 +123,17 @@ class EmployeeAttendanceViewModelTest {
             acceptTermsCallCount++
             return flowOf(acceptTermsResult)
         }
+
+        override fun getTeam(): Flow<ApiResult<TeamResponse>> = flowOf(ApiResult.Success(TeamResponse(status = true)))
+
+        override fun bulkPunchIn(request: BulkPunchRequest): Flow<ApiResult<BulkPunchResponse>> =
+            flowOf(ApiResult.Success(BulkPunchResponse(status = true)))
+
+        override fun submitOtRequest(body: OtRequestBody): Flow<ApiResult<OtRequestResponse>> =
+            flowOf(ApiResult.Success(OtRequestResponse(status = true)))
+
+        override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> =
+            flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
     }
 
     private lateinit var repository: FakeRepository

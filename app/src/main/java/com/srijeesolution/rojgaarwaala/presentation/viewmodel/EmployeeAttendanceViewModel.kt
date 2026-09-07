@@ -6,12 +6,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.srijeesolution.rojgaarwaala.data.remote.model.AcceptTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceListResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
 import com.srijeesolution.rojgaarwaala.domain.repository.EmployeeAttendanceRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +54,18 @@ class EmployeeAttendanceViewModel @Inject constructor(
 
     private val _acceptTermsLiveData = MutableLiveData<ApiResult<AcceptTermsResponse>>()
     val acceptTermsLiveData: LiveData<ApiResult<AcceptTermsResponse>> = _acceptTermsLiveData
+
+    private val _teamLiveData = MutableLiveData<ApiResult<TeamResponse>>()
+    val teamLiveData: LiveData<ApiResult<TeamResponse>> = _teamLiveData
+
+    private val _bulkPunchLiveData = MutableLiveData<ApiResult<BulkPunchResponse>>()
+    val bulkPunchLiveData: LiveData<ApiResult<BulkPunchResponse>> = _bulkPunchLiveData
+
+    private val _otRequestLiveData = MutableLiveData<ApiResult<OtRequestResponse>>()
+    val otRequestLiveData: LiveData<ApiResult<OtRequestResponse>> = _otRequestLiveData
+
+    private val _missedPunchLiveData = MutableLiveData<ApiResult<MissedPunchResponse>>()
+    val missedPunchLiveData: LiveData<ApiResult<MissedPunchResponse>> = _missedPunchLiveData
 
     fun loadDashboard() {
         _dashboardLiveData.value = ApiResult.Loading()
@@ -115,6 +134,38 @@ class EmployeeAttendanceViewModel @Inject constructor(
             employeeAttendanceRepository.acceptFactoryTerms().collectLatest {
                 _acceptTermsLiveData.postValue(it)
             }
+        }
+    }
+
+    fun loadTeam() {
+        _teamLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.getTeam().collectLatest { _teamLiveData.postValue(it) }
+        }
+    }
+
+    fun bulkPunchIn(employeeIds: List<Int>, latitude: Double, longitude: Double, accuracy: Double) {
+        _bulkPunchLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.bulkPunchIn(
+                BulkPunchRequest(employeeIds, latitude, longitude, accuracy),
+            ).collectLatest { _bulkPunchLiveData.postValue(it) }
+        }
+    }
+
+    fun submitOtRequest(hours: Int, reason: String) {
+        _otRequestLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.submitOtRequest(OtRequestBody(hours, reason))
+                .collectLatest { _otRequestLiveData.postValue(it) }
+        }
+    }
+
+    fun submitMissedPunch(punchType: String, reason: String) {
+        _missedPunchLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.submitMissedPunch(MissedPunchBody(punchType, reason))
+                .collectLatest { _missedPunchLiveData.postValue(it) }
         }
     }
 }

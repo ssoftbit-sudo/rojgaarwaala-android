@@ -29,6 +29,7 @@ data class EmployeeProfile(
     @SerializedName("employee_code") val employeeCode: String? = null,
     @SerializedName("joining_date") val joiningDate: String? = null,
     @SerializedName("is_active") val isActive: Boolean? = false,
+    @SerializedName("can_bulk_attendance") val canBulkAttendance: Boolean? = false,
 )
 
 data class EmployeeFactory(
@@ -40,6 +41,8 @@ data class EmployeeFactory(
     @SerializedName("longitude") val longitude: Double? = null,
     @SerializedName("geofence_radius") val geofenceRadius: Int? = null,
     @SerializedName("gps_accuracy_threshold") val gpsAccuracyThreshold: Int? = null,
+    @SerializedName("duty_start") val dutyStart: String? = null,
+    @SerializedName("duty_end") val dutyEnd: String? = null,
 )
 
 data class EmployeeToday(
@@ -56,6 +59,8 @@ data class EmployeeToday(
     @SerializedName("can_punch_in") val canPunchIn: Boolean? = false,
     @SerializedName("can_punch_out") val canPunchOut: Boolean? = false,
     @SerializedName("earned_wage") val earnedWage: Double? = null,
+    @SerializedName("can_request_ot") val canRequestOt: Boolean? = false,
+    @SerializedName("can_request_missed_punch") val canRequestMissedPunch: Boolean? = false,
 )
 
 data class EmployeeMonthSummary(
@@ -238,4 +243,113 @@ data class FactoryTermItem(
     @SerializedName("id") val id: Int? = null,
     @SerializedName("title") val title: String? = null,
     @SerializedName("description") val description: String? = null,
+)
+
+data class TeamResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: TeamData? = null,
+)
+
+data class TeamData(
+    @SerializedName("factory_id") val factoryId: Int? = null,
+    @SerializedName("factory_name") val factoryName: String? = null,
+    @SerializedName("can_bulk_attendance") val canBulkAttendance: Boolean? = false,
+    @SerializedName("teamList") val teamList: List<TeamMember>? = emptyList(),
+)
+
+data class TeamMember(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("employee_code") val employeeCode: String? = null,
+    @SerializedName("attendance_marked") val attendanceMarked: Boolean? = false,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("status_label") val statusLabel: String? = null,
+    @SerializedName("punch_in_at") val punchInAt: String? = null,
+)
+
+data class BulkPunchRequest(
+    @SerializedName("employee_ids") val employeeIds: List<Int>,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("accuracy") val accuracy: Double,
+)
+
+data class BulkPunchResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: BulkPunchData? = null,
+)
+
+data class BulkPunchData(
+    @SerializedName("punched") val punched: List<BulkPunchItem>? = emptyList(),
+    @SerializedName("skipped") val skipped: List<BulkPunchSkipped>? = emptyList(),
+)
+
+data class BulkPunchItem(
+    @SerializedName("employee_id") val employeeId: Int? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("employee_code") val employeeCode: String? = null,
+    @SerializedName("attendance_id") val attendanceId: Int? = null,
+)
+
+data class BulkPunchSkipped(
+    @SerializedName("employee_id") val employeeId: Int? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("reason") val reason: String? = null,
+)
+
+data class OtRequestBody(
+    @SerializedName("hours") val hours: Int,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("work_date") val workDate: String? = null,
+)
+
+data class OtRequestResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: OtRequestData? = null,
+)
+
+data class OtRequestData(
+    @SerializedName("ot_request") val otRequest: OtRequestItem? = null,
+    @SerializedName("otRequestList") val otRequestList: List<OtRequestItem>? = emptyList(),
+)
+
+data class OtRequestItem(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("work_date") val workDate: String? = null,
+    @SerializedName("hours") val hours: Int? = null,
+    @SerializedName("reason") val reason: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("approved_amount") val approvedAmount: Double? = null,
+    @SerializedName("review_note") val reviewNote: String? = null,
+)
+
+data class MissedPunchBody(
+    @SerializedName("punch_type") val punchType: String,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("work_date") val workDate: String? = null,
+    @SerializedName("requested_at") val requestedAt: String? = null,
+)
+
+data class MissedPunchResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: MissedPunchData? = null,
+)
+
+data class MissedPunchData(
+    @SerializedName("missed_punch") val missedPunch: MissedPunchItem? = null,
+    @SerializedName("missedPunchList") val missedPunchList: List<MissedPunchItem>? = emptyList(),
+)
+
+data class MissedPunchItem(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("work_date") val workDate: String? = null,
+    @SerializedName("punch_type") val punchType: String? = null,
+    @SerializedName("requested_at") val requestedAt: String? = null,
+    @SerializedName("reason") val reason: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("review_note") val reviewNote: String? = null,
 )

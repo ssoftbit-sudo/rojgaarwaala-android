@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -29,7 +30,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.recyclerview.widget.GridLayoutManager
+import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
+import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
@@ -42,6 +44,7 @@ import android.util.Log
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
     private lateinit var homePageViewModel: HomePageViewModel
+    private lateinit var attendanceViewModel: EmployeeAttendanceViewModel
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private var bannerHandler: Handler? = null
@@ -70,6 +73,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
+        attendanceViewModel = ViewModelProvider(this)[EmployeeAttendanceViewModel::class.java]
         mainToolbarViewModel = ViewModelProvider(requireActivity())[MainToolbarViewModel::class.java]
 
         topVideosAdapter = TopVideosAdapter(onViewMoreClick = { openTopVideosList() })
@@ -79,6 +83,12 @@ class HomeFragment : Fragment() {
         setupViewAllClickListeners()
         
         observeHomePageData()
+        attendanceViewModel.dashboardLiveData.observe(viewLifecycleOwner) { result ->
+            val factory = (result as? ApiResult.Success)?.data?.data?.today?.factory
+            if (factory != null) {
+                FactoryGeofenceMonitor.register(requireContext(), factory)
+            }
+        }
         callApi()
     }
 
@@ -116,8 +126,20 @@ class HomeFragment : Fragment() {
 
     private fun setupViewAllClickListeners() {
         binding.topVideosViewAll.setOnClickListener { openTopVideosList() }
-        binding.employeeAttendanceCard.setOnClickListener {
+        binding.employeeAttendanceHeader.setOnClickListener {
             startActivity(Intent(requireContext(), AttendanceDashboardActivity::class.java))
+        }
+        binding.homePunchInButton.setOnClickListener {
+            startActivity(
+                Intent(requireContext(), AttendanceDashboardActivity::class.java)
+                    .putExtra(AttendanceDashboardActivity.EXTRA_PUNCH, AttendanceDashboardActivity.PUNCH_IN),
+            )
+        }
+        binding.homePunchOutButton.setOnClickListener {
+            startActivity(
+                Intent(requireContext(), AttendanceDashboardActivity::class.java)
+                    .putExtra(AttendanceDashboardActivity.EXTRA_PUNCH, AttendanceDashboardActivity.PUNCH_OUT),
+            )
         }
     }
 
@@ -356,6 +378,9 @@ class HomeFragment : Fragment() {
                     
                     val data = apiResponse.data?.dataObj
                     isEmployee = data?.userDetails?.isEmployee == true
+                    if (isEmployee) {
+                        attendanceViewModel.loadDashboard()
+                    }
                     bannerList = orderBanners(data?.bannerList ?: emptyList())
                     setupBannerSlider()
                     
