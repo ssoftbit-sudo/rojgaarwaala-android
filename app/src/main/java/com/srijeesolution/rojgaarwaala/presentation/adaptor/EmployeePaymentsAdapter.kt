@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentItem
 import com.srijeesolution.rojgaarwaala.databinding.ItemEmployeePaymentBinding
+import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
 
 class EmployeePaymentsAdapter(
@@ -23,9 +24,9 @@ class EmployeePaymentsAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: EmployeePaymentItem) {
-            binding.paymentTypeText.text = item.paymentTypeLabel
-                ?: item.paymentType?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
-                ?: "Payment"
+            binding.paymentTypeText.text = AttendanceHindi.paymentType(
+                item.paymentTypeLabel ?: item.paymentType,
+            )
             binding.paymentAmountText.text = WageFormatter.format(item.amount)
             val date = item.dateLabel?.takeIf { it.isNotBlank() }
                 ?: item.paymentDate?.takeIf { it.isNotBlank() }
@@ -41,7 +42,7 @@ class EmployeePaymentsAdapter(
                 item.paymentMethod?.takeIf { it.isNotBlank() }?.let { append(it) }
                 item.transactionReference?.takeIf { it.isNotBlank() }?.let {
                     if (isNotEmpty()) append("  •  ")
-                    append("Ref $it")
+                    append("रेफ $it")
                 }
             }
             binding.paymentMethodText.visibility =

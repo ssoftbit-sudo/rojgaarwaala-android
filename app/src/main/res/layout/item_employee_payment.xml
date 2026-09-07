@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Payment"
+            android:text="पेमेंट"
             android:textColor="@color/white"
             android:textSize="15sp"
             android:textStyle="bold" />
@@ -73,7 +73,7 @@
         android:paddingTop="9dp"
         android:paddingEnd="18dp"
         android:paddingBottom="9dp"
-        android:text="View Proof"
+        android:text="प्रूफ देखें"
         android:textColor="@color/accent"
         android:textSize="13sp"
         android:textStyle="bold"

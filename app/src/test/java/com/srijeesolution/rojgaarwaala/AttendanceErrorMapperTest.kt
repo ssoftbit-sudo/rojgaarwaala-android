@@ -22,7 +22,7 @@ class AttendanceErrorMapperTest {
     @Test
     fun `not an employee has its own copy when server sends nothing`() {
         assertEquals(
-            "You are not registered as an employee.",
+            "आप कर्मचारी नहीं हैं।",
             AttendanceErrorMapper.message(AttendanceErrorMapper.NOT_AN_EMPLOYEE, null),
         )
     }
@@ -41,11 +41,11 @@ class AttendanceErrorMapperTest {
     @Test
     fun `no active assignment always uses the fixed copy`() {
         assertEquals(
-            "You are not assigned to any factory today",
+            "आज आप किसी फैक्ट्री में नहीं लगे हैं",
             AttendanceErrorMapper.message(AttendanceErrorMapper.NO_ACTIVE_ASSIGNMENT, null),
         )
         assertEquals(
-            "You are not assigned to any factory today",
+            "आज आप किसी फैक्ट्री में नहीं लगे हैं",
             AttendanceErrorMapper.message(
                 AttendanceErrorMapper.NO_ACTIVE_ASSIGNMENT,
                 "No assignment found for 2025-08-14",
@@ -56,7 +56,7 @@ class AttendanceErrorMapperTest {
     @Test
     fun `already punched in always uses the fixed copy`() {
         assertEquals(
-            "Attendance already marked today",
+            "आज हाजिरी पहले ही लग चुकी है",
             AttendanceErrorMapper.message(
                 AttendanceErrorMapper.ALREADY_PUNCHED_IN,
                 "Punch in already recorded at 09:12 AM",
@@ -71,7 +71,7 @@ class AttendanceErrorMapperTest {
             AttendanceErrorMapper.message(AttendanceErrorMapper.NOT_PUNCHED_IN, "Punch in first."),
         )
         assertEquals(
-            "You have not punched in yet today.",
+            "आज अभी पंच इन नहीं लगा है।",
             AttendanceErrorMapper.message(AttendanceErrorMapper.NOT_PUNCHED_IN, null),
         )
     }
@@ -86,7 +86,7 @@ class AttendanceErrorMapperTest {
             ),
         )
         assertEquals(
-            "You have already punched out today.",
+            "आज पंच आउट पहले ही लग चुका है।",
             AttendanceErrorMapper.message(AttendanceErrorMapper.ALREADY_PUNCHED_OUT, null),
         )
     }
@@ -103,7 +103,7 @@ class AttendanceErrorMapperTest {
     @Test
     fun `outside geofence has a fallback when the server sends no message`() {
         assertEquals(
-            "You are outside the allowed factory area",
+            "आप फैक्ट्री की सीमा से बाहर हैं",
             AttendanceErrorMapper.message(AttendanceErrorMapper.OUTSIDE_GEOFENCE, null),
         )
     }
@@ -111,7 +111,7 @@ class AttendanceErrorMapperTest {
     @Test
     fun `poor accuracy ignores the server message and gives guidance`() {
         assertEquals(
-            "Unable to get accurate location. Move to an open area away from buildings and try again.",
+            "सही लोकेशन नहीं मिल रही। खुली जगह पर जाकर फिर कोशिश करें।",
             AttendanceErrorMapper.message(
                 AttendanceErrorMapper.POOR_ACCURACY,
                 "Accuracy 84 m exceeds threshold 50 m",
@@ -129,7 +129,7 @@ class AttendanceErrorMapperTest {
             ),
         )
         assertEquals(
-            "Factory location is not set. Please contact your supervisor.",
+            "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।",
             AttendanceErrorMapper.message(AttendanceErrorMapper.FACTORY_LOCATION_MISSING, null),
         )
     }
@@ -176,8 +176,8 @@ class AttendanceErrorMapperTest {
             "Please read and accept your factory terms and conditions before marking attendance.",
         )
 
-        assertTrue(message.contains("accept", ignoreCase = true))
-        assertTrue(message.contains("terms", ignoreCase = true))
+        assertTrue(message.contains("नियम"))
+        assertTrue(message.contains("मान"))
     }
 
     @Test

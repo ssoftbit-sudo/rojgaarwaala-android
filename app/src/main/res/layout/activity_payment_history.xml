@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="Payment History"
+                android:text="पेमेंट इतिहास"
                 android:textColor="@color/white"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -80,7 +80,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Advance"
+                            android:text="एडवांस"
                             android:textColor="@color/search_hint"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -103,7 +103,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Salary"
+                            android:text="सैलरी"
                             android:textColor="@color/search_hint"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -126,7 +126,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Bonus"
+                            android:text="बोनस"
                             android:textColor="@color/search_hint"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -149,7 +149,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Deduction"
+                            android:text="कटौती"
                             android:textColor="@color/search_hint"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -161,7 +161,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="32dp"
-                    android:text="No payments recorded yet."
+                    android:text="अभी कोई पेमेंट नहीं है।"
                     android:textColor="@color/search_hint"
                     android:textSize="15sp"
                     android:visibility="gone" />
@@ -196,7 +196,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Loading payments..."
+                    android:text="पेमेंट लोड हो रही है..."
                     android:textColor="@color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -216,7 +216,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Unable to load payments."
+                    android:text="पेमेंट लोड नहीं हो सकी।"
                     android:textColor="@color/gray_light_3"
                     android:textSize="15sp" />
 
@@ -232,7 +232,7 @@
                     android:paddingTop="12dp"
                     android:paddingEnd="28dp"
                     android:paddingBottom="12dp"
-                    android:text="Retry"
+                    android:text="फिर कोशिश करें"
                     android:textColor="@color/accent"
                     android:textSize="15sp"
                     android:textStyle="bold" />

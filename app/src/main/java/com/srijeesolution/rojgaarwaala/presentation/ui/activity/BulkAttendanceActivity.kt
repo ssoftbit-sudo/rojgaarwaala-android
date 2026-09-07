@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityBulkAttendanceBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
+import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import com.srijeesolution.rojgaarwaala.utils.LocationHelper
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -34,7 +35,7 @@ class BulkAttendanceActivity : AppCompatActivity() {
             when (result) {
                 is ApiResult.Loading -> binding.statusText.apply {
                     visibility = View.VISIBLE
-                    text = "Loading team..."
+                    text = "टीम लोड हो रही है..."
                 }
                 is ApiResult.Success -> {
                     binding.statusText.visibility = View.GONE
@@ -53,13 +54,13 @@ class BulkAttendanceActivity : AppCompatActivity() {
                 is ApiResult.Loading -> {
                     binding.submitButton.isEnabled = false
                     binding.statusText.visibility = View.VISIBLE
-                    binding.statusText.text = "Marking attendance..."
+                    binding.statusText.text = "हाजिरी लग रही है..."
                 }
                 is ApiResult.Success -> {
                     binding.submitButton.isEnabled = true
                     val punched = result.data?.data?.punched?.size ?: 0
                     val skipped = result.data?.data?.skipped?.size ?: 0
-                    Toast.makeText(this, "Marked $punched, skipped $skipped", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "लग गई $punched, छोड़ी $skipped", Toast.LENGTH_LONG).show()
                     viewModel.loadTeam()
                 }
                 is ApiResult.Error -> {
@@ -78,7 +79,7 @@ class BulkAttendanceActivity : AppCompatActivity() {
         checkBoxes.clear()
         members.forEach { member ->
             val box = CheckBox(this).apply {
-                text = "${member.employeeCode} — ${member.name} (${member.statusLabel ?: "Not Marked"})"
+                text = "${member.employeeCode} — ${member.name} (${AttendanceHindi.status(member.statusLabel)})"
                 setTextColor(0xFFFFFFFF.toInt())
                 isEnabled = member.attendanceMarked != true
                 isChecked = member.attendanceMarked != true
@@ -89,7 +90,7 @@ class BulkAttendanceActivity : AppCompatActivity() {
         }
         if (members.isEmpty()) {
             binding.statusText.visibility = View.VISIBLE
-            binding.statusText.text = "No workers assigned to your factory today."
+            binding.statusText.text = "आज आपकी फैक्ट्री में कोई वर्कर नहीं है।"
         }
     }
 
@@ -98,7 +99,7 @@ class BulkAttendanceActivity : AppCompatActivity() {
             if (box.isChecked && box.isEnabled) box.tag as? Int else null
         }
         if (ids.isEmpty()) {
-            Toast.makeText(this, "Select at least one worker", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "कम से कम एक वर्कर चुनें", Toast.LENGTH_SHORT).show()
             return
         }
         locationHelper.requestCurrentLocation { result ->

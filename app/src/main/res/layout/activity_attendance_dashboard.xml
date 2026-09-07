@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="My Attendance"
+                android:text="मेरी हाजिरी"
                 android:textColor="@color/white"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -48,7 +48,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="8dp"
-                android:text="Refresh"
+                android:text="रिफ्रेश"
                 android:textColor="@color/accent"
                 android:textSize="14sp" />
         </LinearLayout>
@@ -94,7 +94,7 @@
                             android:id="@+id/greetingText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Welcome"
+                            android:text="स्वागत है"
                             android:textColor="@color/gray_light_3"
                             android:textSize="13sp" />
 
@@ -140,7 +140,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Today"
+                            android:text="आज"
                             android:textColor="@color/white"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -154,7 +154,7 @@
                             android:paddingTop="5dp"
                             android:paddingEnd="12dp"
                             android:paddingBottom="5dp"
-                            android:text="Not Marked"
+                            android:text="हाजिरी नहीं लगी"
                             android:textColor="@color/accent"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -165,7 +165,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="No factory assigned"
+                        android:text="आज कोई फैक्ट्री नहीं मिली"
                         android:textColor="@color/gray_light_3"
                         android:textSize="14sp" />
 
@@ -192,7 +192,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Punch In"
+                                android:text="पंच इन"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
 
@@ -215,7 +215,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Punch Out"
+                                android:text="पंच आउट"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
 
@@ -238,7 +238,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Today's Earning"
+                                android:text="आज की कमाई"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
 
@@ -252,6 +252,16 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/punchElapsedText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/accent"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <!-- Live geofence: how far the employee is from the assigned factory -->
@@ -280,7 +290,7 @@
                             android:paddingTop="4dp"
                             android:paddingEnd="10dp"
                             android:paddingBottom="4dp"
-                            android:text="Locating..."
+                            android:text="लोकेशन ढूंढ रहे हैं..."
                             android:textColor="@color/white"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -337,7 +347,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="14dp"
                         android:layout_weight="1"
-                        android:text="Getting your location..."
+                        android:text="आपकी लोकेशन ले रहे हैं..."
                         android:textColor="@color/white"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -353,6 +363,16 @@
                     android:textSize="14sp"
                     android:visibility="gone" />
 
+                <TextView
+                    android:id="@+id/dutyHintText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="हाजिरी सुबह 9 बजे के आसपास लगाएं। समय की सीमा नहीं है।"
+                    android:textColor="@color/search_hint"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:id="@+id/punchInButton"
                     android:layout_width="match_parent"
@@ -364,23 +384,26 @@
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
                     android:orientation="horizontal"
+                    android:paddingStart="16dp"
                     android:paddingTop="18dp"
+                    android:paddingEnd="16dp"
                     android:paddingBottom="18dp"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="26dp"
                         android:layout_height="26dp"
-                        android:contentDescription="आ गए"
+                        android:contentDescription="क्या आप फैक्ट्री आ गए?"
                         android:src="@drawable/ic_punch_sun" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="आ गए"
+                        android:gravity="center"
+                        android:text="क्या आप फैक्ट्री आ गए?"
                         android:textColor="@color/white"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -395,23 +418,26 @@
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
                     android:orientation="horizontal"
+                    android:paddingStart="16dp"
                     android:paddingTop="18dp"
+                    android:paddingEnd="16dp"
                     android:paddingBottom="18dp"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="26dp"
                         android:layout_height="26dp"
-                        android:contentDescription="घर जा रहे"
+                        android:contentDescription="क्या आप घर जा रहे हैं?"
                         android:src="@drawable/ic_punch_moon" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="घर जा रहे"
+                        android:gravity="center"
+                        android:text="क्या आप घर जा रहे हैं?"
                         android:textColor="@color/white"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -424,7 +450,7 @@
                     android:gravity="center"
                     android:paddingTop="16dp"
                     android:paddingBottom="16dp"
-                    android:text="Attendance complete for today"
+                    android:text="आज की हाजिरी पूरी हो गई"
                     android:textColor="@color/color_green"
                     android:textSize="15sp"
                     android:textStyle="bold"
@@ -435,7 +461,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    android:text="This Month"
+                    android:text="इस महीने"
                     android:textColor="@color/white"
                     android:textSize="17sp"
                     android:textStyle="bold" />
@@ -479,7 +505,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Present"
+                                android:text="हाजिर"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -502,7 +528,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Absent"
+                                android:text="गैरहाजिर"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -525,7 +551,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Half Day"
+                                android:text="आधा दिन"
                                 android:textColor="@color/search_hint"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -547,7 +573,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Total Earned"
+                            android:text="कुल कमाई"
                             android:textColor="@color/gray_light_3"
                             android:textSize="14sp" />
 
@@ -571,7 +597,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Remaining Balance"
+                            android:text="बची हुई रकम"
                             android:textColor="@color/gray_light_3"
                             android:textSize="14sp" />
 
@@ -591,7 +617,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    android:text="More"
+                    android:text="और भी"
                     android:textColor="@color/white"
                     android:textSize="17sp"
                     android:textStyle="bold" />
@@ -668,7 +694,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Loading attendance..."
+            android:text="हाजिरी लोड हो रही है..."
             android:textColor="@color/white"
             android:textSize="16sp" />
     </LinearLayout>
@@ -688,7 +714,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Unable to load attendance."
+            android:text="हाजिरी लोड नहीं हो सकी।"
             android:textColor="@color/gray_light_3"
             android:textSize="15sp" />
 
@@ -704,7 +730,7 @@
             android:paddingTop="12dp"
             android:paddingEnd="28dp"
             android:paddingBottom="12dp"
-            android:text="Retry"
+            android:text="फिर कोशिश करें"
             android:textColor="@color/accent"
             android:textSize="15sp"
             android:textStyle="bold" />

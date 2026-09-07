@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="Monthly Wage"
+                android:text="महीने की मजदूरी"
                 android:textColor="@color/white"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -113,7 +113,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Total Earned"
+                            android:text="कुल कमाई"
                             android:textColor="@color/gray_light_3"
                             android:textSize="13sp" />
 
@@ -143,7 +143,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Advance Taken"
+                                android:text="एडवांस लिया"
                                 android:textColor="@color/gray_light_3"
                                 android:textSize="14sp" />
 
@@ -167,7 +167,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Salary Paid"
+                                android:text="सैलरी दी गई"
                                 android:textColor="@color/gray_light_3"
                                 android:textSize="14sp" />
 
@@ -191,7 +191,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Remaining Balance"
+                                android:text="बची हुई रकम"
                                 android:textColor="@color/gray_light_3"
                                 android:textSize="14sp" />
 
@@ -215,7 +215,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Cumulative Balance"
+                                android:text="कुल बैलेंस"
                                 android:textColor="@color/gray_light_3"
                                 android:textSize="14sp" />
 
@@ -234,7 +234,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="22dp"
-                        android:text="Factory Breakdown"
+                        android:text="फैक्ट्री के हिसाब से"
                         android:textColor="@color/white"
                         android:textSize="17sp"
                         android:textStyle="bold" />
@@ -245,7 +245,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:padding="28dp"
-                        android:text="No factory breakdown for this month."
+                        android:text="इस महीने फैक्ट्री का ब्योरा नहीं है।"
                         android:textColor="@color/search_hint"
                         android:textSize="14sp"
                         android:visibility="gone" />
@@ -278,7 +278,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Loading wage summary..."
+                    android:text="मजदूरी लोड हो रही है..."
                     android:textColor="@color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -298,7 +298,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Unable to load wage summary."
+                    android:text="मजदूरी लोड नहीं हो सकी।"
                     android:textColor="@color/gray_light_3"
                     android:textSize="15sp" />
 
@@ -314,7 +314,7 @@
                     android:paddingTop="12dp"
                     android:paddingEnd="28dp"
                     android:paddingBottom="12dp"
-                    android:text="Retry"
+                    android:text="फिर कोशिश करें"
                     android:textColor="@color/accent"
                     android:textSize="15sp"
                     android:textStyle="bold" />

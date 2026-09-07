@@ -116,8 +116,8 @@ object GeofenceEvaluator {
                 distanceMetres = null,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "No factory",
-                message = "You are not assigned to any factory today. Please contact your supervisor.",
+                label = "फैक्ट्री नहीं",
+                message = "आज आप किसी फैक्ट्री में नहीं लगे हैं। सुपरवाइज़र से बात करें।",
             )
         }
 
@@ -129,8 +129,8 @@ object GeofenceEvaluator {
                 distanceMetres = null,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "Location not set",
-                message = "Factory location is not set. Please contact your supervisor.",
+                label = "लोकेशन नहीं है",
+                message = "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।",
             )
         }
 
@@ -140,13 +140,13 @@ object GeofenceEvaluator {
                 distanceMetres = null,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "Locating...",
-                message = "Finding your location...",
+                label = "लोकेशन ढूंढ रहे हैं...",
+                message = "आपकी लोकेशन ढूंढ रहे हैं...",
             )
         }
 
         val distance = distanceInMetres(latitude, longitude, factoryLat, factoryLng)
-        val factoryName = factory.name?.takeIf { it.isNotBlank() } ?: "the factory"
+        val factoryName = factory.name?.takeIf { it.isNotBlank() } ?: "फैक्ट्री"
 
         if (distance > radius) {
             return Evaluation(
@@ -154,9 +154,9 @@ object GeofenceEvaluator {
                 distanceMetres = distance,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "Outside area",
-                message = "You are ${formatDistance(distance)} away from $factoryName. " +
-                    "Move within $radius meters of the factory to mark attendance.",
+                label = "बाहर हैं",
+                message = "आप $factoryName से ${formatDistance(distance)} दूर हैं। " +
+                    "हाजिरी लगाने के लिए फैक्ट्री के $radius meters के अंदर आएं।",
             )
         }
 
@@ -170,10 +170,10 @@ object GeofenceEvaluator {
                 distanceMetres = distance,
                 radiusMetres = radius,
                 accuracyThresholdMetres = threshold,
-                label = "Weak GPS",
-                message = "Your location is only accurate to within ${formatDistance(uncertainty)}, " +
-                    "which cannot confirm you are inside the $radius meter area. " +
-                    "Move to an open area, away from buildings, and wait a moment.",
+                label = "कमजोर GPS",
+                message = "आपकी लोकेशन ${formatDistance(uncertainty)} तक ही सही है, " +
+                    "इससे $radius meters के अंदर होना पक्का नहीं होता। " +
+                    "खुली जगह पर जाकर थोड़ा रुकें।",
             )
         }
 
@@ -182,9 +182,9 @@ object GeofenceEvaluator {
             distanceMetres = distance,
             radiusMetres = radius,
             accuracyThresholdMetres = threshold,
-            label = "Inside area",
-            message = "You are ${formatDistance(distance)} from $factoryName, " +
-                "inside the allowed $radius meter area. You can mark attendance.",
+                label = "अंदर हैं",
+                message = "आप $factoryName से ${formatDistance(distance)} पर हैं, " +
+                    "$radius meters के अंदर। हाजिरी लगा सकते हैं।",
         )
     }
 

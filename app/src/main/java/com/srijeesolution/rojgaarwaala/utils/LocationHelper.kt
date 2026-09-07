@@ -357,12 +357,12 @@ class LocationHelper(private val activity: ComponentActivity) {
         const val TRACKING_INTERVAL_MS = 3_000L
         const val TRACKING_FASTEST_INTERVAL_MS = 1_500L
 
-        const val MESSAGE_PERMISSION = "Location permission required"
+        const val MESSAGE_PERMISSION = "लोकेशन की अनुमति चाहिए"
         const val MESSAGE_PERMISSION_SETTINGS =
-            "Location permission required. Enable it from app settings to mark attendance."
-        const val MESSAGE_GPS = "Please enable GPS"
+            "लोकेशन की अनुमति चाहिए। हाजिरी लगाने के लिए सेटिंग में चालू करें।"
+        const val MESSAGE_GPS = "GPS चालू करें"
         const val MESSAGE_TIMEOUT =
-            "Unable to get accurate location. Move to an open area and try again."
-        const val MESSAGE_UNAVAILABLE = "Unable to get accurate location"
+            "सही लोकेशन नहीं मिल रही। खुली जगह पर जाकर फिर कोशिश करें।"
+        const val MESSAGE_UNAVAILABLE = "सही लोकेशन नहीं मिल रही"
     }
 }

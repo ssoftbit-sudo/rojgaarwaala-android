@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.AttendanceItem
 import com.srijeesolution.rojgaarwaala.databinding.ItemAttendanceDayBinding
+import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
 
 class AttendanceHistoryAdapter(
@@ -24,16 +25,16 @@ class AttendanceHistoryAdapter(
         fun bind(item: AttendanceItem) {
             binding.attendanceDateText.text = item.dateLabel ?: item.attendanceDate.orEmpty()
             binding.attendanceFactoryText.text = item.factoryName ?: "-"
-            binding.attendanceStatusText.text =
-                item.statusLabel ?: item.status?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
-                    ?: "-"
+            binding.attendanceStatusText.text = AttendanceHindi.status(
+                item.statusLabel ?: item.status,
+            )
             binding.attendanceEarnedText.text = WageFormatter.format(item.earnedWage)
 
             val timing = buildString {
-                item.punchInAt?.takeIf { it.isNotBlank() }?.let { append("In $it") }
+                item.punchInAt?.takeIf { it.isNotBlank() }?.let { append("पंच इन $it") }
                 item.punchOutAt?.takeIf { it.isNotBlank() }?.let {
                     if (isNotEmpty()) append("  •  ")
-                    append("Out $it")
+                    append("पंच आउट $it")
                 }
             }
             binding.attendanceTimingText.text = timing

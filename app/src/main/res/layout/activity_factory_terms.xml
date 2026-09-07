@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="Factory Terms"
+                android:text="फैक्ट्री के नियम"
                 android:textColor="@color/white"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="32dp"
-                    android:text="No terms have been added for your factory."
+                    android:text="आपकी फैक्ट्री के नियम अभी नहीं बने हैं।"
                     android:textColor="@color/search_hint"
                     android:textSize="15sp"
                     android:visibility="gone" />
@@ -116,7 +116,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:layout_weight="1"
-                            android:text="I have read and agree to these terms and conditions"
+                            android:text="मैंने ये नियम पढ़ लिए हैं और मानता हूँ"
                             android:textColor="@color/white"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -133,7 +133,7 @@
                         android:gravity="center"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
-                        android:text="AGREE AND CONTINUE"
+                        android:text="मान गया, आगे बढ़ें"
                         android:textColor="@color/white"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -167,7 +167,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Loading terms..."
+                    android:text="नियम लोड हो रहे हैं..."
                     android:textColor="@color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -187,7 +187,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Unable to load factory terms."
+                    android:text="नियम लोड नहीं हो सके।"
                     android:textColor="@color/gray_light_3"
                     android:textSize="15sp" />
 
@@ -203,7 +203,7 @@
                     android:paddingTop="12dp"
                     android:paddingEnd="28dp"
                     android:paddingBottom="12dp"
-                    android:text="Retry"
+                    android:text="फिर कोशिश करें"
                     android:textColor="@color/accent"
                     android:textSize="15sp"
                     android:textStyle="bold" />

@@ -86,7 +86,7 @@ class AttendanceErrorParserTest {
         )
 
         assertEquals(AttendanceErrorMapper.POOR_ACCURACY, result.errorCode)
-        assertTrue(result.message.contains("open area"))
+        assertTrue(result.message.contains("खुली जगह"))
     }
 
     @Test

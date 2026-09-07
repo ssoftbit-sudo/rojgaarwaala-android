@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,9 +35,12 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorMapper
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
+import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import com.srijeesolution.rojgaarwaala.utils.GeofenceEvaluator
 import com.srijeesolution.rojgaarwaala.utils.LocationHelper
+import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
+import com.srijeesolution.rojgaarwaala.utils.PunchOutOutcome
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -87,6 +92,16 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     private var pendingPunchAction: String? = null
     private var pendingPunchConsumed = false
 
+    private var punchInAtMillis: Long? = null
+    private var punchOutAtMillis: Long? = null
+    private val elapsedHandler = Handler(Looper.getMainLooper())
+    private val elapsedTick = object : Runnable {
+        override fun run() {
+            renderPunchElapsed()
+            elapsedHandler.postDelayed(this, 1000)
+        }
+    }
+
     private val backgroundLocationLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -125,7 +140,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.refreshButton.setOnClickListener { viewModel.loadDashboard() }
         binding.errorRetryButton.setOnClickListener { viewModel.loadDashboard() }
         binding.punchInButton.setOnClickListener { startPunchFlow(isPunchIn = true) }
-        binding.punchOutButton.setOnClickListener { startPunchFlow(isPunchIn = false) }
+        binding.punchOutButton.setOnClickListener { confirmPunchOut() }
 
         setupMap()
         observeDashboard()
@@ -143,14 +158,17 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             return
         }
         if (!punchInProgress) viewModel.loadDashboard()
+        startPunchElapsedTicker()
     }
 
     override fun onPause() {
+        stopPunchElapsedTicker()
         locationHelper.stopLocationUpdates()
         super.onPause()
     }
 
     override fun onDestroy() {
+        stopPunchElapsedTicker()
         locationHelper.cancel()
         super.onDestroy()
     }
@@ -218,32 +236,32 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupNavigationRows() {
-        binding.historyRow.navRowTitle.text = "Attendance History"
-        binding.historyRow.navRowSubtitle.text = "Day by day record for any month"
+        binding.historyRow.navRowTitle.text = "हाजिरी इतिहास"
+        binding.historyRow.navRowSubtitle.text = "किसी भी महीने की रोज़ की हाजिरी"
         binding.historyRow.root.setOnClickListener {
             startActivity(Intent(this, AttendanceHistoryActivity::class.java))
         }
 
-        binding.wageRow.navRowTitle.text = "Monthly Wage"
-        binding.wageRow.navRowSubtitle.text = "Earnings, advance and balance"
+        binding.wageRow.navRowTitle.text = "महीने की मजदूरी"
+        binding.wageRow.navRowSubtitle.text = "कमाई, एडवांस और बैलेंस"
         binding.wageRow.root.setOnClickListener {
             startActivity(Intent(this, MonthlyWageActivity::class.java))
         }
 
-        binding.paymentsRow.navRowTitle.text = "Payment History"
-        binding.paymentsRow.navRowSubtitle.text = "Advances, salary and bonus receipts"
+        binding.paymentsRow.navRowTitle.text = "पेमेंट इतिहास"
+        binding.paymentsRow.navRowSubtitle.text = "एडवांस, सैलरी और बोनस"
         binding.paymentsRow.root.setOnClickListener {
             startActivity(Intent(this, PaymentHistoryActivity::class.java))
         }
 
-        binding.termsRow.navRowTitle.text = "Factory Terms"
-        binding.termsRow.navRowSubtitle.text = "Rules and conditions of your factory"
+        binding.termsRow.navRowTitle.text = "फैक्ट्री के नियम"
+        binding.termsRow.navRowSubtitle.text = "आपकी फैक्ट्री के नियम"
         binding.termsRow.root.setOnClickListener {
             startActivity(Intent(this, FactoryTermsActivity::class.java))
         }
 
-        binding.otRow.navRowTitle.text = "Request OT"
-        binding.otRow.navRowSubtitle.text = "Overtime hours for supervisor approval"
+        binding.otRow.navRowTitle.text = "ओवरटाइम रिक्वेस्ट"
+        binding.otRow.navRowSubtitle.text = "ओवरटाइम के घंटे अप्रूव करवाएं"
         binding.otRow.root.setOnClickListener {
             startActivity(
                 Intent(this, AttendanceRequestActivity::class.java)
@@ -251,8 +269,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             )
         }
 
-        binding.missedPunchRow.navRowTitle.text = "Missed Punch"
-        binding.missedPunchRow.navRowSubtitle.text = "Forgot to punch? Send a request"
+        binding.missedPunchRow.navRowTitle.text = "मिस्ड पंच"
+        binding.missedPunchRow.navRowSubtitle.text = "पंच लगाना भूल गए? रिक्वेस्ट भेजें"
         binding.missedPunchRow.root.setOnClickListener {
             startActivity(
                 Intent(this, AttendanceRequestActivity::class.java)
@@ -260,8 +278,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             )
         }
 
-        binding.bulkAttendanceRow.navRowTitle.text = "Bulk Attendance"
-        binding.bulkAttendanceRow.navRowSubtitle.text = "Mark workers who do not have a phone"
+        binding.bulkAttendanceRow.navRowTitle.text = "कई लोगों की हाजिरी"
+        binding.bulkAttendanceRow.navRowSubtitle.text = "बिना फोन वाले वर्कर की हाजिरी लगाएं"
         binding.bulkAttendanceRow.root.setOnClickListener {
             startActivity(Intent(this, BulkAttendanceActivity::class.java))
         }
@@ -304,27 +322,30 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         val today = data?.today
         val summary = data?.monthSummary
 
-        binding.greetingText.text = data?.greeting ?: "Welcome"
+        binding.greetingText.text = AttendanceHindi.greeting(data?.greeting)
         binding.employeeNameText.text = employee?.name ?: "-"
         val code = employee?.employeeCode.orEmpty()
-        binding.employeeCodeText.text = if (code.isBlank()) "" else "Employee code: $code"
+        binding.employeeCodeText.text = if (code.isBlank()) "" else "कर्मचारी कोड: $code"
         binding.employeeCodeText.visibility = if (code.isBlank()) View.GONE else View.VISIBLE
 
-        binding.todayDateText.text = today?.dateLabel ?: today?.date ?: "Today"
+        binding.todayDateText.text = today?.dateLabel ?: today?.date ?: "आज"
         binding.todayStatusChip.text = when {
-            today?.attendanceMarked == true -> today.statusLabel ?: "Marked"
-            !today?.statusLabel.isNullOrBlank() -> today?.statusLabel.orEmpty()
-            else -> "Not Marked"
+            today?.attendanceMarked == true -> AttendanceHindi.status(today.statusLabel ?: "Marked")
+            !today?.statusLabel.isNullOrBlank() -> AttendanceHindi.status(today?.statusLabel)
+            else -> AttendanceHindi.status("Not Marked")
         }
 
-        binding.factoryNameText.text = today?.factory?.name ?: "No factory assigned today"
+        binding.factoryNameText.text = today?.factory?.name ?: "आज कोई फैक्ट्री नहीं मिली"
         val dailyWage = today?.dailyWage
         binding.dailyWageText.text =
-            if (dailyWage == null) "" else "Daily wage ${WageFormatter.format(dailyWage)}"
+            if (dailyWage == null) "" else "रोज़ की मजदूरी ${WageFormatter.format(dailyWage)}"
         binding.dailyWageText.visibility = if (dailyWage == null) View.GONE else View.VISIBLE
 
         binding.punchInTimeText.text = today?.punchInAt?.takeIf { it.isNotBlank() } ?: "--"
         binding.punchOutTimeText.text = today?.punchOutAt?.takeIf { it.isNotBlank() } ?: "--"
+        punchInAtMillis = PunchElapsedFormatter.parseClock(today?.date, today?.punchInAt)
+        punchOutAtMillis = PunchElapsedFormatter.parseClock(today?.date, today?.punchOutAt)
+        if (punchInAtMillis != null) startPunchElapsedTicker() else stopPunchElapsedTicker()
         binding.todayEarnedText.text = WageFormatter.format(today?.earnedWage)
 
         binding.monthLabelText.text = summary?.monthLabel ?: summary?.month.orEmpty()
@@ -352,7 +373,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             if (employee?.canBulkAttendance == true) View.VISIBLE else View.GONE
 
         if (employeeInactive) {
-            showPunchMessage("Your employee account is inactive.")
+            showPunchMessage("आपका अकाउंट बंद है।")
         } else if (today?.hasActiveAssignment == false) {
             showPunchMessage(AttendanceErrorMapper.message(AttendanceErrorMapper.NO_ACTIVE_ASSIGNMENT))
         } else {
@@ -386,7 +407,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             }
             PUNCH_OUT -> if (serverCanPunchOut) {
                 pendingPunchConsumed = true
-                startPunchFlow(isPunchIn = false)
+                confirmPunchOut()
             }
         }
     }
@@ -442,6 +463,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         if (employeeInactive || punchBlockedByError || punchInProgress) {
             binding.punchInButton.visibility = View.GONE
             binding.punchOutButton.visibility = View.GONE
+            binding.dutyHintText.visibility = View.GONE
             binding.dayCompleteText.visibility = View.GONE
             return
         }
@@ -456,6 +478,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         // geofence on both: an employee leaves by the gate they entered.
         applyPunchButtonState(binding.punchInButton, visible = serverCanPunchIn, enabled = enabled)
         applyPunchButtonState(binding.punchOutButton, visible = serverCanPunchOut, enabled = enabled)
+        binding.dutyHintText.visibility = if (serverCanPunchIn) View.VISIBLE else View.GONE
 
         binding.dayCompleteText.visibility =
             if (!serverCanPunchIn && !serverCanPunchOut && attendanceMarked) {
@@ -499,7 +522,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         map.addMarker(
             MarkerOptions()
                 .position(factoryPoint)
-                .title(factory.name ?: "Factory"),
+                .title(factory.name ?: "फैक्ट्री"),
         )
         map.addCircle(
             CircleOptions()
@@ -520,7 +543,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         map.addMarker(
             MarkerOptions()
                 .position(here)
-                .title("You")
+                .title("आप")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)),
         )
 
@@ -529,19 +552,57 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, MAP_BOUNDS_PADDING_PX))
     }
 
+    private fun confirmPunchOut() {
+        if (punchInProgress) return
+        val outcome = PunchOutOutcome.evaluate(
+            punchInAtMillis,
+            System.currentTimeMillis(),
+            todayFactory?.dutyEnd,
+        )
+        val title: String
+        val message: String
+        val confirm: String
+        when (outcome) {
+            PunchOutOutcome.Kind.HALF_DAY -> {
+                title = "आधा दिन की हाजिरी"
+                message = "शाम 6 बजे से पहले पंच आउट करने पर आधा दिन लगेगा। पक्का करें?"
+                confirm = "हाँ, आधा दिन"
+            }
+            PunchOutOutcome.Kind.ZERO_HOURS -> {
+                title = "0 घंटे की हाजिरी"
+                message = "अभी 4 घंटे पूरे नहीं हुए। शाम 6 बजे से पहले पंच आउट करने पर आधा दिन भी नहीं लगेगा, हाजिरी 0 घंटे रहेगी। पक्का करें?"
+                confirm = "हाँ, पंच आउट"
+            }
+            PunchOutOutcome.Kind.FULL_DAY -> {
+                title = "क्या आप घर जा रहे हैं?"
+                message = "पंच आउट लग जाएगा। पक्का करें?"
+                confirm = "हाँ, पंच आउट"
+            }
+        }
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(confirm) { dialog, _ ->
+                dialog.dismiss()
+                startPunchFlow(isPunchIn = false)
+            }
+            .setNegativeButton("रद्द करें", null)
+            .show()
+    }
+
     private fun startPunchFlow(isPunchIn: Boolean) {
         if (punchInProgress) return
         punchInProgress = true
         hidePunchMessage()
         binding.punchInButton.visibility = View.GONE
         binding.punchOutButton.visibility = View.GONE
-        showPunchProgress("Getting your location...")
+        showPunchProgress("आपकी लोकेशन ले रहे हैं...")
 
         locationHelper.requestCurrentLocation { result ->
             when (result) {
                 is LocationHelper.Result.Success -> {
                     showPunchProgress(
-                        if (isPunchIn) "Marking your attendance..." else "Recording punch out...",
+                        if (isPunchIn) "आपकी हाजिरी लग रही है..." else "पंच आउट लग रहा है...",
                     )
                     if (isPunchIn) {
                         viewModel.punchIn(result.latitude, result.longitude, result.accuracy)
@@ -560,16 +621,15 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         showPunchMessage(error.message)
         when (error.failure) {
             LocationHelper.Failure.PERMISSION_PERMANENTLY_DENIED -> showSettingsDialog(
-                title = "Location permission required",
-                message = "Attendance can only be marked with your location. " +
-                    "Enable the location permission for Rojgaarwaala in app settings.",
-                positiveLabel = "Open Settings",
+                title = "लोकेशन की अनुमति चाहिए",
+                message = "हाजिरी लगाने के लिए लोकेशन चाहिए। सेटिंग में Rojgaarwaala की लोकेशन चालू करें।",
+                positiveLabel = "सेटिंग खोलें",
                 onPositive = { locationHelper.openAppSettings() },
             )
             LocationHelper.Failure.GPS_DISABLED -> showSettingsDialog(
-                title = "Please enable GPS",
-                message = "Turn on location services to mark your attendance.",
-                positiveLabel = "Location Settings",
+                title = "GPS चालू करें",
+                message = "हाजिरी लगाने के लिए लोकेशन चालू करें।",
+                positiveLabel = "लोकेशन सेटिंग",
                 onPositive = { locationHelper.openLocationSettings() },
             )
             else -> Unit
@@ -591,16 +651,16 @@ class AttendanceDashboardActivity : AppCompatActivity() {
                 dialog.dismiss()
                 onPositive()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton("रद्द करें", null)
             .show()
     }
 
     private fun observePunchResults() {
         viewModel.punchInLiveData.observe(this) { result ->
-            handlePunchResult(result, "Punched in successfully")
+            handlePunchResult(result, "पंच इन लग गया")
         }
         viewModel.punchOutLiveData.observe(this) { result ->
-            handlePunchResult(result, "Punched out successfully")
+            handlePunchResult(result, "पंच आउट लग गया")
         }
     }
 
@@ -651,6 +711,38 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     private fun showPunchMessage(message: String) {
         binding.punchMessageText.text = message
         binding.punchMessageText.visibility = View.VISIBLE
+    }
+
+    private fun startPunchElapsedTicker() {
+        val punchIn = punchInAtMillis
+        if (punchIn == null) {
+            stopPunchElapsedTicker()
+            return
+        }
+        elapsedHandler.removeCallbacks(elapsedTick)
+        renderPunchElapsed()
+        if (punchOutAtMillis == null) {
+            elapsedHandler.postDelayed(elapsedTick, 1000)
+        }
+    }
+
+    private fun stopPunchElapsedTicker() {
+        elapsedHandler.removeCallbacks(elapsedTick)
+        if (punchInAtMillis == null) {
+            binding.punchElapsedText.visibility = View.GONE
+        }
+    }
+
+    private fun renderPunchElapsed() {
+        val punchIn = punchInAtMillis ?: run {
+            binding.punchElapsedText.visibility = View.GONE
+            return
+        }
+        binding.punchElapsedText.visibility = View.VISIBLE
+        binding.punchElapsedText.text = PunchElapsedFormatter.formatHindi(
+            PunchElapsedFormatter.elapsedMillis(punchIn, System.currentTimeMillis(), punchOutAtMillis),
+            running = punchOutAtMillis == null,
+        )
     }
 
     private fun hidePunchMessage() {

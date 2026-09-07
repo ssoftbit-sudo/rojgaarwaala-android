@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
             android:layout_weight="1"
-            android:text="Bulk Attendance"
+            android:text="कई लोगों की हाजिरी"
             android:textColor="@color/white"
             android:textSize="21sp"
             android:textStyle="bold" />
@@ -78,7 +78,7 @@
         android:gravity="center"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
-        android:text="आ गए — selected workers"
+        android:text="चुने हुए वर्कर की हाजिरी लगाएं"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold" />

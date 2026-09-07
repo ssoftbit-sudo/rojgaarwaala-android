@@ -293,7 +293,7 @@ class GeofenceEvaluatorTest {
             10.0,
         )
 
-        assertTrue(result.message.contains("the factory"))
+        assertTrue(result.message.contains("फैक्ट्री"))
     }
 
     private companion object {

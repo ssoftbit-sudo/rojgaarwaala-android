@@ -1,5 +1,8 @@
 package com.srijeesolution.rojgaarwaala
 
+import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiInterface
 import kotlinx.coroutines.runBlocking
@@ -616,6 +619,152 @@ class EmployeeAttendanceApiContractTest {
         assertEquals(2, data?.termsList?.size)
         assertEquals("Working Hours", data?.termsList?.first()?.title)
         assertEquals("Sunday", data?.termsList?.get(1)?.description)
+    }
+
+    @Test
+    fun `overtime request sends hours and reason`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Overtime request submitted.",
+              "data": {
+                "ot_request": {
+                  "id": 4,
+                  "work_date": "2026-09-07",
+                  "hours": 2,
+                  "reason": "Machine breakdown extra shift",
+                  "status": "pending",
+                  "approved_amount": null,
+                  "review_note": null
+                }
+              }
+            }
+            """.trimIndent(),
+            code = 201,
+        )
+
+        val response = api.submitOtRequest(
+            OtRequestBody(hours = 2, reason = "Machine breakdown extra shift"),
+        )
+        val recorded = server.takeRequest()
+        val body = JSONObject(recorded.body.readUtf8())
+
+        assertEquals("/api/employee/ot-requests", recorded.path)
+        assertEquals(2, body.getInt("hours"))
+        assertEquals("Machine breakdown extra shift", body.getString("reason"))
+        assertEquals("pending", response.body()?.data?.otRequest?.status)
+        assertEquals(2, response.body()?.data?.otRequest?.hours)
+    }
+
+    @Test
+    fun `team list maps factory workers for bulk attendance`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "factory_id": 3,
+                "factory_name": "ABC Steel",
+                "can_bulk_attendance": true,
+                "teamList": [
+                  {
+                    "id": 9,
+                    "name": "Suresh",
+                    "employee_code": "EMP0009",
+                    "attendance_marked": false,
+                    "status": null,
+                    "status_label": "Not Marked",
+                    "punch_in_at": null
+                  }
+                ]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getEmployeeTeam().body()?.data
+        assertEquals("/api/employee/team", server.takeRequest().path)
+        assertEquals(true, data?.canBulkAttendance)
+        assertEquals("ABC Steel", data?.factoryName)
+        assertEquals("Suresh", data?.teamList?.first()?.name)
+        assertEquals(false, data?.teamList?.first()?.attendanceMarked)
+    }
+
+    @Test
+    fun `bulk punch in sends the selected workers and coordinates`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Bulk attendance recorded.",
+              "data": {
+                "punched": [
+                  { "employee_id": 9, "name": "Suresh", "employee_code": "EMP0009", "attendance_id": 21 }
+                ],
+                "skipped": []
+              }
+            }
+            """.trimIndent(),
+            code = 201,
+        )
+
+        val response = api.employeeBulkPunchIn(
+            BulkPunchRequest(
+                employeeIds = listOf(9),
+                latitude = 21.2514,
+                longitude = 81.6296,
+                accuracy = 10.0,
+            ),
+        )
+        val recorded = server.takeRequest()
+        val body = JSONObject(recorded.body.readUtf8())
+
+        assertEquals("/api/employee/attendance/bulk-punch-in", recorded.path)
+        assertEquals(9, body.getJSONArray("employee_ids").getInt(0))
+        assertEquals(21.2514, body.getDouble("latitude"), 0.0)
+        assertEquals(9, response.body()?.data?.punched?.first()?.employeeId)
+    }
+
+    @Test
+    fun `missed punch request sends the chosen work date`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Missed punch request submitted.",
+              "data": {
+                "missed_punch": {
+                  "id": 11,
+                  "work_date": "2026-09-05",
+                  "punch_type": "punch_in",
+                  "requested_at": "09:00 AM",
+                  "reason": "Phone died",
+                  "status": "pending",
+                  "review_note": null
+                }
+              }
+            }
+            """.trimIndent(),
+            code = 201,
+        )
+
+        val response = api.submitMissedPunch(
+            MissedPunchBody(
+                punchType = "punch_in",
+                reason = "Phone died",
+                workDate = "2026-09-05",
+            ),
+        )
+        val recorded = server.takeRequest()
+        val body = JSONObject(recorded.body.readUtf8())
+
+        assertEquals("/api/employee/missed-punches", recorded.path)
+        assertEquals("punch_in", body.getString("punch_type"))
+        assertEquals("2026-09-05", body.getString("work_date"))
+        assertEquals("2026-09-05", response.body()?.data?.missedPunch?.workDate)
+        assertEquals("pending", response.body()?.data?.missedPunch?.status)
     }
 
     @Test

@@ -19,8 +19,8 @@ object AttendanceErrorMapper {
     const val POOR_ACCURACY = "poor_accuracy"
     const val FACTORY_LOCATION_MISSING = "factory_location_missing"
 
-    const val UNAUTHENTICATED_MESSAGE = "Your session has expired. Please login again."
-    const val GENERIC_MESSAGE = "Something went wrong. Please try again."
+    const val UNAUTHENTICATED_MESSAGE = "आपका सेशन खत्म हो गया है। फिर से लॉगिन करें।"
+    const val GENERIC_MESSAGE = "कुछ गड़बड़ हो गई। फिर कोशिश करें।"
 
     /**
      * @param serverMessage the `message` field of the envelope, used verbatim where the
@@ -29,19 +29,19 @@ object AttendanceErrorMapper {
     fun message(errorCode: String?, serverMessage: String? = null): String {
         val fallback = serverMessage?.takeIf { it.isNotBlank() }
         return when (errorCode) {
-            NOT_AN_EMPLOYEE -> fallback ?: "You are not registered as an employee."
-            EMPLOYEE_INACTIVE -> fallback ?: "Your employee account is inactive."
-            NO_ACTIVE_ASSIGNMENT -> "You are not assigned to any factory today"
+            NOT_AN_EMPLOYEE -> fallback ?: "आप कर्मचारी नहीं हैं।"
+            EMPLOYEE_INACTIVE -> fallback ?: "आपका अकाउंट बंद है।"
+            NO_ACTIVE_ASSIGNMENT -> "आज आप किसी फैक्ट्री में नहीं लगे हैं"
             TERMS_NOT_ACCEPTED ->
-                "Please read and accept your factory terms and conditions to mark attendance."
-            ALREADY_PUNCHED_IN -> "Attendance already marked today"
-            NOT_PUNCHED_IN -> fallback ?: "You have not punched in yet today."
-            ALREADY_PUNCHED_OUT -> fallback ?: "You have already punched out today."
-            OUTSIDE_GEOFENCE -> fallback ?: "You are outside the allowed factory area"
+                "हाजिरी लगाने से पहले फैक्ट्री के नियम पढ़कर मान लें।"
+            ALREADY_PUNCHED_IN -> "आज हाजिरी पहले ही लग चुकी है"
+            NOT_PUNCHED_IN -> fallback ?: "आज अभी पंच इन नहीं लगा है।"
+            ALREADY_PUNCHED_OUT -> fallback ?: "आज पंच आउट पहले ही लग चुका है।"
+            OUTSIDE_GEOFENCE -> fallback ?: "आप फैक्ट्री की सीमा से बाहर हैं"
             POOR_ACCURACY ->
-                "Unable to get accurate location. Move to an open area away from buildings and try again."
+                "सही लोकेशन नहीं मिल रही। खुली जगह पर जाकर फिर कोशिश करें।"
             FACTORY_LOCATION_MISSING ->
-                fallback ?: "Factory location is not set. Please contact your supervisor."
+                fallback ?: "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।"
             else -> fallback ?: GENERIC_MESSAGE
         }
     }

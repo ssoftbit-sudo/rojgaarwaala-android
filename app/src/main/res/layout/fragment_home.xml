@@ -89,7 +89,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="My Attendance"
+                            android:text="मेरी हाजिरी"
                             android:textColor="@color/white"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -98,7 +98,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Punch in, wages and payments"
+                            android:text="पंच इन, मजदूरी और पेमेंट"
                             android:textColor="@color/search_hint"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -111,71 +111,101 @@
                         app:tint="@color/accent" />
                 </LinearLayout>
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/homePunchHintText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="हाजिरी सुबह 9 बजे के आसपास लगाएं। समय की सीमा नहीं है।"
+                    android:textColor="@color/search_hint"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/homePunchElapsedText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
+                    android:background="@drawable/bg_attendance_status_chip"
+                    android:gravity="center"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/homePunchButtonsRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:id="@+id/homePunchInButton"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
                         android:background="@drawable/bg_punch_in_button"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:gravity="center"
                         android:orientation="horizontal"
+                        android:paddingStart="12dp"
                         android:paddingTop="14dp"
+                        android:paddingEnd="12dp"
                         android:paddingBottom="14dp">
 
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:contentDescription="आ गए"
+                            android:contentDescription="क्या आप फैक्ट्री आ गए?"
                             android:src="@drawable/ic_punch_sun" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="आ गए"
+                            android:gravity="center"
+                            android:text="क्या आप फैक्ट्री आ गए?"
                             android:textColor="@color/white"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/homePunchOutButton"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
+                        android:layout_marginTop="8dp"
                         android:background="@drawable/bg_punch_out_button"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:gravity="center"
                         android:orientation="horizontal"
+                        android:paddingStart="12dp"
                         android:paddingTop="14dp"
+                        android:paddingEnd="12dp"
                         android:paddingBottom="14dp">
 
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:contentDescription="घर जा रहे"
+                            android:contentDescription="क्या आप घर जा रहे हैं?"
                             android:src="@drawable/ic_punch_moon" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="घर जा रहे"
+                            android:gravity="center"
+                            android:text="क्या आप घर जा रहे हैं?"
                             android:textColor="@color/white"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>

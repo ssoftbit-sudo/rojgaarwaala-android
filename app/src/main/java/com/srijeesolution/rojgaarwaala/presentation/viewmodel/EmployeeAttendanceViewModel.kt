@@ -161,10 +161,12 @@ class EmployeeAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun submitMissedPunch(punchType: String, reason: String) {
+    fun submitMissedPunch(punchType: String, reason: String, workDate: String? = null) {
         _missedPunchLiveData.value = ApiResult.Loading()
         viewModelScope.launch {
-            employeeAttendanceRepository.submitMissedPunch(MissedPunchBody(punchType, reason))
+            employeeAttendanceRepository.submitMissedPunch(
+                MissedPunchBody(punchType = punchType, reason = reason, workDate = workDate),
+            )
                 .collectLatest { _missedPunchLiveData.postValue(it) }
         }
     }

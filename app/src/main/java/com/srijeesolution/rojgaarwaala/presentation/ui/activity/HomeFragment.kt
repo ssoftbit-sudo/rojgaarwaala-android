@@ -30,8 +30,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeToday
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
+import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
 import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
@@ -60,6 +62,15 @@ class HomeFragment : Fragment() {
     private var isEmployee = false
     private var topVideosHasMore = false
     private lateinit var topVideosAdapter: TopVideosAdapter
+    private var punchInAtMillis: Long? = null
+    private var punchOutAtMillis: Long? = null
+    private var elapsedHandler: Handler? = null
+    private val elapsedTick = object : Runnable {
+        override fun run() {
+            renderPunchElapsed()
+            elapsedHandler?.postDelayed(this, 1000)
+        }
+    }
 
     private lateinit var mainToolbarViewModel: MainToolbarViewModel
 
@@ -84,12 +95,25 @@ class HomeFragment : Fragment() {
         
         observeHomePageData()
         attendanceViewModel.dashboardLiveData.observe(viewLifecycleOwner) { result ->
-            val factory = (result as? ApiResult.Success)?.data?.data?.today?.factory
+            val today = (result as? ApiResult.Success)?.data?.data?.today
+            val factory = today?.factory
             if (factory != null) {
                 FactoryGeofenceMonitor.register(requireContext(), factory)
             }
+            bindHomeAttendance(today)
         }
         callApi()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isEmployee) attendanceViewModel.loadDashboard()
+        startPunchElapsedTicker()
+    }
+
+    override fun onPause() {
+        stopPunchElapsedTicker()
+        super.onPause()
     }
 
     private fun observeMainToolbarFilters() {
@@ -222,6 +246,11 @@ class HomeFragment : Fragment() {
         // Attendance entry point is only for linked employees, and is irrelevant while searching
         binding.employeeAttendanceCard.visibility =
             if (isEmployee && !isSearchMode) View.VISIBLE else View.GONE
+        if (binding.employeeAttendanceCard.visibility != View.VISIBLE) {
+            stopPunchElapsedTicker()
+        } else {
+            startPunchElapsedTicker()
+        }
 
         // Check if we have any results
         val hasResults = categories.isNotEmpty() || topVideos.isNotEmpty() || categoryVideos.isNotEmpty()
@@ -352,9 +381,63 @@ class HomeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        stopPunchElapsedTicker()
         bannerHandler?.removeCallbacksAndMessages(null)
         _binding = null
+        super.onDestroyView()
+    }
+
+    private fun bindHomeAttendance(today: EmployeeToday?) {
+        punchInAtMillis = PunchElapsedFormatter.parseClock(today?.date, today?.punchInAt)
+        punchOutAtMillis = PunchElapsedFormatter.parseClock(today?.date, today?.punchOutAt)
+
+        val showIn = today?.canPunchIn == true
+        val showOut = today?.canPunchOut == true
+        binding.homePunchInButton.visibility = if (showIn) View.VISIBLE else View.GONE
+        binding.homePunchOutButton.visibility = if (showOut) View.VISIBLE else View.GONE
+        binding.homePunchOutButton.apply {
+            val params = layoutParams as? android.widget.LinearLayout.LayoutParams
+            params?.topMargin = if (showIn && showOut) {
+                (8 * resources.displayMetrics.density).toInt()
+            } else {
+                0
+            }
+            layoutParams = params
+        }
+        binding.homePunchHintText.visibility = if (showIn) View.VISIBLE else View.GONE
+        binding.homePunchButtonsRow.visibility =
+            if (showIn || showOut) View.VISIBLE else View.GONE
+
+        if (punchInAtMillis != null) {
+            binding.homePunchElapsedText.visibility = View.VISIBLE
+            startPunchElapsedTicker()
+        } else {
+            stopPunchElapsedTicker()
+            binding.homePunchElapsedText.visibility = View.GONE
+        }
+    }
+
+    private fun startPunchElapsedTicker() {
+        if (_binding == null || punchInAtMillis == null) return
+        if (elapsedHandler == null) elapsedHandler = Handler(Looper.getMainLooper())
+        elapsedHandler?.removeCallbacks(elapsedTick)
+        renderPunchElapsed()
+        if (punchOutAtMillis == null) {
+            elapsedHandler?.postDelayed(elapsedTick, 1000)
+        }
+    }
+
+    private fun stopPunchElapsedTicker() {
+        elapsedHandler?.removeCallbacks(elapsedTick)
+    }
+
+    private fun renderPunchElapsed() {
+        val binding = _binding ?: return
+        val punchIn = punchInAtMillis ?: return
+        binding.homePunchElapsedText.text = PunchElapsedFormatter.formatHindi(
+            PunchElapsedFormatter.elapsedMillis(punchIn, System.currentTimeMillis(), punchOutAtMillis),
+            running = punchOutAtMillis == null,
+        )
     }
 
     private fun observeHomePageData() {
