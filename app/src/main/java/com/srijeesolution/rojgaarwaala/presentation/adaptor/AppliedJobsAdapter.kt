@@ -7,6 +7,7 @@ import android.view.View
 import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.databinding.ItemAppliedJobBinding
 import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
+import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 
 class AppliedJobsAdapter(
     private var applications: List<JobApplicationDto>,
@@ -24,7 +25,7 @@ class AppliedJobsAdapter(
 
         fun bind(application: JobApplicationDto, position: Int) {
             binding.appliedJobIndex.text = (position + 1).toString()
-            binding.appliedJobTitle.text = application.jobTitle ?: "Job Application"
+            binding.appliedJobTitle.text = JobTitleCopy.display(application.jobTitle)
             binding.appliedJobMeta.text = buildString {
                 application.categoryName?.takeIf { it.isNotBlank() }?.let { append(it) }
                 application.appliedAt?.takeIf { it.isNotBlank() }?.let {

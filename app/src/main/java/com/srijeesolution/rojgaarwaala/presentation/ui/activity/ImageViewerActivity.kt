@@ -19,6 +19,7 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
@@ -314,7 +315,9 @@ class ImageViewerActivity : AppCompatActivity(),
         startActivity(
             Intent(this, ApplyFormActivity::class.java).apply {
                 putExtra("scheduled_image_id", id)
-                putExtra("video_title", scheduledImage?.title ?: "Job Opportunity")
+                JobTitleCopy.forRequest(
+                    scheduledImage?.title ?: scheduledImage?.description
+                )?.let { title -> putExtra("video_title", title) }
             }
         )
     }

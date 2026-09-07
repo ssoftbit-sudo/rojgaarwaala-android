@@ -12,6 +12,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.JobApplicationDto
 import com.srijeesolution.rojgaarwaala.databinding.ActivityApplyFormBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.ApplyViewModel
 import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
+import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,9 +48,11 @@ class ApplyFormActivity : AppCompatActivity() {
 
     videoId = intent.getIntExtra("video_id", 0)
     scheduledImageId = intent.getIntExtra("scheduled_image_id", 0)
-    jobTitle = intent.getStringExtra("video_title") ?: intent.getStringExtra("job_title") ?: ""
+    jobTitle = JobTitleCopy.forRequest(
+      intent.getStringExtra("video_title") ?: intent.getStringExtra("job_title")
+    ).orEmpty()
 
-    binding.jobTitle.text = jobTitle.ifBlank { "Job Application" }
+    binding.jobTitle.text = JobTitleCopy.display(jobTitle)
 
     setupClickListeners()
     observeViewModel()
@@ -110,7 +113,7 @@ class ApplyFormActivity : AppCompatActivity() {
     viewModel.submitApplication(
       videoId = videoId.takeIf { it > 0 },
       scheduledImageId = scheduledImageId.takeIf { it > 0 },
-      jobTitle = jobTitle.takeIf { it.isNotBlank() },
+      jobTitle = JobTitleCopy.forRequest(jobTitle),
       name = name,
       phone = phone,
       email = email,
@@ -167,6 +170,7 @@ class ApplyFormActivity : AppCompatActivity() {
 
     binding.applyFormFields.visibility = View.GONE
     binding.alreadyAppliedPanel.visibility = View.VISIBLE
+    binding.jobTitle.text = JobTitleCopy.display(application.jobTitle ?: jobTitle)
     binding.alreadyAppliedTitle.text = ApplicationPaymentCopy.alreadyAppliedTitle()
     binding.alreadyAppliedPayment.text = ApplicationPaymentCopy.applyPaymentDetail(
       application.paymentStatus,

@@ -22,6 +22,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityVideoPlayerBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.EdgeToEdgeHelper
+import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -452,7 +453,9 @@ class VideoPlayerActivity : AppCompatActivity(),
         }
         val applyIntent = Intent(this, ApplyFormActivity::class.java)
         applyIntent.putExtra("video_id", videoId)
-        applyIntent.putExtra("video_title", currentVideoTitle ?: "Job Opportunity")
+        JobTitleCopy.forRequest(currentVideoTitle)?.let { title ->
+            applyIntent.putExtra("video_title", title)
+        }
         startActivity(applyIntent)
     }
 

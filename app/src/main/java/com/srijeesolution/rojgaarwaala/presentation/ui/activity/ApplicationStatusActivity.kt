@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityApplicationStatusBind
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ApplicationTimelineAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.StatusViewModel
 import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
+import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -67,7 +68,7 @@ class ApplicationStatusActivity : AppCompatActivity() {
         viewModel.applicationDetails.observe(this) { application ->
             if (application == null) return@observe
 
-            binding.jobTitleText.text = application.jobTitle ?: "Job Application"
+            binding.jobTitleText.text = JobTitleCopy.display(application.jobTitle)
             binding.categoryText.text = application.categoryName?.let { "Category - $it" }.orEmpty()
             binding.categoryText.visibility =
                 if (application.categoryName.isNullOrBlank()) View.GONE else View.VISIBLE
