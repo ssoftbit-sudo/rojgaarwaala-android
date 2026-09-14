@@ -20,6 +20,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryData
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchAttendance
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchData
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
@@ -133,6 +134,15 @@ class EmployeeAttendanceViewModelTest {
             flowOf(ApiResult.Success(OtRequestResponse(status = true)))
 
         override fun getOtRequests(): Flow<ApiResult<OtRequestResponse>> =
+            flowOf(ApiResult.Success(OtRequestResponse(status = true)))
+
+        override fun getOtReviews(): Flow<ApiResult<OtReviewResponse>> =
+            flowOf(ApiResult.Success(OtReviewResponse(status = true)))
+
+        override fun approveOtRequest(id: Int, note: String?): Flow<ApiResult<OtRequestResponse>> =
+            flowOf(ApiResult.Success(OtRequestResponse(status = true)))
+
+        override fun rejectOtRequest(id: Int, note: String?): Flow<ApiResult<OtRequestResponse>> =
             flowOf(ApiResult.Success(OtRequestResponse(status = true)))
 
         override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> =

@@ -666,6 +666,14 @@
                     android:visibility="gone" />
 
                 <include
+                    android:id="@+id/otReviewRow"
+                    layout="@layout/item_attendance_nav_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone" />
+
+                <include
                     android:id="@+id/termsRow"
                     layout="@layout/item_attendance_nav_row"
                     android:layout_width="match_parent"

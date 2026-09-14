@@ -13,6 +13,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityOtpBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -127,9 +128,14 @@ class OtpActivity : AppCompatActivity() {
                         }
                         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, true))
                         Toast.makeText(this, "Successfully logged in!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-                        finishAffinity()
+                        startActivities(
+                            arrayOf(
+                                Intent(this, MainActivity::class.java),
+                                Intent(this, ProfileActivity::class.java)
+                                    .putExtra(AuthNavigation.EXTRA_FROM_OTP, true),
+                            ),
+                        )
+                        finish()
                     } else {
                         Toast.makeText(
                             this,

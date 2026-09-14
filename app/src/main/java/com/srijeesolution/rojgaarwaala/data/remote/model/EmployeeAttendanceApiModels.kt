@@ -30,7 +30,10 @@ data class EmployeeProfile(
     @SerializedName("joining_date") val joiningDate: String? = null,
     @SerializedName("is_active") val isActive: Boolean? = false,
     @SerializedName("can_bulk_attendance") val canBulkAttendance: Boolean? = false,
-)
+    @SerializedName("can_review_ot") val canReviewOt: Boolean? = false,
+) {
+    fun isAuthorisedStaff(): Boolean = canBulkAttendance == true || canReviewOt == true
+}
 
 data class EmployeeFactory(
     @SerializedName("id") val id: Int? = null,
@@ -324,6 +327,30 @@ data class OtRequestItem(
     @SerializedName("status") val status: String? = null,
     @SerializedName("approved_amount") val approvedAmount: Double? = null,
     @SerializedName("review_note") val reviewNote: String? = null,
+    @SerializedName("employee_id") val employeeId: Int? = null,
+    @SerializedName("employee_name") val employeeName: String? = null,
+    @SerializedName("employee_code") val employeeCode: String? = null,
+    @SerializedName("factory_id") val factoryId: Int? = null,
+    @SerializedName("factory_name") val factoryName: String? = null,
+    @SerializedName("reviewed_at") val reviewedAt: String? = null,
+)
+
+data class OtReviewBody(
+    @SerializedName("review_note") val reviewNote: String? = null,
+)
+
+data class OtReviewResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: OtReviewData? = null,
+)
+
+data class OtReviewData(
+    @SerializedName("factory_id") val factoryId: Int? = null,
+    @SerializedName("factory_name") val factoryName: String? = null,
+    @SerializedName("can_review_ot") val canReviewOt: Boolean? = false,
+    @SerializedName("pendingList") val pendingList: List<OtRequestItem>? = emptyList(),
+    @SerializedName("historyList") val historyList: List<OtRequestItem>? = emptyList(),
 )
 
 data class MissedPunchBody(

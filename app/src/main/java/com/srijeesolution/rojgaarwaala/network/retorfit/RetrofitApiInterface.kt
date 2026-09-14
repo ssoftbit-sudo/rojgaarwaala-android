@@ -31,6 +31,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkConstants
 import retrofit2.Response
@@ -287,6 +289,21 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.EMPLOYEE_OT_REQUESTS)
     suspend fun getOtRequests(): Response<OtRequestResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_OT_REVIEWS)
+    suspend fun getOtReviews(): Response<OtReviewResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_OT_APPROVE)
+    suspend fun approveOtRequest(
+        @Path("id") id: Int,
+        @Body body: OtReviewBody,
+    ): Response<OtRequestResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_OT_REJECT)
+    suspend fun rejectOtRequest(
+        @Path("id") id: Int,
+        @Body body: OtReviewBody,
+    ): Response<OtRequestResponse>
 
     @POST(NetworkConstants.EMPLOYEE_MISSED_PUNCHES)
     suspend fun submitMissedPunch(@Body body: MissedPunchBody): Response<MissedPunchResponse>

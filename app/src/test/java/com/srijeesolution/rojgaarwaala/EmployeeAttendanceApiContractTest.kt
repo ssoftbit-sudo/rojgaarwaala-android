@@ -3,6 +3,7 @@ package com.srijeesolution.rojgaarwaala
 import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiInterface
 import kotlinx.coroutines.runBlocking
@@ -76,7 +77,8 @@ class EmployeeAttendanceApiContractTest {
                   "employee_code": "EMP0007",
                   "joining_date": "2026-01-15",
                   "is_active": true,
-                  "can_bulk_attendance": false
+                  "can_bulk_attendance": false,
+                  "can_review_ot": false
                 },
                 "greeting": "Good Morning",
                 "today": {
@@ -139,6 +141,7 @@ class EmployeeAttendanceApiContractTest {
         assertEquals(false, data.today?.canPunchIn)
         assertEquals(true, data.today?.canPunchOut)
         assertEquals(false, data.employee?.canBulkAttendance)
+        assertEquals(false, data.employee?.canReviewOt)
         assertEquals("09:00", data.today?.factory?.dutyStart)
         assertEquals("18:00", data.today?.factory?.dutyEnd)
         assertEquals(true, data.today?.canRequestOt)
@@ -656,6 +659,93 @@ class EmployeeAttendanceApiContractTest {
         assertEquals("2026-09-07", body.getString("work_date"))
         assertEquals("pending", response.body()?.data?.otRequest?.status)
         assertEquals(2, response.body()?.data?.otRequest?.hours)
+    }
+
+    @Test
+    fun `ot review queue maps pending and history for authorised staff`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "factory_id": 3,
+                "factory_name": "ABC Steel",
+                "can_review_ot": true,
+                "pendingList": [
+                  {
+                    "id": 11,
+                    "work_date": "2026-09-13",
+                    "hours": 2,
+                    "reason": "Night loading",
+                    "status": "pending",
+                    "approved_amount": null,
+                    "review_note": null,
+                    "employee_id": 9,
+                    "employee_name": "Suresh",
+                    "employee_code": "EMP0009",
+                    "factory_id": 3,
+                    "factory_name": "ABC Steel",
+                    "reviewed_at": null
+                  }
+                ],
+                "historyList": [
+                  {
+                    "id": 8,
+                    "work_date": "2026-09-05",
+                    "hours": 3,
+                    "reason": "Sunday loading",
+                    "status": "approved",
+                    "approved_amount": 150.0,
+                    "review_note": "Checked",
+                    "employee_id": 9,
+                    "employee_name": "Suresh",
+                    "employee_code": "EMP0009",
+                    "factory_id": 3,
+                    "factory_name": "ABC Steel",
+                    "reviewed_at": "2026-09-14T10:00:00+05:30"
+                  }
+                ]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getOtReviews().body()?.data
+        assertEquals("/api/employee/ot-reviews", server.takeRequest().path)
+        assertEquals(true, data?.canReviewOt)
+        assertEquals("Suresh", data?.pendingList?.first()?.employeeName)
+        assertEquals("approved", data?.historyList?.first()?.status)
+        assertEquals(150.0, data?.historyList?.first()?.approvedAmount!!, 0.0)
+    }
+
+    @Test
+    fun `ot approve posts to the request id`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Overtime request approved.",
+              "data": {
+                "ot_request": {
+                  "id": 11,
+                  "status": "approved",
+                  "employee_name": "Suresh",
+                  "approved_amount": 100.0
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val response = api.approveOtRequest(11, OtReviewBody(reviewNote = "Checked on the floor"))
+        val recorded = server.takeRequest()
+        val body = JSONObject(recorded.body.readUtf8())
+
+        assertEquals("/api/employee/ot-requests/11/approve", recorded.path)
+        assertEquals("Checked on the floor", body.getString("review_note"))
+        assertEquals("approved", response.body()?.data?.otRequest?.status)
+        assertEquals("Suresh", response.body()?.data?.otRequest?.employeeName)
     }
 
     @Test

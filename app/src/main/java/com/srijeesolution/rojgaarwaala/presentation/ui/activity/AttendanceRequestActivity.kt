@@ -15,6 +15,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
 import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
+import com.srijeesolution.rojgaarwaala.utils.OtStatusStyle
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 
@@ -131,6 +132,7 @@ class AttendanceRequestActivity : AppCompatActivity() {
         val row = ItemOtRequestBinding.inflate(layoutInflater, binding.otHistoryList, false)
         row.otDateText.text = item.workDate ?: "-"
         row.otStatusText.text = AttendanceHindi.status(item.status)
+        OtStatusStyle.apply(row.otStatusText, item.status)
         val hours = item.hours ?: 0
         val amount = item.approvedAmount
         row.otHoursText.text = buildString {

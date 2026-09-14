@@ -51,7 +51,7 @@ class MapPinActivity : AppCompatActivity() {
         binding.mapPinConfirmButton.setOnClickListener { confirmPin() }
 
         setupMap()
-        reverseGeocode(selectedLat, selectedLng)
+        centerOnCurrentLocation()
 
         if (!BuildConfig.HAS_MAPS_KEY) {
             Toast.makeText(this, getString(R.string.map_pin_unavailable), Toast.LENGTH_LONG).show()
@@ -121,6 +121,10 @@ class MapPinActivity : AppCompatActivity() {
     }
 
     private fun moveToCurrentLocation() {
+        centerOnCurrentLocation()
+    }
+
+    private fun centerOnCurrentLocation() {
         if (locating) return
         locating = true
         binding.mapPinProgress.visibility = View.VISIBLE
@@ -135,6 +139,8 @@ class MapPinActivity : AppCompatActivity() {
                 }
                 is LocationHelper.Result.Error -> {
                     Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+                    movePin(LatLng(selectedLat, selectedLng), animate = false)
+                    reverseGeocode(selectedLat, selectedLng)
                 }
             }
         }

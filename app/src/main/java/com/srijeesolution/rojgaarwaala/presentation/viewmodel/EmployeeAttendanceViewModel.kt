@@ -16,6 +16,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
@@ -69,6 +70,12 @@ class EmployeeAttendanceViewModel @Inject constructor(
 
     private val _missedPunchLiveData = MutableLiveData<ApiResult<MissedPunchResponse>>()
     val missedPunchLiveData: LiveData<ApiResult<MissedPunchResponse>> = _missedPunchLiveData
+
+    private val _otReviewsLiveData = MutableLiveData<ApiResult<OtReviewResponse>>()
+    val otReviewsLiveData: LiveData<ApiResult<OtReviewResponse>> = _otReviewsLiveData
+
+    private val _otReviewActionLiveData = MutableLiveData<ApiResult<OtRequestResponse>>()
+    val otReviewActionLiveData: LiveData<ApiResult<OtRequestResponse>> = _otReviewActionLiveData
 
     fun loadDashboard() {
         _dashboardLiveData.value = ApiResult.Loading()
@@ -169,6 +176,33 @@ class EmployeeAttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             employeeAttendanceRepository.getOtRequests().collectLatest {
                 _otListLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun loadOtReviews() {
+        _otReviewsLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.getOtReviews().collectLatest {
+                _otReviewsLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun approveOtRequest(id: Int, note: String? = null) {
+        _otReviewActionLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.approveOtRequest(id, note).collectLatest {
+                _otReviewActionLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun rejectOtRequest(id: Int, note: String? = null) {
+        _otReviewActionLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.rejectOtRequest(id, note).collectLatest {
+                _otReviewActionLiveData.postValue(it)
             }
         }
     }

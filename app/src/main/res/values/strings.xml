@@ -62,6 +62,7 @@
     <string name="profile_resume">रिज्यूमे</string>
     <string name="profile_resume_choose">चुनें</string>
     <string name="profile_save">प्रोफ़ाइल सेव करें</string>
+    <string name="profile_confirm">कन्फर्म करें</string>
     <string name="profile_saving">सेव हो रहा है...</string>
     <string name="profile_logout">लॉग आउट</string>
     <string name="profile_name_required">नाम ज़रूरी है</string>
@@ -82,7 +83,7 @@
     <string name="map_pin_title">पता सेट करें</string>
     <string name="map_pin_back">वापस</string>
     <string name="map_pin_my_location">मेरी लोकेशन</string>
-    <string name="map_pin_hint">पिन को खींचकर अपना सही पता चुनें। मैप पर टैप करके भी पिन हटा सकते हैं।</string>
+    <string name="map_pin_hint">मैप आपकी मौजूदा लोकेशन पर खुलेगा। पिन खींचकर सही जगह रखें, फिर सेव करें।</string>
     <string name="map_pin_address_placeholder">पता ढूँढा जा रहा है...</string>
     <string name="map_pin_confirm">यह पता सेव करें</string>
     <string name="map_pin_unavailable">मैप अभी नहीं खुल रहा। मेरी लोकेशन से पता सेट करें।</string>

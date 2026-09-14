@@ -12,6 +12,8 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewBody
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
@@ -75,6 +77,22 @@ class EmployeeAttendanceRepositoryImpl @Inject constructor() :
 
     override fun getOtRequests(): Flow<ApiResult<OtRequestResponse>> = flow {
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).getOtRequests() })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getOtReviews(): Flow<ApiResult<OtReviewResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getOtReviews() })
+    }.flowOn(Dispatchers.IO)
+
+    override fun approveOtRequest(id: Int, note: String?): Flow<ApiResult<OtRequestResponse>> = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).approveOtRequest(id, OtReviewBody(note))
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun rejectOtRequest(id: Int, note: String?): Flow<ApiResult<OtRequestResponse>> = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).rejectOtRequest(id, OtReviewBody(note))
+        })
     }.flowOn(Dispatchers.IO)
 
     override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> = flow {

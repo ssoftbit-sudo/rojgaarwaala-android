@@ -212,6 +212,10 @@
             android:name=".presentation.ui.activity.BulkAttendanceActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.OtReviewActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
 
         <receiver
             android:name=".utils.FactoryArrivalReceiver"

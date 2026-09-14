@@ -18,6 +18,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityProfileBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
 import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
@@ -47,6 +48,9 @@ class ProfileActivity : AppCompatActivity() {
     private var selectedLat: Double? = null
     private var selectedLng: Double? = null
     private var selectedAddress: String = ""
+    private val fromOtp: Boolean
+        get() = intent.getBooleanExtra(AuthNavigation.EXTRA_FROM_OTP, false)
+    private var baselineFingerprint: String? = null
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -120,7 +124,14 @@ class ProfileActivity : AppCompatActivity() {
         observeCategoriesDropdown()
         fetchProfileData()
 
-        binding.updateProfileButton.setOnClickListener { validateAndUpdateProfile() }
+        binding.updateProfileButton.text = saveButtonIdleLabel()
+        binding.updateProfileButton.setOnClickListener {
+            if (fromOtp && !isProfileDirty()) {
+                finish()
+                return@setOnClickListener
+            }
+            validateAndUpdateProfile()
+        }
         binding.profileBackButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
         binding.logoutButton.setOnClickListener { logoutUser() }
     }
@@ -164,6 +175,34 @@ class ProfileActivity : AppCompatActivity() {
             binding.profileResumeFileName.text = getString(R.string.profile_resume_saved)
             binding.profileResumeFileName.visibility = View.VISIBLE
         }
+        baselineFingerprint = profileFingerprint()
+    }
+
+    private fun saveButtonIdleLabel(): String {
+        return getString(if (fromOtp) R.string.profile_confirm else R.string.profile_save)
+    }
+
+    private fun profileFingerprint(): String {
+        return listOf(
+            binding.firstNameEditText.text.toString().trim(),
+            binding.mobileEditText.text.toString().trim(),
+            binding.emailEditText.text.toString().trim(),
+            binding.pincodeEditText.text.toString().trim(),
+            binding.preferredJobCategoryEditText.text.toString().trim(),
+            binding.districtEditText.text?.toString()?.trim().orEmpty(),
+            binding.colonyEditText.text.toString().trim(),
+            cityValue.trim(),
+            stateValue.trim(),
+            selectedAddress.trim(),
+            selectedLat?.toString().orEmpty(),
+            selectedLng?.toString().orEmpty(),
+            resumeFile?.name.orEmpty(),
+        ).joinToString("\u0001")
+    }
+
+    private fun isProfileDirty(): Boolean {
+        val baseline = baselineFingerprint ?: return true
+        return profileFingerprint() != baseline
     }
 
     private fun showSavedAddress() {
@@ -199,7 +238,7 @@ class ProfileActivity : AppCompatActivity() {
                 is ApiResult.Success -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
-                    binding.updateProfileButton.text = getString(R.string.profile_save)
+                    binding.updateProfileButton.text = saveButtonIdleLabel()
                     val payload = apiResponse.data
                     if (payload?.status == true) {
                         if (isProfileUpdateCalled) {
@@ -210,6 +249,10 @@ class ProfileActivity : AppCompatActivity() {
                                 payload.message ?: getString(R.string.profile_updated),
                                 Toast.LENGTH_SHORT,
                             ).show()
+                            if (fromOtp) {
+                                finish()
+                                return@observe
+                            }
                         }
                         payload.dataObj?.userDetails?.let { populateProfile(it) }
                     } else {
@@ -223,7 +266,7 @@ class ProfileActivity : AppCompatActivity() {
                 is ApiResult.Error -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
-                    binding.updateProfileButton.text = getString(R.string.profile_save)
+                    binding.updateProfileButton.text = saveButtonIdleLabel()
                     val serverMsg = parseApiErrorMessage(apiResponse.message)
                     Toast.makeText(
                         this,

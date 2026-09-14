@@ -279,6 +279,12 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.bulkAttendanceRow.root.setOnClickListener {
             startActivity(Intent(this, BulkAttendanceActivity::class.java))
         }
+
+        binding.otReviewRow.navRowTitle.text = "OT अप्रूव / रिजेक्ट"
+        binding.otReviewRow.navRowSubtitle.text = "फैक्ट्री के ओवरटाइम को मंजूर या नामंजूर करें"
+        binding.otReviewRow.root.setOnClickListener {
+            startActivity(Intent(this, OtReviewActivity::class.java))
+        }
     }
 
     private fun observeDashboard() {
@@ -365,8 +371,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         attendanceMarked = today?.attendanceMarked == true
         dashboardLoaded = true
 
-        binding.bulkAttendanceRow.root.visibility =
-            if (employee?.canBulkAttendance == true) View.VISIBLE else View.GONE
+        val authorised = employee?.isAuthorisedStaff() == true
+        binding.bulkAttendanceRow.root.visibility = if (authorised) View.VISIBLE else View.GONE
+        binding.otReviewRow.root.visibility = if (authorised) View.VISIBLE else View.GONE
 
         if (employeeInactive) {
             showPunchMessage("आपका अकाउंट बंद है।")
