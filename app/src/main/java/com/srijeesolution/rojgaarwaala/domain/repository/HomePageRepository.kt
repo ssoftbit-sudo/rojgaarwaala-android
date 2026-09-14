@@ -35,6 +35,9 @@ interface HomePageRepository {
         colony: String,
         preferredJobCategory: String,
         resumePart: MultipartBody.Part?,
+        address: String? = null,
+        latitude: Double? = null,
+        longitude: Double? = null,
     ): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJob(data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun onSubmitJobWithFiles(

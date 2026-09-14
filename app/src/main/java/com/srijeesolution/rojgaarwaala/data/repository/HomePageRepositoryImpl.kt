@@ -86,6 +86,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         colony: String,
         preferredJobCategory: String,
         resumePart: MultipartBody.Part?,
+        address: String?,
+        latitude: Double?,
+        longitude: Double?,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         val text = "text/plain".toMediaTypeOrNull()
         return flow {
@@ -99,6 +102,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     pincode = pincode.toRequestBody(text),
                     district = district.toRequestBody(text),
                     colony = colony.toRequestBody(text),
+                    address = address?.toRequestBody(text),
+                    latitude = latitude?.toString()?.toRequestBody(text),
+                    longitude = longitude?.toString()?.toRequestBody(text),
                     preferredJobCategory = preferredJobCategory.toRequestBody(text),
                     resume = resumePart,
                 )

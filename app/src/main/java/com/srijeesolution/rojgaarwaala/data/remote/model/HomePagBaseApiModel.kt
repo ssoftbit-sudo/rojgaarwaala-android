@@ -128,6 +128,12 @@ data class UserData(
     val district: String? = null,
     @SerializedName("colony")
     val colony: String? = null,
+    @SerializedName("address")
+    val address: String? = null,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null,
     @SerializedName("preferred_job_category")
     val preferredJobCategory: String? = null,
     @SerializedName("resume_url")

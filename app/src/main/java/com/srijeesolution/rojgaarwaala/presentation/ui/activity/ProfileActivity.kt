@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.BuildConfig
+import com.srijeesolution.rojgaarwaala.R
+import com.srijeesolution.rojgaarwaala.data.remote.model.UserData
 import com.srijeesolution.rojgaarwaala.databinding.ActivityProfileBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -26,9 +28,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
-import org.json.JSONObject
 
 @AndroidEntryPoint
 class ProfileActivity : AppCompatActivity() {
@@ -40,6 +42,11 @@ class ProfileActivity : AppCompatActivity() {
     private var categoriesObserverRegistered = false
     private var resumeFile: File? = null
     private var existingResumeUrl: String? = null
+    private var cityValue: String = ""
+    private var stateValue: String = ""
+    private var selectedLat: Double? = null
+    private var selectedLng: Double? = null
+    private var selectedAddress: String = ""
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
@@ -56,6 +63,27 @@ class ProfileActivity : AppCompatActivity() {
                 updateColonySuggestions(district)
             }
         }
+    }
+
+    private val mapPinLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val data = result.data ?: return@registerForActivityResult
+        selectedLat = data.getDoubleExtra(MapPinActivity.EXTRA_LAT, MapPinActivity.DEFAULT_LAT)
+        selectedLng = data.getDoubleExtra(MapPinActivity.EXTRA_LNG, MapPinActivity.DEFAULT_LNG)
+        selectedAddress = data.getStringExtra(MapPinActivity.EXTRA_ADDRESS).orEmpty()
+        val city = data.getStringExtra(MapPinActivity.EXTRA_CITY).orEmpty()
+        val state = data.getStringExtra(MapPinActivity.EXTRA_STATE).orEmpty()
+        if (city.isNotBlank()) cityValue = city
+        if (state.isNotBlank()) stateValue = state
+        val colony = data.getStringExtra(MapPinActivity.EXTRA_COLONY).orEmpty()
+        if (colony.isNotBlank()) binding.colonyEditText.setText(colony)
+        val pincode = data.getStringExtra(MapPinActivity.EXTRA_PINCODE).orEmpty()
+        if (binding.pincodeEditText.text.toString().trim().isEmpty() && pincode.isNotBlank()) {
+            binding.pincodeEditText.setText(pincode)
+        }
+        showSavedAddress()
     }
 
     private val resumeLauncher = registerForActivityResult(
@@ -78,6 +106,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.districtEditText.setOnClickListener {
             districtLauncher.launch(Intent(this, LocationPickerActivity::class.java))
         }
+        binding.setMapAddressButton.setOnClickListener { openMapPin() }
         binding.uploadProfileResumeBtn.setOnClickListener {
             resumeLauncher.launch(arrayOf("image/*", "application/pdf"))
         }
@@ -96,6 +125,13 @@ class ProfileActivity : AppCompatActivity() {
         binding.logoutButton.setOnClickListener { logoutUser() }
     }
 
+    private fun openMapPin() {
+        val intent = Intent(this, MapPinActivity::class.java)
+        selectedLat?.let { intent.putExtra(MapPinActivity.EXTRA_LAT, it) }
+        selectedLng?.let { intent.putExtra(MapPinActivity.EXTRA_LNG, it) }
+        mapPinLauncher.launch(intent)
+    }
+
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         currentFocus?.let { view ->
@@ -108,25 +144,31 @@ class ProfileActivity : AppCompatActivity() {
         homePageViewModel.getProfileData()
     }
 
-    private fun bindProfileFields() {
-        // populated from observer
-    }
-
-    private fun populateProfile(userProfile: com.srijeesolution.rojgaarwaala.data.remote.model.UserData) {
+    private fun populateProfile(userProfile: UserData) {
         binding.firstNameEditText.setText(userProfile.name)
         binding.mobileEditText.setText(userProfile.mobile)
         binding.emailEditText.setText(userProfile.email)
-        binding.cityEditText.setText(userProfile.city)
-        binding.stateEditText.setText(userProfile.state)
+        cityValue = userProfile.city.orEmpty()
+        stateValue = userProfile.state.orEmpty()
+        selectedAddress = userProfile.address.orEmpty()
+        selectedLat = userProfile.latitude
+        selectedLng = userProfile.longitude
         binding.pincodeEditText.setText(userProfile.pincode)
         binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
         binding.districtEditText.text = userProfile.district.orEmpty()
         binding.colonyEditText.setText(userProfile.colony)
+        showSavedAddress()
         updateColonySuggestions(userProfile.district)
         existingResumeUrl = userProfile.resumeUrl
         if (!existingResumeUrl.isNullOrBlank()) {
-            binding.profileResumeFileName.text = "Saved resume on profile"
+            binding.profileResumeFileName.text = getString(R.string.profile_resume_saved)
             binding.profileResumeFileName.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showSavedAddress() {
+        binding.profileAddressText.text = selectedAddress.ifBlank {
+            getString(R.string.profile_address_placeholder)
         }
     }
 
@@ -140,7 +182,11 @@ class ProfileActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     showLoading(false)
-                    Toast.makeText(this, "Failed to load profile: ${apiResponse.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.profile_load_failed) + ": ${apiResponse.message}",
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
@@ -153,7 +199,7 @@ class ProfileActivity : AppCompatActivity() {
                 is ApiResult.Success -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
-                    binding.updateProfileButton.text = "Update Profile"
+                    binding.updateProfileButton.text = getString(R.string.profile_save)
                     val payload = apiResponse.data
                     if (payload?.status == true) {
                         if (isProfileUpdateCalled) {
@@ -161,28 +207,28 @@ class ProfileActivity : AppCompatActivity() {
                             resumeFile = null
                             Toast.makeText(
                                 this,
-                                payload.message ?: "Profile updated successfully!",
-                                Toast.LENGTH_SHORT
+                                payload.message ?: getString(R.string.profile_updated),
+                                Toast.LENGTH_SHORT,
                             ).show()
                         }
                         payload.dataObj?.userDetails?.let { populateProfile(it) }
                     } else {
                         Toast.makeText(
                             this,
-                            payload?.message ?: "Update failed",
-                            Toast.LENGTH_LONG
+                            payload?.message ?: getString(R.string.profile_update_failed),
+                            Toast.LENGTH_LONG,
                         ).show()
                     }
                 }
                 is ApiResult.Error -> {
                     showLoading(false)
                     binding.updateProfileButton.isEnabled = true
-                    binding.updateProfileButton.text = "Update Profile"
+                    binding.updateProfileButton.text = getString(R.string.profile_save)
                     val serverMsg = parseApiErrorMessage(apiResponse.message)
                     Toast.makeText(
                         this,
-                        serverMsg?.takeIf { it.isNotBlank() } ?: "Update failed",
-                        Toast.LENGTH_LONG
+                        serverMsg?.takeIf { it.isNotBlank() } ?: getString(R.string.profile_update_failed),
+                        Toast.LENGTH_LONG,
                     ).show()
                 }
             }
@@ -193,55 +239,64 @@ class ProfileActivity : AppCompatActivity() {
         val firstname = binding.firstNameEditText.text.toString().trim()
         val mobile = binding.mobileEditText.text.toString().trim()
         val email = binding.emailEditText.text.toString().trim()
-        val city = binding.cityEditText.text.toString().trim()
-        val state = binding.stateEditText.text.toString().trim()
         val pincode = binding.pincodeEditText.text.toString().trim()
         val preferredCategory = binding.preferredJobCategoryEditText.text.toString().trim()
         val district = binding.districtEditText.text?.toString()?.trim().orEmpty()
         val colony = binding.colonyEditText.text.toString().trim()
 
         if (firstname.isEmpty()) {
-            binding.firstNameEditText.error = "First name is required"
+            binding.firstNameEditText.error = getString(R.string.profile_name_required)
             return
         }
         if (mobile.length != 10) {
-            binding.mobileEditText.error = "Enter a valid 10-digit mobile number"
+            binding.mobileEditText.error = getString(R.string.profile_mobile_invalid)
             return
         }
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailEditText.error = "Enter a valid email"
+            binding.emailEditText.error = getString(R.string.profile_email_invalid)
             return
         }
         if (preferredCategory.isEmpty()) {
-            binding.preferredJobCategoryEditText.error = "Job category is required"
+            binding.preferredJobCategoryEditText.error = getString(R.string.profile_category_required)
             return
         }
         if (district.isEmpty()) {
-            Toast.makeText(this, "District is required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.profile_district_required), Toast.LENGTH_SHORT).show()
             return
         }
         if (resumeFile == null && existingResumeUrl.isNullOrBlank()) {
-            Toast.makeText(this, "Please upload resume (photo or PDF)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.profile_resume_required), Toast.LENGTH_SHORT).show()
             return
         }
 
         hideKeyboard()
         isProfileUpdateCalled = true
         binding.updateProfileButton.isEnabled = false
-        binding.updateProfileButton.text = "Updating..."
+        binding.updateProfileButton.text = getString(R.string.profile_saving)
         showLoading(true)
 
         val resumePart = resumeFile?.let { file ->
             MultipartBody.Part.createFormData(
                 "resume",
                 file.name,
-                file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull())
+                file.asRequestBody(mimeTypeForUpload(file).toMediaTypeOrNull()),
             )
         }
 
         homePageViewModel.updateProfileMultipart(
-            firstname, mobile, email, city, state, pincode,
-            district, colony, preferredCategory, resumePart
+            name = firstname,
+            mobile = mobile,
+            email = email,
+            city = cityValue,
+            state = stateValue,
+            pincode = pincode,
+            district = district,
+            colony = colony,
+            preferredJobCategory = preferredCategory,
+            resumePart = resumePart,
+            address = selectedAddress.takeIf { it.isNotBlank() },
+            latitude = selectedLat,
+            longitude = selectedLng,
         )
     }
 
@@ -263,12 +318,12 @@ class ProfileActivity : AppCompatActivity() {
                         .mapNotNull { it.title?.trim() }
                         .filter { it.isNotEmpty() }
                     if (titles.isEmpty()) {
-                        Toast.makeText(this, "No categories found", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.profile_no_categories), Toast.LENGTH_SHORT).show()
                         return@observe
                     }
                     if (categoryDialog?.isShowing == true) return@observe
                     categoryDialog = AlertDialog.Builder(this)
-                        .setTitle("Select Category")
+                        .setTitle(getString(R.string.profile_category_picker))
                         .setItems(titles.toTypedArray()) { _, which ->
                             binding.preferredJobCategoryEditText.setText(titles[which])
                             binding.preferredJobCategoryEditText.error = null
@@ -278,7 +333,7 @@ class ProfileActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     categoryPickerRequested = false
-                    Toast.makeText(this, "Failed to load categories", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.profile_categories_failed), Toast.LENGTH_SHORT).show()
                 }
                 is ApiResult.Loading -> Unit
             }
@@ -301,7 +356,7 @@ class ProfileActivity : AppCompatActivity() {
                 lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")
             val isPdf = mimeType == "application/pdf" || lower.endsWith(".pdf")
             if (!isImage && !isPdf) {
-                Toast.makeText(this, "Please choose JPG/PNG photo or PDF only", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.resume_format_hint), Toast.LENGTH_SHORT).show()
                 return
             }
             val fileName = if (isImage && !lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.endsWith(".png")) {
@@ -315,11 +370,11 @@ class ProfileActivity : AppCompatActivity() {
                 val file = File(cacheDir, fileName)
                 file.outputStream().use { output -> input.copyTo(output) }
                 resumeFile = file
-                binding.profileResumeFileName.text = "Selected: $fileName"
+                binding.profileResumeFileName.text = getString(R.string.profile_resume_selected, fileName)
                 binding.profileResumeFileName.visibility = View.VISIBLE
             }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Failed to read resume file", Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(R.string.profile_update_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -358,7 +413,7 @@ class ProfileActivity : AppCompatActivity() {
     private fun logoutUser() {
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS)
-        Toast.makeText(this, "Successfully logged out!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.profile_logged_out), Toast.LENGTH_SHORT).show()
         val intent = Intent(this, LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)

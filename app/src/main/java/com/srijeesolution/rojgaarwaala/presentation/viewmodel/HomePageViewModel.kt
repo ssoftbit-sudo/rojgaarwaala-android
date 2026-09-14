@@ -147,11 +147,15 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         colony: String,
         preferredJobCategory: String,
         resumePart: okhttp3.MultipartBody.Part?,
+        address: String? = null,
+        latitude: Double? = null,
+        longitude: Double? = null,
     ) {
         viewModelScope.launch {
             homePageRepository.updateProfileMultipart(
                 name, mobile, email, city, state, pincode,
-                district, colony, preferredJobCategory, resumePart
+                district, colony, preferredJobCategory, resumePart,
+                address, latitude, longitude,
             ).collectLatest {
                 _profileUpdateLiveData.postValue(it)
             }

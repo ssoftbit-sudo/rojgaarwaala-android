@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="Profile"
+                android:text="@string/profile_title"
                 android:textColor="@color/white"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -74,7 +74,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
-                        android:text="Update your details"
+                        android:text="@string/profile_heading"
                         android:textColor="@color/white"
                         android:textSize="28sp"
                         android:textStyle="bold" />
@@ -83,7 +83,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Keep your contact information ready so employers can reach you faster."
+                        android:text="@string/profile_heading_hint"
                         android:textColor="@color/gray_light_3"
                         android:textSize="15sp" />
                 </LinearLayout>
@@ -98,7 +98,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="First Name"
+                        android:text="@string/profile_name"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -109,7 +109,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your first name"
+                        android:hint="@string/profile_name_hint"
                         android:inputType="textPersonName"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
@@ -121,7 +121,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Mobile Number"
+                        android:text="@string/profile_mobile"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -132,7 +132,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your mobile number"
+                        android:hint="@string/profile_mobile_hint"
                         android:inputType="phone"
                         android:maxLength="10"
                         android:paddingStart="18dp"
@@ -145,7 +145,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Email Address"
+                        android:text="@string/profile_email"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -156,7 +156,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your email address"
+                        android:hint="@string/profile_email_hint"
                         android:inputType="textEmailAddress"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
@@ -168,53 +168,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="City"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/cityEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your city"
-                        android:inputType="textCapWords"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:textColor="@color/white"
-                        android:textColorHint="@color/search_hint"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="State"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/stateEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your state"
-                        android:inputType="textCapWords"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:textColor="@color/white"
-                        android:textColorHint="@color/search_hint"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Pincode"
+                        android:text="@string/profile_pincode"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -225,7 +179,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Enter your pincode"
+                        android:hint="@string/profile_pincode_hint"
                         android:inputType="number"
                         android:maxLength="6"
                         android:paddingStart="18dp"
@@ -238,7 +192,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Colony / Area (Optional)"
+                        android:text="@string/profile_colony"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -249,7 +203,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Type or choose colony / area (optional)"
+                        android:hint="@string/profile_colony_hint"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
                         android:textColor="@color/white"
@@ -287,7 +241,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="Preferred Job Category"
+                        android:text="@string/profile_preferred_job"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -298,7 +252,7 @@
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
-                        android:hint="Tap to choose job category"
+                        android:hint="@string/profile_preferred_job_hint"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
                         android:textColor="@color/white"
@@ -312,7 +266,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="District"
+                        android:text="@string/profile_district"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -324,7 +278,7 @@
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_theme_field"
                         android:gravity="center_vertical"
-                        android:hint="Tap to choose district"
+                        android:hint="@string/profile_district_hint"
                         android:paddingStart="18dp"
                         android:paddingEnd="18dp"
                         android:textColor="@color/white"
@@ -333,6 +287,43 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/profile_address"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/profileAddressText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_theme_field"
+                        android:minHeight="56dp"
+                        android:padding="14dp"
+                        android:text="@string/profile_address_placeholder"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/setMapAddressButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_theme_chip"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/profile_set_map_address"
+                        android:textColor="@color/accent"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -353,7 +344,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Resume"
+                                android:text="@string/profile_resume"
                                 android:textColor="@color/white"
                                 android:textSize="14sp" />
 
@@ -378,7 +369,7 @@
                             android:paddingTop="6dp"
                             android:paddingEnd="12dp"
                             android:paddingBottom="6dp"
-                            android:text="Choose"
+                            android:text="@string/profile_resume_choose"
                             android:textColor="@color/accent"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -419,7 +410,7 @@
                         android:paddingTop="10dp"
                         android:paddingEnd="16dp"
                         android:paddingBottom="10dp"
-                        android:text="Update Profile"
+                        android:text="@string/profile_save"
                         android:textAllCaps="false"
                         android:textColor="@color/accent"
                         android:textSize="16sp"
@@ -440,7 +431,7 @@
                         android:paddingTop="10dp"
                         android:paddingEnd="16dp"
                         android:paddingBottom="10dp"
-                        android:text="Logout"
+                        android:text="@string/profile_logout"
                         android:textColor="@color/accent"
                         android:textSize="15sp"
                         android:textStyle="bold" />

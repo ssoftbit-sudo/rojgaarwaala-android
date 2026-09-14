@@ -119,6 +119,10 @@
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
+            android:name=".presentation.ui.activity.MapPinActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash" />
+        <activity
             android:name=".presentation.ui.activity.HelpDeskActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>

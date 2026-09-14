@@ -85,6 +85,9 @@ interface RetrofitApiInterface {
         @Part("pincode") pincode: RequestBody,
         @Part("district") district: RequestBody,
         @Part("colony") colony: RequestBody,
+        @Part("address") address: RequestBody? = null,
+        @Part("latitude") latitude: RequestBody? = null,
+        @Part("longitude") longitude: RequestBody? = null,
         @Part("preferred_job_category") preferredJobCategory: RequestBody,
         @Part resume: MultipartBody.Part? = null,
     ): Response<HomePagBaseApiModel>
