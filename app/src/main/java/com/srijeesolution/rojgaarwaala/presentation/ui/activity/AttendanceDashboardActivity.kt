@@ -83,6 +83,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     private var serverCanPunchOut = false
     private var attendanceMarked = false
     private var dashboardLoaded = false
+    private var authorisedStaff = false
 
     private var lastFix: LocationHelper.Result.Success? = null
     private var locationPermissionAsked = false
@@ -204,6 +205,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     }
 
     private fun startLocationTracking() {
+        if (authorisedStaff) return
         // onResume runs again as soon as the permission dialog closes, so asking more than
         // once per visit would trap a refusing user in a loop of system prompts.
         if (!locationHelper.hasLocationPermission()) {
@@ -357,9 +359,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.monthTotalEarnedText.text = WageFormatter.format(summary?.totalEarned)
         binding.monthRemainingBalanceText.text = WageFormatter.format(summary?.remainingBalance)
 
-        // The gate comes first: an employee who has not agreed must not see, or act on, a
-        // screen they are not yet entitled to use.
-        if (data?.terms?.acceptanceRequired == true) {
+        // Labour must accept factory terms before they can punch. Authorised staff
+        // never punch themselves, so the terms gate must not hide bulk / OT review.
+        if (data?.terms?.acceptanceRequired == true && employee?.isAuthorisedStaff() != true) {
             openTermsGate()
             return
         }
@@ -372,15 +374,26 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         dashboardLoaded = true
 
         val authorised = employee?.isAuthorisedStaff() == true
+        authorisedStaff = authorised
         binding.bulkAttendanceRow.root.visibility = if (authorised) View.VISIBLE else View.GONE
         binding.otReviewRow.root.visibility = if (authorised) View.VISIBLE else View.GONE
+        binding.otRow.root.visibility = if (authorised) View.GONE else View.VISIBLE
+        binding.missedPunchRow.root.visibility = if (authorised) View.GONE else View.VISIBLE
 
         if (employeeInactive) {
             showPunchMessage("आपका अकाउंट बंद है।")
+        } else if (authorised) {
+            showPunchMessage("आप हाजिरी नहीं लगाते। अपनी फैक्ट्री के वर्कर की हाजिरी और OT अप्रूव करें।")
         } else if (today?.hasActiveAssignment == false) {
             showPunchMessage(AttendanceErrorMapper.message(AttendanceErrorMapper.NO_ACTIVE_ASSIGNMENT))
         } else {
             hidePunchMessage()
+        }
+
+        if (authorised) {
+            locationHelper.stopLocationUpdates()
+        } else {
+            startLocationTracking()
         }
 
         renderGeofence()
@@ -389,6 +402,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     }
 
     private fun registerArrivalGeofenceIfAllowed() {
+        if (authorisedStaff) return
         val hasBackground = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
             ContextCompat.checkSelfPermission(
                 this,

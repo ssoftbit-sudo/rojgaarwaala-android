@@ -18,6 +18,7 @@ object AttendanceErrorMapper {
     const val OUTSIDE_GEOFENCE = "outside_geofence"
     const val POOR_ACCURACY = "poor_accuracy"
     const val FACTORY_LOCATION_MISSING = "factory_location_missing"
+    const val STAFF_DOES_NOT_PUNCH = "staff_does_not_punch"
 
     const val UNAUTHENTICATED_MESSAGE = "आपका सेशन खत्म हो गया है। फिर से लॉगिन करें।"
     const val GENERIC_MESSAGE = "कुछ गड़बड़ हो गई। फिर कोशिश करें।"
@@ -42,13 +43,17 @@ object AttendanceErrorMapper {
                 "सही लोकेशन नहीं मिल रही। खुली जगह पर जाकर फिर कोशिश करें।"
             FACTORY_LOCATION_MISSING ->
                 fallback ?: "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।"
+            STAFF_DOES_NOT_PUNCH ->
+                "आप हाजिरी नहीं लगाते। वर्कर की हाजिरी और OT अप्रूव करें।"
             else -> fallback ?: GENERIC_MESSAGE
         }
     }
 
     /** Punch buttons stay hidden for these — retrying can never succeed for this user. */
     fun disablesPunchUi(errorCode: String?): Boolean =
-        errorCode == NOT_AN_EMPLOYEE || errorCode == EMPLOYEE_INACTIVE
+        errorCode == NOT_AN_EMPLOYEE ||
+            errorCode == EMPLOYEE_INACTIVE ||
+            errorCode == STAFF_DOES_NOT_PUNCH
 
     /** The employee has to agree to the factory's terms before this punch can be retried. */
     fun requiresTermsAcceptance(errorCode: String?): Boolean = errorCode == TERMS_NOT_ACCEPTED

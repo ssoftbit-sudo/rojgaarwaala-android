@@ -164,6 +164,7 @@ class AttendanceErrorMapperTest {
     fun `only employee level codes disable the punch buttons`() {
         assertTrue(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.NOT_AN_EMPLOYEE))
         assertTrue(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.EMPLOYEE_INACTIVE))
+        assertTrue(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.STAFF_DOES_NOT_PUNCH))
         assertFalse(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.OUTSIDE_GEOFENCE))
         assertFalse(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.POOR_ACCURACY))
         assertFalse(AttendanceErrorMapper.disablesPunchUi(null))
