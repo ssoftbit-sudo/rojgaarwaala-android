@@ -25,6 +25,9 @@ object AttendanceHindi {
             "marked" -> "लग गई"
             "paid leave" -> "पेड छुट्टी"
             "unpaid leave" -> "बिना पे छुट्टी"
+            "pending" -> "पेंडिंग"
+            "approved" -> "अप्रूव्ड"
+            "rejected" -> "रिजेक्ट"
             else -> value
         }
     }

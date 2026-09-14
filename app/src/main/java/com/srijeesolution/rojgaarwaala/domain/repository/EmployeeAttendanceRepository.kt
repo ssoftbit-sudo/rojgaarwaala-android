@@ -41,5 +41,7 @@ interface EmployeeAttendanceRepository {
 
     fun submitOtRequest(body: OtRequestBody): Flow<ApiResult<OtRequestResponse>>
 
+    fun getOtRequests(): Flow<ApiResult<OtRequestResponse>>
+
     fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>>
 }

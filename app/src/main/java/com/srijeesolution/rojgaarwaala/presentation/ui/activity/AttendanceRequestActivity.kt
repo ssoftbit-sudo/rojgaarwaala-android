@@ -7,11 +7,14 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestItem
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.databinding.ActivityAttendanceRequestBinding
+import com.srijeesolution.rojgaarwaala.databinding.ItemOtRequestBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
+import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 
@@ -36,6 +39,10 @@ class AttendanceRequestActivity : AppCompatActivity() {
         val missed = intent.getStringExtra(EXTRA_MODE) == MODE_MISSED
         binding.backButton.setOnClickListener { finish() }
 
+        binding.workDateRow.visibility = View.VISIBLE
+        renderWorkDate()
+        binding.workDateText.setOnClickListener { openWorkDatePicker() }
+
         if (missed) {
             binding.titleText.text = "मिस्ड पंच"
             binding.helpText.text =
@@ -43,10 +50,13 @@ class AttendanceRequestActivity : AppCompatActivity() {
             binding.hoursLabel.visibility = View.GONE
             binding.hoursInput.visibility = View.GONE
             binding.punchTypeGroup.visibility = View.VISIBLE
-            binding.workDateRow.visibility = View.VISIBLE
-            renderWorkDate()
-            binding.workDateText.setOnClickListener { openWorkDatePicker() }
+            binding.workDateLabel.text = "कौन सी तारीख का पंच मिस हुआ?"
             binding.submitButton.text = "मिस्ड पंच रिक्वेस्ट भेजें"
+        } else {
+            binding.workDateLabel.text = "किस तारीख का ओवरटाइम है?"
+            binding.otHistoryLabel.visibility = View.VISIBLE
+            binding.otHistoryList.visibility = View.VISIBLE
+            viewModel.loadOtRequests()
         }
 
         binding.submitButton.setOnClickListener { submit(missed) }
@@ -56,6 +66,9 @@ class AttendanceRequestActivity : AppCompatActivity() {
         }
         viewModel.missedPunchLiveData.observe(this) { result ->
             if (missed) bindMissed(result)
+        }
+        viewModel.otListLiveData.observe(this) { result ->
+            if (!missed) bindOtHistory(result)
         }
     }
 
@@ -74,7 +87,7 @@ class AttendanceRequestActivity : AppCompatActivity() {
                 Toast.makeText(this, "ओवरटाइम के घंटे लिखें", Toast.LENGTH_SHORT).show()
                 return
             }
-            viewModel.submitOtRequest(hours, reason)
+            viewModel.submitOtRequest(hours, reason, apiWorkDate())
         }
     }
 
@@ -92,6 +105,44 @@ class AttendanceRequestActivity : AppCompatActivity() {
             is ApiResult.Success -> onSent(result.data?.message)
             is ApiResult.Error -> onFailed(AttendanceErrorParser.parse(result.message).message)
         }
+    }
+
+    private fun bindOtHistory(result: ApiResult<OtRequestResponse>) {
+        if (result !is ApiResult.Success) {
+            return
+        }
+        val items = result.data?.data?.otRequestList.orEmpty()
+        binding.otHistoryLabel.visibility = View.VISIBLE
+        binding.otHistoryList.visibility = View.VISIBLE
+        binding.otHistoryList.removeAllViews()
+        if (items.isEmpty()) {
+            val empty = ItemOtRequestBinding.inflate(layoutInflater, binding.otHistoryList, false)
+            empty.otDateText.text = "अभी कोई रिक्वेस्ट नहीं"
+            empty.otStatusText.visibility = View.GONE
+            empty.otHoursText.visibility = View.GONE
+            empty.otReasonText.visibility = View.GONE
+            binding.otHistoryList.addView(empty.root)
+            return
+        }
+        items.forEach { binding.otHistoryList.addView(otRow(it).root) }
+    }
+
+    private fun otRow(item: OtRequestItem): ItemOtRequestBinding {
+        val row = ItemOtRequestBinding.inflate(layoutInflater, binding.otHistoryList, false)
+        row.otDateText.text = item.workDate ?: "-"
+        row.otStatusText.text = AttendanceHindi.status(item.status)
+        val hours = item.hours ?: 0
+        val amount = item.approvedAmount
+        row.otHoursText.text = buildString {
+            append("$hours घंटे")
+            if (amount != null && amount > 0) {
+                append("  •  ₹${amount.toInt()}")
+            }
+        }
+        val reason = item.reason.orEmpty()
+        row.otReasonText.text = reason
+        row.otReasonText.visibility = if (reason.isBlank()) View.GONE else View.VISIBLE
+        return row
     }
 
     private fun openWorkDatePicker() {

@@ -64,6 +64,9 @@ class EmployeeAttendanceViewModel @Inject constructor(
     private val _otRequestLiveData = MutableLiveData<ApiResult<OtRequestResponse>>()
     val otRequestLiveData: LiveData<ApiResult<OtRequestResponse>> = _otRequestLiveData
 
+    private val _otListLiveData = MutableLiveData<ApiResult<OtRequestResponse>>()
+    val otListLiveData: LiveData<ApiResult<OtRequestResponse>> = _otListLiveData
+
     private val _missedPunchLiveData = MutableLiveData<ApiResult<MissedPunchResponse>>()
     val missedPunchLiveData: LiveData<ApiResult<MissedPunchResponse>> = _missedPunchLiveData
 
@@ -153,11 +156,20 @@ class EmployeeAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun submitOtRequest(hours: Int, reason: String) {
+    fun submitOtRequest(hours: Int, reason: String, workDate: String? = null) {
         _otRequestLiveData.value = ApiResult.Loading()
         viewModelScope.launch {
-            employeeAttendanceRepository.submitOtRequest(OtRequestBody(hours, reason))
+            employeeAttendanceRepository.submitOtRequest(OtRequestBody(hours, reason, workDate))
                 .collectLatest { _otRequestLiveData.postValue(it) }
+        }
+    }
+
+    fun loadOtRequests() {
+        _otListLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.getOtRequests().collectLatest {
+                _otListLiveData.postValue(it)
+            }
         }
     }
 

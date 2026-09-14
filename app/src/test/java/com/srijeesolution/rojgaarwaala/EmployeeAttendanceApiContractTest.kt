@@ -645,7 +645,7 @@ class EmployeeAttendanceApiContractTest {
         )
 
         val response = api.submitOtRequest(
-            OtRequestBody(hours = 2, reason = "Machine breakdown extra shift"),
+            OtRequestBody(hours = 2, reason = "Machine breakdown extra shift", workDate = "2026-09-07"),
         )
         val recorded = server.takeRequest()
         val body = JSONObject(recorded.body.readUtf8())
@@ -653,6 +653,7 @@ class EmployeeAttendanceApiContractTest {
         assertEquals("/api/employee/ot-requests", recorded.path)
         assertEquals(2, body.getInt("hours"))
         assertEquals("Machine breakdown extra shift", body.getString("reason"))
+        assertEquals("2026-09-07", body.getString("work_date"))
         assertEquals("pending", response.body()?.data?.otRequest?.status)
         assertEquals(2, response.body()?.data?.otRequest?.hours)
     }

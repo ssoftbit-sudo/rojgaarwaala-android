@@ -22,5 +22,8 @@ class AttendanceHindiTest {
         assertEquals("हाजिरी नहीं लगी", AttendanceHindi.status("Not Marked"))
         assertEquals("0 घंटे", AttendanceHindi.status("0 Hours"))
         assertEquals("लग गई", AttendanceHindi.status("Marked"))
+        assertEquals("पेंडिंग", AttendanceHindi.status("pending"))
+        assertEquals("अप्रूव्ड", AttendanceHindi.status("approved"))
+        assertEquals("रिजेक्ट", AttendanceHindi.status("rejected"))
     }
 }

@@ -88,6 +88,7 @@
                 android:visibility="gone">
 
                 <TextView
+                    android:id="@+id/workDateLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="कौन सी तारीख का पंच मिस हुआ?"
@@ -177,6 +178,25 @@
                 android:layout_marginTop="14dp"
                 android:textColor="@color/gray_light_3"
                 android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/otHistoryLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="पिछली रिक्वेस्ट"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/otHistoryList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
                 android:visibility="gone" />
         </LinearLayout>
     </ScrollView>

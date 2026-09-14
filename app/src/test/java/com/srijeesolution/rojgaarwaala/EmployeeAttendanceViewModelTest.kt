@@ -132,6 +132,9 @@ class EmployeeAttendanceViewModelTest {
         override fun submitOtRequest(body: OtRequestBody): Flow<ApiResult<OtRequestResponse>> =
             flowOf(ApiResult.Success(OtRequestResponse(status = true)))
 
+        override fun getOtRequests(): Flow<ApiResult<OtRequestResponse>> =
+            flowOf(ApiResult.Success(OtRequestResponse(status = true)))
+
         override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> =
             flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
     }

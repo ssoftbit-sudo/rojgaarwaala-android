@@ -73,6 +73,10 @@ class EmployeeAttendanceRepositoryImpl @Inject constructor() :
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).submitOtRequest(body) })
     }.flowOn(Dispatchers.IO)
 
+    override fun getOtRequests(): Flow<ApiResult<OtRequestResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getOtRequests() })
+    }.flowOn(Dispatchers.IO)
+
     override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> = flow {
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).submitMissedPunch(body) })
     }.flowOn(Dispatchers.IO)
