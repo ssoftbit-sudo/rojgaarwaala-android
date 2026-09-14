@@ -39,6 +39,7 @@ import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
 import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import com.srijeesolution.rojgaarwaala.utils.GeofenceEvaluator
 import com.srijeesolution.rojgaarwaala.utils.LocationHelper
+import com.srijeesolution.rojgaarwaala.utils.LocationPermissionPolicy
 import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
 import com.srijeesolution.rojgaarwaala.utils.PunchOutOutcome
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
@@ -100,12 +101,6 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             renderPunchElapsed()
             elapsedHandler.postDelayed(this, 1000)
         }
-    }
-
-    private val backgroundLocationLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        if (granted) FactoryGeofenceMonitor.register(this, todayFactory)
     }
 
     private val termsGate = registerForActivityResult(
@@ -228,6 +223,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
                 is LocationHelper.Result.Success -> {
                     trackingError = null
                     lastFix = result
+                    maybeStartPendingPunch()
                 }
                 is LocationHelper.Result.Error -> trackingError = result
             }
@@ -381,25 +377,29 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         }
 
         renderGeofence()
-        requestBackgroundLocationIfNeeded()
+        registerArrivalGeofenceIfAllowed()
         maybeStartPendingPunch()
     }
 
-    private fun requestBackgroundLocationIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+    private fun registerArrivalGeofenceIfAllowed() {
+        val hasBackground = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
+        if (LocationPermissionPolicy.canRegisterArrivalGeofence(
+                sdkInt = Build.VERSION.SDK_INT,
+                foregroundGranted = locationHelper.hasLocationPermission(),
+                backgroundGranted = hasBackground,
+            )
         ) {
-            backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            return
+            FactoryGeofenceMonitor.register(this, todayFactory)
         }
-        FactoryGeofenceMonitor.register(this, todayFactory)
     }
 
     private fun maybeStartPendingPunch() {
         if (pendingPunchConsumed || punchInProgress || employeeInactive) return
+        if (!locationHelper.hasLocationPermission()) return
         when (pendingPunchAction) {
             PUNCH_IN -> if (serverCanPunchIn) {
                 pendingPunchConsumed = true

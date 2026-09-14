@@ -33,6 +33,9 @@ import com.google.android.gms.tasks.CancellationTokenSource
  * Must be constructed as an activity field (before `onStart`) because it registers
  * activity-result launchers for the permission prompt and the location-settings
  * resolution dialog.
+ *
+ * Foreground ("while using the app") is enough. Never request background location
+ * from here; that prompt races this one and drops the punch callback.
  */
 class LocationHelper(private val activity: ComponentActivity) {
 
@@ -59,10 +62,10 @@ class LocationHelper(private val activity: ComponentActivity) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var timeoutRunnable: Runnable? = null
 
-    /** Set while a caller other than [requestCurrentLocation] is awaiting the permission result. */
-    private var permissionRequest: ((granted: Boolean, error: Result.Error?) -> Unit)? = null
     private var locationCallback: LocationCallback? = null
     private var trackingCallback: ((Result) -> Unit)? = null
+    private var waitingToTrack: ((Result) -> Unit)? = null
+    private var permissionLaunchInFlight = false
 
     private val fusedLocationClient by lazy {
         LocationServices.getFusedLocationProviderClient(activity)
@@ -71,24 +74,28 @@ class LocationHelper(private val activity: ComponentActivity) {
     private val permissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants ->
-        val granted = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+        permissionLaunchInFlight = false
+        // Samsung's "Allow only while using the app" grants foreground even when the
+        // result map is empty because a second (background) request cancelled this one.
+        val granted = hasLocationPermission() ||
+            grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         val error = when {
             granted -> null
-            // Once a denial has been recorded, "no rationale" means the user picked
-            // "Don't ask again" (or the OS is blocking the prompt entirely).
             shouldShowRationale() ->
                 Result.Error(Failure.PERMISSION_DENIED, MESSAGE_PERMISSION)
             else ->
                 Result.Error(Failure.PERMISSION_PERMANENTLY_DENIED, MESSAGE_PERMISSION_SETTINGS)
         }
 
-        val handler = permissionRequest
-        permissionRequest = null
-        when {
-            handler != null -> handler(granted, error)
-            granted -> ensureLocationEnabled()
-            error != null -> deliver(error)
+        val trackAfterGrant = waitingToTrack
+        waitingToTrack = null
+        if (granted) {
+            trackAfterGrant?.let { startLocationUpdates(it) }
+            if (pendingCallback != null) ensureLocationEnabled()
+        } else if (error != null) {
+            trackAfterGrant?.invoke(error)
+            if (pendingCallback != null) deliver(error)
         }
     }
 
@@ -107,17 +114,11 @@ class LocationHelper(private val activity: ComponentActivity) {
      * [onResult] is always invoked exactly once, on the main thread.
      */
     fun requestCurrentLocation(onResult: (Result) -> Unit) {
-        if (pendingCallback != null) return
         pendingCallback = onResult
         if (hasLocationPermission()) {
             ensureLocationEnabled()
         } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                ),
-            )
+            launchForegroundPermission()
         }
     }
 
@@ -134,15 +135,13 @@ class LocationHelper(private val activity: ComponentActivity) {
             startLocationUpdates(onUpdate)
             return
         }
-        // A tracking request must not consume a punch's pending callback.
-        if (permissionRequest != null || pendingCallback != null) return
-        permissionRequest = { granted, error ->
-            if (granted) {
-                startLocationUpdates(onUpdate)
-            } else if (error != null) {
-                onUpdate(error)
-            }
-        }
+        waitingToTrack = onUpdate
+        launchForegroundPermission()
+    }
+
+    private fun launchForegroundPermission() {
+        if (permissionLaunchInFlight) return
+        permissionLaunchInFlight = true
         permissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -240,7 +239,8 @@ class LocationHelper(private val activity: ComponentActivity) {
         cancellationTokenSource?.cancel()
         cancellationTokenSource = null
         pendingCallback = null
-        permissionRequest = null
+        waitingToTrack = null
+        permissionLaunchInFlight = false
         stopLocationUpdates()
     }
 
@@ -248,6 +248,9 @@ class LocationHelper(private val activity: ComponentActivity) {
         ActivityCompat.shouldShowRequestPermissionRationale(
             activity,
             Manifest.permission.ACCESS_FINE_LOCATION,
+        ) || ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         )
 
     private fun ensureLocationEnabled() {
