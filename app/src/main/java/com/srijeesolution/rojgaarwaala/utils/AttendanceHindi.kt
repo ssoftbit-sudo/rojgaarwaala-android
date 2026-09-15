@@ -32,6 +32,15 @@ object AttendanceHindi {
         }
     }
 
+    fun punchType(value: String?): String {
+        val key = value?.trim()?.lowercase()?.replace('_', ' ') ?: return "-"
+        return when (key) {
+            "punch in" -> "पंच इन"
+            "punch out" -> "पंच आउट"
+            else -> checkNotNull(value)
+        }
+    }
+
     fun paymentType(value: String?): String {
         val key = value?.trim()?.lowercase()?.replace('_', ' ') ?: return "-"
         return when (key) {

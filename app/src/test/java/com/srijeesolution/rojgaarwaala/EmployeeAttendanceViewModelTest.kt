@@ -16,6 +16,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsData
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryData
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
@@ -146,6 +147,18 @@ class EmployeeAttendanceViewModelTest {
             flowOf(ApiResult.Success(OtRequestResponse(status = true)))
 
         override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> =
+            flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
+
+        override fun getMissedPunches(): Flow<ApiResult<MissedPunchResponse>> =
+            flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
+
+        override fun getMissedPunchReviews(): Flow<ApiResult<MissedPunchReviewResponse>> =
+            flowOf(ApiResult.Success(MissedPunchReviewResponse(status = true)))
+
+        override fun approveMissedPunch(id: Int, note: String?): Flow<ApiResult<MissedPunchResponse>> =
+            flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
+
+        override fun rejectMissedPunch(id: Int, note: String?): Flow<ApiResult<MissedPunchResponse>> =
             flowOf(ApiResult.Success(MissedPunchResponse(status = true)))
     }
 

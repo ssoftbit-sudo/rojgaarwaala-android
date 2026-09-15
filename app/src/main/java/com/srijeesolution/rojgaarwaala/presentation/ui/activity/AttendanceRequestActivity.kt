@@ -6,7 +6,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchItem
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchSuggestion
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestItem
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.databinding.ActivityAttendanceRequestBinding
@@ -26,11 +28,13 @@ class AttendanceRequestActivity : AppCompatActivity() {
         const val EXTRA_MODE = "mode"
         const val MODE_OT = "ot"
         const val MODE_MISSED = "missed"
+        private const val DEFAULT_MISSED_REASON = "हाजिरी मिस हो गई"
     }
 
     private lateinit var binding: ActivityAttendanceRequestBinding
     private val viewModel: EmployeeAttendanceViewModel by viewModels()
     private val workDate = Calendar.getInstance()
+    private var sendingSuggestion = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +51,13 @@ class AttendanceRequestActivity : AppCompatActivity() {
         if (missed) {
             binding.titleText.text = "मिस्ड पंच"
             binding.helpText.text =
-                "अगर आपने पंच लगाना भूल गए हैं तो रिक्वेस्ट भेजें। सुपरवाइज़र अप्रूव करेंगे।"
+                "मिस हुए दिन पर टैप करके रिक्वेस्ट भेजें। सुपरवाइज़र अप्रूव करेंगे।"
             binding.hoursLabel.visibility = View.GONE
             binding.hoursInput.visibility = View.GONE
             binding.punchTypeGroup.visibility = View.VISIBLE
-            binding.workDateLabel.text = "कौन सी तारीख का पंच मिस हुआ?"
+            binding.workDateLabel.text = "या तारीख चुनकर भेजें"
             binding.submitButton.text = "मिस्ड पंच रिक्वेस्ट भेजें"
+            viewModel.loadMissedPunches()
         } else {
             binding.workDateLabel.text = "किस तारीख का ओवरटाइम है?"
             binding.otHistoryLabel.visibility = View.VISIBLE
@@ -67,6 +72,9 @@ class AttendanceRequestActivity : AppCompatActivity() {
         }
         viewModel.missedPunchLiveData.observe(this) { result ->
             if (missed) bindMissed(result)
+        }
+        viewModel.missedListLiveData.observe(this) { result ->
+            if (missed) bindMissedList(result)
         }
         viewModel.otListLiveData.observe(this) { result ->
             if (!missed) bindOtHistory(result)
@@ -103,8 +111,89 @@ class AttendanceRequestActivity : AppCompatActivity() {
     private fun bindMissed(result: ApiResult<MissedPunchResponse>) {
         when (result) {
             is ApiResult.Loading -> showSending()
-            is ApiResult.Success -> onSent(result.data?.message)
-            is ApiResult.Error -> onFailed(AttendanceErrorParser.parse(result.message).message)
+            is ApiResult.Success -> {
+                if (sendingSuggestion) {
+                    sendingSuggestion = false
+                    binding.submitButton.isEnabled = true
+                    Toast.makeText(this, result.data?.message ?: "रिक्वेस्ट भेज दी गई", Toast.LENGTH_SHORT).show()
+                    viewModel.loadMissedPunches()
+                } else {
+                    onSent(result.data?.message)
+                }
+            }
+            is ApiResult.Error -> {
+                sendingSuggestion = false
+                onFailed(AttendanceErrorParser.parse(result.message).message)
+            }
+        }
+    }
+
+    private fun bindMissedList(result: ApiResult<MissedPunchResponse>) {
+        if (result !is ApiResult.Success) {
+            return
+        }
+        val data = result.data?.data
+        renderSuggestions(data?.suggestedList.orEmpty())
+        renderMissedHistory(data?.missedPunchList.orEmpty())
+    }
+
+    private fun renderSuggestions(items: List<MissedPunchSuggestion>) {
+        binding.suggestedList.removeAllViews()
+        if (items.isEmpty()) {
+            binding.suggestedLabel.visibility = View.GONE
+            binding.suggestedList.visibility = View.GONE
+            return
+        }
+        binding.suggestedLabel.visibility = View.VISIBLE
+        binding.suggestedList.visibility = View.VISIBLE
+        items.forEach { item ->
+            binding.suggestedList.addView(suggestionRow(item).root)
+        }
+    }
+
+    private fun suggestionRow(item: MissedPunchSuggestion): ItemOtRequestBinding {
+        val row = ItemOtRequestBinding.inflate(layoutInflater, binding.suggestedList, false)
+        row.otDateText.text = item.dateLabel ?: item.workDate ?: "-"
+        row.otStatusText.text = "भेजें"
+        row.otHoursText.text = AttendanceHindi.punchType(item.punchType) + "  •  टैप करके रिक्वेस्ट भेजें"
+        row.otReasonText.visibility = View.GONE
+        row.root.setOnClickListener {
+            sendSuggested(item.workDate, item.punchType)
+        }
+        return row
+    }
+
+    private fun sendSuggested(workDate: String?, punchType: String?) {
+        if (sendingSuggestion || workDate.isNullOrBlank() || punchType.isNullOrBlank()) {
+            return
+        }
+        sendingSuggestion = true
+        viewModel.submitMissedPunch(punchType, DEFAULT_MISSED_REASON, workDate)
+    }
+
+    private fun renderMissedHistory(items: List<MissedPunchItem>) {
+        binding.otHistoryLabel.visibility = View.VISIBLE
+        binding.otHistoryList.visibility = View.VISIBLE
+        binding.otHistoryList.removeAllViews()
+        if (items.isEmpty()) {
+            val empty = ItemOtRequestBinding.inflate(layoutInflater, binding.otHistoryList, false)
+            empty.otDateText.text = "अभी कोई रिक्वेस्ट नहीं"
+            empty.otStatusText.visibility = View.GONE
+            empty.otHoursText.visibility = View.GONE
+            empty.otReasonText.visibility = View.GONE
+            binding.otHistoryList.addView(empty.root)
+            return
+        }
+        items.forEach { item ->
+            val row = ItemOtRequestBinding.inflate(layoutInflater, binding.otHistoryList, false)
+            row.otDateText.text = item.workDate ?: "-"
+            row.otStatusText.text = AttendanceHindi.status(item.status)
+            OtStatusStyle.apply(row.otStatusText, item.status)
+            row.otHoursText.text = AttendanceHindi.punchType(item.punchType)
+            val reason = item.reason.orEmpty()
+            row.otReasonText.text = reason
+            row.otReasonText.visibility = if (reason.isBlank()) View.GONE else View.VISIBLE
+            binding.otHistoryList.addView(row.root)
         }
     }
 

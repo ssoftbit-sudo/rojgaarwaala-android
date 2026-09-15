@@ -277,7 +277,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         }
 
         binding.bulkAttendanceRow.navRowTitle.text = "कई लोगों की हाजिरी"
-        binding.bulkAttendanceRow.navRowSubtitle.text = "बिना फोन वाले वर्कर की हाजिरी लगाएं"
+        binding.bulkAttendanceRow.navRowSubtitle.text = "हाजिरी लगाएं और मिस्ड पंच अप्रूव करें"
         binding.bulkAttendanceRow.root.setOnClickListener {
             startActivity(Intent(this, BulkAttendanceActivity::class.java))
         }

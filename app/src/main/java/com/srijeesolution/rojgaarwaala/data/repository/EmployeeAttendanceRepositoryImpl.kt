@@ -9,6 +9,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsRespons
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
@@ -97,5 +98,25 @@ class EmployeeAttendanceRepositoryImpl @Inject constructor() :
 
     override fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>> = flow {
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).submitMissedPunch(body) })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getMissedPunches(): Flow<ApiResult<MissedPunchResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getMissedPunches() })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getMissedPunchReviews(): Flow<ApiResult<MissedPunchReviewResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).getMissedPunchReviews() })
+    }.flowOn(Dispatchers.IO)
+
+    override fun approveMissedPunch(id: Int, note: String?): Flow<ApiResult<MissedPunchResponse>> = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).approveMissedPunch(id, OtReviewBody(note))
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun rejectMissedPunch(id: Int, note: String?): Flow<ApiResult<MissedPunchResponse>> = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).rejectMissedPunch(id, OtReviewBody(note))
+        })
     }.flowOn(Dispatchers.IO)
 }

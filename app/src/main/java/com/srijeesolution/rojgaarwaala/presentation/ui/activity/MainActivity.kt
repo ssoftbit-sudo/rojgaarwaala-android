@@ -542,6 +542,8 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                     }
                     jobApplicationsViewModel.notifyJobStatusUpdated()
                 }
+                "ot_request" -> startActivity(Intent(this, OtReviewActivity::class.java))
+                "missed_punch_request" -> startActivity(Intent(this, BulkAttendanceActivity::class.java))
                 "attendance_punch_out_reminder",
                 "attendance_missed_punch",
                 "attendance_geofence_arrival" -> {

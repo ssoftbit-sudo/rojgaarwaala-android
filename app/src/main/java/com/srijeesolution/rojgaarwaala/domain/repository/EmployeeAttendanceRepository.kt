@@ -9,6 +9,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsRespons
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
@@ -51,4 +52,12 @@ interface EmployeeAttendanceRepository {
     fun rejectOtRequest(id: Int, note: String? = null): Flow<ApiResult<OtRequestResponse>>
 
     fun submitMissedPunch(body: MissedPunchBody): Flow<ApiResult<MissedPunchResponse>>
+
+    fun getMissedPunches(): Flow<ApiResult<MissedPunchResponse>>
+
+    fun getMissedPunchReviews(): Flow<ApiResult<MissedPunchReviewResponse>>
+
+    fun approveMissedPunch(id: Int, note: String? = null): Flow<ApiResult<MissedPunchResponse>>
+
+    fun rejectMissedPunch(id: Int, note: String? = null): Flow<ApiResult<MissedPunchResponse>>
 }

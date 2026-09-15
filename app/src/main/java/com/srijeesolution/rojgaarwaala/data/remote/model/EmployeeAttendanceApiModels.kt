@@ -369,6 +369,14 @@ data class MissedPunchResponse(
 data class MissedPunchData(
     @SerializedName("missed_punch") val missedPunch: MissedPunchItem? = null,
     @SerializedName("missedPunchList") val missedPunchList: List<MissedPunchItem>? = emptyList(),
+    @SerializedName("suggestedList") val suggestedList: List<MissedPunchSuggestion>? = emptyList(),
+)
+
+data class MissedPunchSuggestion(
+    @SerializedName("work_date") val workDate: String? = null,
+    @SerializedName("date_label") val dateLabel: String? = null,
+    @SerializedName("punch_type") val punchType: String? = null,
+    @SerializedName("punch_type_label") val punchTypeLabel: String? = null,
 )
 
 data class MissedPunchItem(
@@ -379,4 +387,23 @@ data class MissedPunchItem(
     @SerializedName("reason") val reason: String? = null,
     @SerializedName("status") val status: String? = null,
     @SerializedName("review_note") val reviewNote: String? = null,
+    @SerializedName("employee_id") val employeeId: Int? = null,
+    @SerializedName("employee_name") val employeeName: String? = null,
+    @SerializedName("employee_code") val employeeCode: String? = null,
+    @SerializedName("factory_id") val factoryId: Int? = null,
+    @SerializedName("factory_name") val factoryName: String? = null,
+    @SerializedName("reviewed_at") val reviewedAt: String? = null,
+)
+
+data class MissedPunchReviewResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: MissedPunchReviewData? = null,
+)
+
+data class MissedPunchReviewData(
+    @SerializedName("factory_id") val factoryId: Int? = null,
+    @SerializedName("factory_name") val factoryName: String? = null,
+    @SerializedName("pendingList") val pendingList: List<MissedPunchItem>? = emptyList(),
+    @SerializedName("historyList") val historyList: List<MissedPunchItem>? = emptyList(),
 )

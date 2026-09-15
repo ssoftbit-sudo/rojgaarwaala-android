@@ -79,6 +79,24 @@
                 android:textColorHint="@color/search_hint"
                 android:textSize="16sp" />
 
+            <TextView
+                android:id="@+id/suggestedLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="मिस हुए दिन — टैप करके रिक्वेस्ट भेजें"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/suggestedList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:id="@+id/workDateRow"
                 android:layout_width="match_parent"

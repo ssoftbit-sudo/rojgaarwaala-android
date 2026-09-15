@@ -26,4 +26,11 @@ class AttendanceHindiTest {
         assertEquals("अप्रूव्ड", AttendanceHindi.status("approved"))
         assertEquals("रिजेक्ट", AttendanceHindi.status("rejected"))
     }
+
+    @Test
+    fun `maps punch types labour and staff see`() {
+        assertEquals("पंच इन", AttendanceHindi.punchType("punch_in"))
+        assertEquals("पंच आउट", AttendanceHindi.punchType("Punch Out"))
+        assertEquals("-", AttendanceHindi.punchType(null))
+    }
 }

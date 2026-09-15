@@ -13,6 +13,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsRespons
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
@@ -76,6 +77,15 @@ class EmployeeAttendanceViewModel @Inject constructor(
 
     private val _otReviewActionLiveData = MutableLiveData<ApiResult<OtRequestResponse>>()
     val otReviewActionLiveData: LiveData<ApiResult<OtRequestResponse>> = _otReviewActionLiveData
+
+    private val _missedListLiveData = MutableLiveData<ApiResult<MissedPunchResponse>>()
+    val missedListLiveData: LiveData<ApiResult<MissedPunchResponse>> = _missedListLiveData
+
+    private val _missedReviewsLiveData = MutableLiveData<ApiResult<MissedPunchReviewResponse>>()
+    val missedReviewsLiveData: LiveData<ApiResult<MissedPunchReviewResponse>> = _missedReviewsLiveData
+
+    private val _missedReviewActionLiveData = MutableLiveData<ApiResult<MissedPunchResponse>>()
+    val missedReviewActionLiveData: LiveData<ApiResult<MissedPunchResponse>> = _missedReviewActionLiveData
 
     fun loadDashboard() {
         _dashboardLiveData.value = ApiResult.Loading()
@@ -214,6 +224,42 @@ class EmployeeAttendanceViewModel @Inject constructor(
                 MissedPunchBody(punchType = punchType, reason = reason, workDate = workDate),
             )
                 .collectLatest { _missedPunchLiveData.postValue(it) }
+        }
+    }
+
+    fun loadMissedPunches() {
+        _missedListLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.getMissedPunches().collectLatest {
+                _missedListLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun loadMissedPunchReviews() {
+        _missedReviewsLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.getMissedPunchReviews().collectLatest {
+                _missedReviewsLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun approveMissedPunch(id: Int, note: String? = null) {
+        _missedReviewActionLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.approveMissedPunch(id, note).collectLatest {
+                _missedReviewActionLiveData.postValue(it)
+            }
+        }
+    }
+
+    fun rejectMissedPunch(id: Int, note: String? = null) {
+        _missedReviewActionLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.rejectMissedPunch(id, note).collectLatest {
+                _missedReviewActionLiveData.postValue(it)
+            }
         }
     }
 }

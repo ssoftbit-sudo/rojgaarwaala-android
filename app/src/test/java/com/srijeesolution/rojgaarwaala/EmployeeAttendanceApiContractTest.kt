@@ -859,6 +859,111 @@ class EmployeeAttendanceApiContractTest {
     }
 
     @Test
+    fun `missed punch list maps tap suggestions for labour`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "missedPunchList": [
+                  {
+                    "id": 11,
+                    "work_date": "2026-09-05",
+                    "punch_type": "punch_in",
+                    "reason": "Phone died",
+                    "status": "pending"
+                  }
+                ],
+                "suggestedList": [
+                  {
+                    "work_date": "2026-09-07",
+                    "date_label": "07 Sep 2026",
+                    "punch_type": "punch_in",
+                    "punch_type_label": "Punch In"
+                  }
+                ]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getMissedPunches().body()?.data
+        assertEquals("/api/employee/missed-punches", server.takeRequest().path)
+        assertEquals("2026-09-05", data?.missedPunchList?.first()?.workDate)
+        assertEquals("2026-09-07", data?.suggestedList?.first()?.workDate)
+        assertEquals("punch_in", data?.suggestedList?.first()?.punchType)
+        assertEquals("Punch In", data?.suggestedList?.first()?.punchTypeLabel)
+    }
+
+    @Test
+    fun `missed punch review queue maps pending requests by date and name`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "API Success",
+              "data": {
+                "factory_id": 3,
+                "factory_name": "ABC Steel",
+                "pendingList": [
+                  {
+                    "id": 14,
+                    "work_date": "2026-09-13",
+                    "punch_type": "punch_in",
+                    "reason": "Phone died",
+                    "status": "pending",
+                    "employee_id": 9,
+                    "employee_name": "Suresh",
+                    "employee_code": "EMP0009",
+                    "factory_id": 3,
+                    "factory_name": "ABC Steel",
+                    "reviewed_at": null
+                  }
+                ],
+                "historyList": []
+              }
+            }
+            """.trimIndent()
+        )
+
+        val data = api.getMissedPunchReviews().body()?.data
+        assertEquals("/api/employee/missed-punch-reviews", server.takeRequest().path)
+        assertEquals("Suresh", data?.pendingList?.first()?.employeeName)
+        assertEquals("2026-09-13", data?.pendingList?.first()?.workDate)
+        assertEquals("punch_in", data?.pendingList?.first()?.punchType)
+    }
+
+    @Test
+    fun `missed punch approve posts to the request id`() = runBlocking {
+        enqueue(
+            """
+            {
+              "status": true,
+              "message": "Missed punch request approved.",
+              "data": {
+                "missed_punch": {
+                  "id": 14,
+                  "status": "approved",
+                  "employee_name": "Suresh",
+                  "punch_type": "punch_in"
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val response = api.approveMissedPunch(14, OtReviewBody(reviewNote = "Checked on the floor"))
+        val recorded = server.takeRequest()
+        val body = JSONObject(recorded.body.readUtf8())
+
+        assertEquals("/api/employee/missed-punches/14/approve", recorded.path)
+        assertEquals("Checked on the floor", body.getString("review_note"))
+        assertEquals("approved", response.body()?.data?.missedPunch?.status)
+        assertEquals("Suresh", response.body()?.data?.missedPunch?.employeeName)
+    }
+
+    @Test
     fun `an unauthenticated response is reported as 401 without a parsed body`() = runBlocking {
         enqueue("""{"message": "Unauthenticated."}""", code = 401)
 

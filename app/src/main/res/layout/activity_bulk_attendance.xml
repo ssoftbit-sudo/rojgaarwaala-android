@@ -52,11 +52,53 @@
         android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/teamListContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp" />
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/teamLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="आज की टीम"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/teamListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/missedRequestLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="मिस्ड पंच रिक्वेस्ट"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/missedRequestHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="तारीख और नाम के हिसाब से जितनी रिक्वेस्ट आई हैं"
+                android:textColor="@color/search_hint"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/missedRequestList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+        </LinearLayout>
     </ScrollView>
 
     <TextView

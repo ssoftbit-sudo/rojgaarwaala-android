@@ -29,6 +29,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewBody
@@ -310,5 +311,20 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.EMPLOYEE_MISSED_PUNCHES)
     suspend fun getMissedPunches(): Response<MissedPunchResponse>
+
+    @GET(NetworkConstants.EMPLOYEE_MISSED_PUNCH_REVIEWS)
+    suspend fun getMissedPunchReviews(): Response<MissedPunchReviewResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_MISSED_PUNCH_APPROVE)
+    suspend fun approveMissedPunch(
+        @Path("id") id: Int,
+        @Body body: OtReviewBody,
+    ): Response<MissedPunchResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_MISSED_PUNCH_REJECT)
+    suspend fun rejectMissedPunch(
+        @Path("id") id: Int,
+        @Body body: OtReviewBody,
+    ): Response<MissedPunchResponse>
 
 }

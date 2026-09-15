@@ -60,5 +60,8 @@ class NetworkConstants {
         const val EMPLOYEE_OT_APPROVE = "employee/ot-requests/{id}/approve"
         const val EMPLOYEE_OT_REJECT = "employee/ot-requests/{id}/reject"
         const val EMPLOYEE_MISSED_PUNCHES = "employee/missed-punches"
+        const val EMPLOYEE_MISSED_PUNCH_REVIEWS = "employee/missed-punch-reviews"
+        const val EMPLOYEE_MISSED_PUNCH_APPROVE = "employee/missed-punches/{id}/approve"
+        const val EMPLOYEE_MISSED_PUNCH_REJECT = "employee/missed-punches/{id}/reject"
     }
 }
