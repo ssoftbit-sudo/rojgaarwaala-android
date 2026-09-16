@@ -294,10 +294,21 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
-    fun getScheduledImages() {
+    fun getScheduledImages(lat: Double? = null, lng: Double? = null, radiusKm: Int? = null) {
         viewModelScope.launch {
-            homePageRepository.getScheduledImages().collectLatest{
+            homePageRepository.getScheduledImages(lat, lng, radiusKm).collectLatest{
                 _imageListLiveData.postValue(it)
+            }
+        }
+    }
+
+    private var _nearbyJobsLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = MutableLiveData()
+    val nearbyJobsLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = _nearbyJobsLiveData
+
+    fun getNearbyScheduledImages(lat: Double, lng: Double, radiusKm: Int = 15, limit: Int = 2) {
+        viewModelScope.launch {
+            homePageRepository.getNearbyScheduledImages(lat, lng, radiusKm, limit).collectLatest {
+                _nearbyJobsLiveData.postValue(it)
             }
         }
     }

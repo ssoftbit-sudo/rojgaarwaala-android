@@ -46,5 +46,17 @@ data class ScheduledImage(
     @SerializedName("updated_at")
     val updatedAt: String? = null,
     @SerializedName("phone_number")
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    @SerializedName("area_name")
+    val areaName: String? = null,
+    @SerializedName("salary_text")
+    val salaryText: String? = null,
+    @SerializedName("shift_text")
+    val shiftText: String? = null,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null,
+    @SerializedName("distance_km")
+    val distanceKm: Double? = null,
 ) : Parcelable 

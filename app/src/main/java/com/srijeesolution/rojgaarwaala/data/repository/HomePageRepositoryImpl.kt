@@ -268,9 +268,24 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         })
     }.flowOn(Dispatchers.IO)
 
-    override fun getScheduledImages() = flow {
+    override fun getScheduledImages(
+        lat: Double?,
+        lng: Double?,
+        radiusKm: Int?,
+    ) = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).getScheduledImages()
+            RetrofitApiService.create(BASE_URL).getScheduledImages(lat, lng, radiusKm)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getNearbyScheduledImages(
+        lat: Double,
+        lng: Double,
+        radiusKm: Int,
+        limit: Int,
+    ) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getNearbyScheduledImages(lat, lng, radiusKm, limit)
         })
     }.flowOn(Dispatchers.IO)
 

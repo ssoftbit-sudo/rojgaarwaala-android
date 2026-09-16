@@ -30,15 +30,20 @@ class ImagesGridAdapter(
                         .placeholder(R.drawable.no_image_placeholder)
                         .error(R.drawable.no_image_placeholder)
                         .centerCrop()
-                        .dontAnimate() // Disable animations for smoother scrolling
-                        .skipMemoryCache(false) // Use memory cache for better performance
+                        .dontAnimate()
+                        .skipMemoryCache(false)
                         .into(imageView)
                 } else {
-                    // Set placeholder if no image
                     imageView.setImageResource(R.drawable.no_image_placeholder)
                 }
-                
-                // Set click listener
+                val title = image.title.orEmpty()
+                imageTitle.text = title
+                imageTitle.visibility = if (title.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
+                val distance = image.distanceKm?.let { "📍 आपसे $it किमी दूर" }
+                val whenPosted = TimeUtils.formatPublishMeta(root.context, image.publishDate, image.createdAt)
+                val meta = listOfNotNull(distance, whenPosted.takeIf { it.isNotBlank() }).joinToString(" · ")
+                imageTime.text = meta
+                imageTime.visibility = if (meta.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
                 root.setOnClickListener {
                     val position = bindingAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {

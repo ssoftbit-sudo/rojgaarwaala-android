@@ -340,6 +340,12 @@ data class ImageData(
     val imageUrl: String? = null,
     @SerializedName("location")
     val location: String? = null,
+    @SerializedName("area_name")
+    val areaName: String? = null,
+    @SerializedName("salary_text")
+    val salaryText: String? = null,
+    @SerializedName("shift_text")
+    val shiftText: String? = null,
     @SerializedName("publish_date")
     val publishDate: String? = null,
     @SerializedName("created_at")
@@ -350,6 +356,28 @@ data class ImageData(
     val phoneNumber: String? = null,
     @SerializedName("sort_order")
     val sortOrder: Int? = null,
+    @SerializedName("latitude")
+    val latitude: Double? = null,
+    @SerializedName("longitude")
+    val longitude: Double? = null,
+    @SerializedName("distance_km")
+    val distanceKm: Double? = null,
+)
+
+data class NearbyJobsResponse(
+    @SerializedName("status")
+    val status: Boolean? = false,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: NearbyJobsData? = null,
+)
+
+data class NearbyJobsData(
+    @SerializedName("images")
+    val images: List<ImageData>? = emptyList(),
+    @SerializedName("has_more")
+    val hasMore: Boolean? = false,
 )
 
 data class StoriesResponse(

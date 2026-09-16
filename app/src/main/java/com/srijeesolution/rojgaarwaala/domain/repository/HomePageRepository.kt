@@ -63,7 +63,17 @@ interface HomePageRepository {
     fun deleteJob(id: Int): Flow<ApiResult<HomePagBaseApiModel>>
     fun updateJob(id: Int, data: HashMap<String, String>): Flow<ApiResult<HomePagBaseApiModel>>
     fun getScheduledImagesGrouped(): Flow<ApiResult<ImagesApiResponse>>
-    fun getScheduledImages(): Flow<ApiResult<ImageListResponse>>
+    fun getScheduledImages(
+        lat: Double? = null,
+        lng: Double? = null,
+        radiusKm: Int? = null,
+    ): Flow<ApiResult<ImageListResponse>>
+    fun getNearbyScheduledImages(
+        lat: Double,
+        lng: Double,
+        radiusKm: Int = 15,
+        limit: Int = 2,
+    ): Flow<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>>
     fun getSectionStoriesGrouped(): Flow<ApiResult<StoriesResponse>>
     fun getActiveStories(deviceKey: String): Flow<ApiResult<ActiveStoriesResponse>>
     fun markStoryViewed(storyId: Int, deviceKey: String): Flow<ApiResult<StoriesResponse>>

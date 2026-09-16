@@ -28,6 +28,7 @@ class NetworkConstants {
         const val JOB_UPDATE = "job/update/{id}"
             const val SCHEDULED_IMAGES_GROUPED = "scheduled-images/grouped"
     const val SCHEDULED_IMAGES = "scheduled-images"
+    const val SCHEDULED_IMAGES_NEARBY = "scheduled-images/nearby"
     const val SECTION_STORIES_GROUPED = "section-stories/grouped-by-time"
         const val STORIES_ACTIVE = "stories/active"
         const val STORIES_VIEW = "stories/{id}/view"

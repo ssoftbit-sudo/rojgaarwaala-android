@@ -26,8 +26,11 @@ import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.ImageLocationFilter
+import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import android.widget.SeekBar
+import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -46,6 +49,8 @@ class ImagesFragment : Fragment() {
     // Search related variables
     private var allCategories: List<ImageSubItem> = emptyList()
     private var isSearchMode = false
+    private var overrideLat: Double? = null
+    private var overrideLng: Double? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -107,6 +112,51 @@ class ImagesFragment : Fragment() {
             onViewAllClick = { category -> onViewAllClick(category) }
         )
         binding.imagesRecyclerView.adapter = imagesAdapter
+        setupRadiusHeader()
+    }
+
+    private fun setupRadiusHeader() {
+        val radius = ProfileLocationStore.radiusKm(sharedPrefs)
+        binding.freeJobRadiusSeek.progress = (radius - 1).coerceIn(0, 29)
+        binding.freeJobRadiusLabel.text = "$radius किमी"
+        binding.freeJobAddressText.text = ProfileLocationStore.address(sharedPrefs).ifBlank {
+            "📍 प्रोफ़ाइल में पता सेट करें"
+        }
+        binding.freeJobRadiusSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.freeJobRadiusLabel.text = "${progress + 1} किमी"
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val km = (seekBar?.progress ?: 14) + 1
+                sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.FREE_JOB_RADIUS_KM, km))
+                loadImages()
+            }
+        })
+        binding.freeJobUseGpsSwitch.setOnCheckedChangeListener { _, checked ->
+            if (!checked) {
+                overrideLat = null
+                overrideLng = null
+                loadImages()
+                return@setOnCheckedChangeListener
+            }
+            val activity = activity ?: return@setOnCheckedChangeListener
+            LocationServices.getFusedLocationProviderClient(activity).lastLocation
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        overrideLat = location.latitude
+                        overrideLng = location.longitude
+                        loadImages()
+                    } else {
+                        binding.freeJobUseGpsSwitch.isChecked = false
+                        Toast.makeText(context, "लोकेशन नहीं मिली। प्रोफ़ाइल मैप वाला पता इस्तेमाल होगा।", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    binding.freeJobUseGpsSwitch.isChecked = false
+                    Toast.makeText(context, "लोकेशन अनुमति नहीं है।", Toast.LENGTH_SHORT).show()
+                }
+        }
     }
 
     private fun setupSearch() {
@@ -152,7 +202,10 @@ class ImagesFragment : Fragment() {
     }
 
     private fun loadImages() {
-        viewModel.getScheduledImages()
+        val radius = ProfileLocationStore.radiusKm(sharedPrefs)
+        val lat = overrideLat ?: ProfileLocationStore.latitude(sharedPrefs)
+        val lng = overrideLng ?: ProfileLocationStore.longitude(sharedPrefs)
+        viewModel.getScheduledImages(lat, lng, if (lat != null && lng != null) radius else null)
     }
 
     private fun filterContent(query: String, locationQuery: String = "") {
@@ -262,7 +315,13 @@ class ImagesFragment : Fragment() {
                     status = null,
                     createdAt = imageData.createdAt,
                     updatedAt = null,
-                    phoneNumber = imageData.phoneNumber
+                    phoneNumber = imageData.phoneNumber,
+                    areaName = imageData.areaName,
+                    salaryText = imageData.salaryText,
+                    shiftText = imageData.shiftText,
+                    latitude = imageData.latitude,
+                    longitude = imageData.longitude,
+                    distanceKm = imageData.distanceKm,
                 )
             }
             

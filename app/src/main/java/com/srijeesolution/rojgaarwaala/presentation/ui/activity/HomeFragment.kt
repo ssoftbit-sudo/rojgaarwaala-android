@@ -20,6 +20,7 @@ import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagePagerAdapter
 import com.srijeesolution.rojgaarwaala.data.remote.model.BannerList
 import com.srijeesolution.rojgaarwaala.data.remote.model.Category
 import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideo
+import com.srijeesolution.rojgaarwaala.data.remote.model.ImageData
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
@@ -39,12 +40,23 @@ import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
+import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoListUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoLocationFilter
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
+import javax.inject.Inject
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import android.util.Log
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
     private lateinit var homePageViewModel: HomePageViewModel
     private lateinit var attendanceViewModel: EmployeeAttendanceViewModel
     private var _binding: FragmentHomeBinding? = null
@@ -94,6 +106,8 @@ class HomeFragment : Fragment() {
         setupViewAllClickListeners()
         
         observeHomePageData()
+        observeNearbyJobs()
+        maybeLoadNearbyJobs()
         attendanceViewModel.dashboardLiveData.observe(viewLifecycleOwner) { result ->
             val today = (result as? ApiResult.Success)?.data?.data?.today
             val factory = today?.factory
@@ -367,6 +381,57 @@ class HomeFragment : Fragment() {
         } else {
             binding.categorySectionsContainer.visibility = View.GONE
         }
+    }
+
+    private fun maybeLoadNearbyJobs() {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.NEARBY_JOBS_POPUP_DATE, "") == today) return
+        val lat = ProfileLocationStore.latitude(sharedPrefs) ?: return
+        val lng = ProfileLocationStore.longitude(sharedPrefs) ?: return
+        homePageViewModel.getNearbyScheduledImages(
+            lat,
+            lng,
+            ProfileLocationStore.radiusKm(sharedPrefs),
+            2,
+        )
+    }
+
+    private fun observeNearbyJobs() {
+        homePageViewModel.nearbyJobsLiveData.observe(viewLifecycleOwner) { result ->
+            val jobs = (result as? ApiResult.Success)?.data?.data?.images.orEmpty()
+            if (jobs.isNotEmpty()) {
+                showNearbyJobsSheet(jobs)
+            }
+        }
+    }
+
+    private fun showNearbyJobsSheet(jobs: List<ImageData>) {
+        val ctx = context ?: return
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.NEARBY_JOBS_POPUP_DATE, today))
+        val dialog = BottomSheetDialog(ctx)
+        val sheet = layoutInflater.inflate(R.layout.dialog_nearby_jobs, null)
+        val cards = sheet.findViewById<android.widget.LinearLayout>(R.id.nearbyJobsCards)
+        jobs.take(2).forEach { job ->
+            val card = layoutInflater.inflate(R.layout.item_nearby_job_card, cards, false)
+            card.findViewById<android.widget.TextView>(R.id.nearbyJobTitle).text =
+                job.title.orEmpty().ifBlank { "Free Job" }
+            val place = job.areaName ?: job.location
+            val salary = job.salaryText
+            val posted = TimeUtils.formatPublishMeta(ctx, job.publishDate, job.createdAt)
+            card.findViewById<android.widget.TextView>(R.id.nearbyJobMeta).text =
+                listOfNotNull(place, salary, posted.takeIf { it.isNotBlank() }).joinToString(" · ")
+            val distance = job.distanceKm
+            card.findViewById<android.widget.TextView>(R.id.nearbyJobDistance).text =
+                if (distance != null) "📍 आपसे $distance किमी दूर" else ""
+            cards.addView(card)
+        }
+        sheet.findViewById<View>(R.id.nearbyJobsSeeAll).setOnClickListener {
+            dialog.dismiss()
+            (activity as? MainActivity)?.selectTabFromFragment(3)
+        }
+        dialog.setContentView(sheet)
+        dialog.show()
     }
 
     private fun callApi() {

@@ -26,4 +26,9 @@ object SharedPrefsConstant {
     const val CACHED_FORCE_UPDATE_TITLE = "cached_force_update_title"
     const val CACHED_FORCE_UPDATE_MESSAGE = "cached_force_update_message"
     const val CACHED_FORCE_UPDATE_STORE_URL = "cached_force_update_store_url"
+    const val PROFILE_LATITUDE = "profile_latitude"
+    const val PROFILE_LONGITUDE = "profile_longitude"
+    const val PROFILE_MAP_ADDRESS = "profile_map_address"
+    const val FREE_JOB_RADIUS_KM = "free_job_radius_km"
+    const val NEARBY_JOBS_POPUP_DATE = "nearby_jobs_popup_date"
 }

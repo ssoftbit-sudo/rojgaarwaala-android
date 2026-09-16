@@ -18,6 +18,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
+import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_AUTH_TOKEN
@@ -156,6 +157,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
         binding.districtEditText.text = userProfile.district.orEmpty()
         showSavedAddress()
+        ProfileLocationStore.save(sharedPrefs, userProfile)
         existingResumeUrl = userProfile.resumeUrl
         if (!existingResumeUrl.isNullOrBlank()) {
             binding.profileResumeFileName.text = getString(R.string.profile_resume_saved)
