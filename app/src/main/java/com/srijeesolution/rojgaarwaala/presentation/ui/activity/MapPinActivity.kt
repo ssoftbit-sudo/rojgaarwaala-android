@@ -223,11 +223,7 @@ class MapPinActivity : AppCompatActivity() {
             Intent()
                 .putExtra(EXTRA_LAT, selectedLat)
                 .putExtra(EXTRA_LNG, selectedLng)
-                .putExtra(EXTRA_ADDRESS, address)
-                .putExtra(EXTRA_CITY, parts?.city.orEmpty())
-                .putExtra(EXTRA_STATE, parts?.state.orEmpty())
-                .putExtra(EXTRA_COLONY, parts?.colony.orEmpty())
-                .putExtra(EXTRA_PINCODE, parts?.pincode.orEmpty()),
+                .putExtra(EXTRA_ADDRESS, address),
         )
         finish()
     }
@@ -236,10 +232,6 @@ class MapPinActivity : AppCompatActivity() {
         const val EXTRA_LAT = "extra_lat"
         const val EXTRA_LNG = "extra_lng"
         const val EXTRA_ADDRESS = "extra_address"
-        const val EXTRA_CITY = "extra_city"
-        const val EXTRA_STATE = "extra_state"
-        const val EXTRA_COLONY = "extra_colony"
-        const val EXTRA_PINCODE = "extra_pincode"
 
         const val DEFAULT_LAT = 21.2514
         const val DEFAULT_LNG = 81.6296

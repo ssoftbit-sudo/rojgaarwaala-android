@@ -45,6 +45,7 @@ class ProfileActivity : AppCompatActivity() {
     private var existingResumeUrl: String? = null
     private var cityValue: String = ""
     private var stateValue: String = ""
+    private var pincodeValue: String = ""
     private var selectedLat: Double? = null
     private var selectedLng: Double? = null
     private var selectedAddress: String = ""
@@ -77,16 +78,6 @@ class ProfileActivity : AppCompatActivity() {
         selectedLat = data.getDoubleExtra(MapPinActivity.EXTRA_LAT, MapPinActivity.DEFAULT_LAT)
         selectedLng = data.getDoubleExtra(MapPinActivity.EXTRA_LNG, MapPinActivity.DEFAULT_LNG)
         selectedAddress = data.getStringExtra(MapPinActivity.EXTRA_ADDRESS).orEmpty()
-        val city = data.getStringExtra(MapPinActivity.EXTRA_CITY).orEmpty()
-        val state = data.getStringExtra(MapPinActivity.EXTRA_STATE).orEmpty()
-        if (city.isNotBlank()) cityValue = city
-        if (state.isNotBlank()) stateValue = state
-        val colony = data.getStringExtra(MapPinActivity.EXTRA_COLONY).orEmpty()
-        if (colony.isNotBlank()) binding.colonyEditText.setText(colony)
-        val pincode = data.getStringExtra(MapPinActivity.EXTRA_PINCODE).orEmpty()
-        if (binding.pincodeEditText.text.toString().trim().isEmpty() && pincode.isNotBlank()) {
-            binding.pincodeEditText.setText(pincode)
-        }
         showSavedAddress()
     }
 
@@ -161,10 +152,10 @@ class ProfileActivity : AppCompatActivity() {
         binding.emailEditText.setText(userProfile.email)
         cityValue = userProfile.city.orEmpty()
         stateValue = userProfile.state.orEmpty()
+        pincodeValue = userProfile.pincode.orEmpty()
         selectedAddress = userProfile.address.orEmpty()
         selectedLat = userProfile.latitude
         selectedLng = userProfile.longitude
-        binding.pincodeEditText.setText(userProfile.pincode)
         binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
         binding.districtEditText.text = userProfile.district.orEmpty()
         binding.colonyEditText.setText(userProfile.colony)
@@ -187,12 +178,12 @@ class ProfileActivity : AppCompatActivity() {
             binding.firstNameEditText.text.toString().trim(),
             binding.mobileEditText.text.toString().trim(),
             binding.emailEditText.text.toString().trim(),
-            binding.pincodeEditText.text.toString().trim(),
             binding.preferredJobCategoryEditText.text.toString().trim(),
             binding.districtEditText.text?.toString()?.trim().orEmpty(),
             binding.colonyEditText.text.toString().trim(),
             cityValue.trim(),
             stateValue.trim(),
+            pincodeValue.trim(),
             selectedAddress.trim(),
             selectedLat?.toString().orEmpty(),
             selectedLng?.toString().orEmpty(),
@@ -282,7 +273,6 @@ class ProfileActivity : AppCompatActivity() {
         val firstname = binding.firstNameEditText.text.toString().trim()
         val mobile = binding.mobileEditText.text.toString().trim()
         val email = binding.emailEditText.text.toString().trim()
-        val pincode = binding.pincodeEditText.text.toString().trim()
         val preferredCategory = binding.preferredJobCategoryEditText.text.toString().trim()
         val district = binding.districtEditText.text?.toString()?.trim().orEmpty()
         val colony = binding.colonyEditText.text.toString().trim()
@@ -332,7 +322,7 @@ class ProfileActivity : AppCompatActivity() {
             email = email,
             city = cityValue,
             state = stateValue,
-            pincode = pincode,
+            pincode = pincodeValue,
             district = district,
             colony = colony,
             preferredJobCategory = preferredCategory,

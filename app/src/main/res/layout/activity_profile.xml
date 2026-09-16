@@ -168,30 +168,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="@string/profile_pincode"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/pincodeEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_theme_field"
-                        android:hint="@string/profile_pincode_hint"
-                        android:inputType="number"
-                        android:maxLength="6"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:textColor="@color/white"
-                        android:textColorHint="@color/search_hint"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:text="@string/profile_colony"
                         android:textColor="@color/white"
                         android:textSize="14sp"

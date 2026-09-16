@@ -1,10 +1,8 @@
 package com.srijeesolution.rojgaarwaala.utils
 
 /**
- * Turns Geocoder address parts into the profile fields the backend stores.
- *
- * City / state are never typed by the user; colony and pincode can still be edited
- * on the profile screen after the pin is saved.
+ * Turns Geocoder parts into the single address line shown on the map pin screen.
+ * Profile fields (city, pincode, colony) are never filled from this result.
  */
 data class MapAddressParts(
     val address: String,
