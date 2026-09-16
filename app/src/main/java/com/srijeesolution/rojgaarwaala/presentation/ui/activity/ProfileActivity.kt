@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -19,7 +18,6 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
-import com.srijeesolution.rojgaarwaala.utils.ColonySuggestions
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_AUTH_TOKEN
@@ -46,6 +44,7 @@ class ProfileActivity : AppCompatActivity() {
     private var cityValue: String = ""
     private var stateValue: String = ""
     private var pincodeValue: String = ""
+    private var colonyValue: String = ""
     private var selectedLat: Double? = null
     private var selectedLng: Double? = null
     private var selectedAddress: String = ""
@@ -65,7 +64,6 @@ class ProfileActivity : AppCompatActivity() {
             val district = result.data?.getStringExtra(LocationPickerActivity.EXTRA_SELECTED_LOCATION).orEmpty()
             if (district.isNotBlank()) {
                 binding.districtEditText.text = district
-                updateColonySuggestions(district)
             }
         }
     }
@@ -102,12 +100,10 @@ class ProfileActivity : AppCompatActivity() {
             districtLauncher.launch(Intent(this, LocationPickerActivity::class.java))
         }
         binding.setMapAddressButton.setOnClickListener { openMapPin() }
+        binding.profileAddressText.setOnClickListener { openMapPin() }
         binding.uploadProfileResumeBtn.setOnClickListener {
             resumeLauncher.launch(arrayOf("image/*", "application/pdf"))
         }
-        binding.colonyEditText.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, emptyList<String>())
-        )
 
         observeProfileData()
         observeUpdateProfileData()
@@ -153,14 +149,13 @@ class ProfileActivity : AppCompatActivity() {
         cityValue = userProfile.city.orEmpty()
         stateValue = userProfile.state.orEmpty()
         pincodeValue = userProfile.pincode.orEmpty()
+        colonyValue = userProfile.colony.orEmpty()
         selectedAddress = userProfile.address.orEmpty()
         selectedLat = userProfile.latitude
         selectedLng = userProfile.longitude
         binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
         binding.districtEditText.text = userProfile.district.orEmpty()
-        binding.colonyEditText.setText(userProfile.colony)
         showSavedAddress()
-        updateColonySuggestions(userProfile.district)
         existingResumeUrl = userProfile.resumeUrl
         if (!existingResumeUrl.isNullOrBlank()) {
             binding.profileResumeFileName.text = getString(R.string.profile_resume_saved)
@@ -180,7 +175,6 @@ class ProfileActivity : AppCompatActivity() {
             binding.emailEditText.text.toString().trim(),
             binding.preferredJobCategoryEditText.text.toString().trim(),
             binding.districtEditText.text?.toString()?.trim().orEmpty(),
-            binding.colonyEditText.text.toString().trim(),
             cityValue.trim(),
             stateValue.trim(),
             pincodeValue.trim(),
@@ -275,7 +269,6 @@ class ProfileActivity : AppCompatActivity() {
         val email = binding.emailEditText.text.toString().trim()
         val preferredCategory = binding.preferredJobCategoryEditText.text.toString().trim()
         val district = binding.districtEditText.text?.toString()?.trim().orEmpty()
-        val colony = binding.colonyEditText.text.toString().trim()
 
         if (firstname.isEmpty()) {
             binding.firstNameEditText.error = getString(R.string.profile_name_required)
@@ -295,6 +288,10 @@ class ProfileActivity : AppCompatActivity() {
         }
         if (district.isEmpty()) {
             Toast.makeText(this, getString(R.string.profile_district_required), Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (selectedAddress.isBlank() || selectedLat == null || selectedLng == null) {
+            Toast.makeText(this, getString(R.string.profile_map_address_required), Toast.LENGTH_SHORT).show()
             return
         }
         if (resumeFile == null && existingResumeUrl.isNullOrBlank()) {
@@ -324,7 +321,7 @@ class ProfileActivity : AppCompatActivity() {
             state = stateValue,
             pincode = pincodeValue,
             district = district,
-            colony = colony,
+            colony = colonyValue,
             preferredJobCategory = preferredCategory,
             resumePart = resumePart,
             address = selectedAddress.takeIf { it.isNotBlank() },
@@ -371,13 +368,6 @@ class ProfileActivity : AppCompatActivity() {
                 is ApiResult.Loading -> Unit
             }
         }
-    }
-
-    private fun updateColonySuggestions(district: String?) {
-        val colonies = ColonySuggestions.forDistrict(district)
-        binding.colonyEditText.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, colonies)
-        )
     }
 
     private fun handleResumeSelection(uri: Uri) {

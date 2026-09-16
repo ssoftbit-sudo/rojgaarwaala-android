@@ -57,8 +57,9 @@
     <string name="profile_district">जिला</string>
     <string name="profile_district_hint">जिला चुनने के लिए टैप करें</string>
     <string name="profile_address">पूरा पता</string>
-    <string name="profile_address_placeholder">मैप पर पिन सेट करने के बाद पता यहाँ दिखेगा</string>
+    <string name="profile_address_placeholder">मैप पर पिन रखकर पता सेट करें</string>
     <string name="profile_set_map_address">मैप पर पता सेट करें</string>
+    <string name="profile_map_address_required">मैप पर अपना पता सेट करें</string>
     <string name="profile_resume">रिज्यूमे</string>
     <string name="profile_resume_choose">चुनें</string>
     <string name="profile_save">प्रोफ़ाइल सेव करें</string>
