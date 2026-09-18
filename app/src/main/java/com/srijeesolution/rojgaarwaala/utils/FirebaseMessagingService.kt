@@ -132,9 +132,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             Log.d(TAG, "Intent package: $packageName")
         }
         
+        val requestCode = ((type ?: "") + (id ?: "") + (resolvedApplicationId ?: "")).hashCode()
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         
         Log.d(TAG, "PendingIntent created: $pendingIntent")
