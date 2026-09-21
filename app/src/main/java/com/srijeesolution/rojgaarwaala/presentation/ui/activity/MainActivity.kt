@@ -544,6 +544,10 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 }
                 "ot_request" -> startActivity(Intent(this, OtReviewActivity::class.java))
                 "missed_punch_request" -> startActivity(Intent(this, BulkAttendanceActivity::class.java))
+                "missed_punch_submitted" -> startActivity(
+                    Intent(this, AttendanceRequestActivity::class.java)
+                        .putExtra(AttendanceRequestActivity.EXTRA_MODE, AttendanceRequestActivity.MODE_MISSED),
+                )
                 "ot_approved",
                 "ot_rejected" -> startActivity(
                     Intent(this, AttendanceRequestActivity::class.java)

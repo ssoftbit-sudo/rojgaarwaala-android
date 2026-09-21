@@ -356,16 +356,13 @@ class HomeFragment : Fragment() {
                     val orderedVideos = VideoListUtils.orderVideos(cat.videos ?: emptyList())
                     val sourceCategory = allCategoryVideos.find { it.id == cat.id } ?: cat
                     val sourcePreviewCount = sourceCategory.videos?.size ?: orderedVideos.size
-                    val showCategoryViewMore = if (hasActiveTextSearch()) {
-                        false
-                    } else {
-                        VideoListUtils.inferHasMore(
-                            previewCount = sourcePreviewCount,
-                            hasMore = sourceCategory.hasMore,
-                            total = sourceCategory.videoTotal,
-                        )
-                    }
-                    sectionViewAll.visibility = if (showCategoryViewMore) View.VISIBLE else View.GONE
+                    val hasMoreInCategory = VideoListUtils.inferHasMore(
+                        previewCount = sourcePreviewCount,
+                        hasMore = sourceCategory.hasMore,
+                        total = sourceCategory.videoTotal,
+                    )
+                    val showCategoryViewAll = !hasActiveTextSearch()
+                    sectionViewAll.visibility = if (showCategoryViewAll) View.VISIBLE else View.GONE
 
                     sectionViewAll.setOnClickListener { openCategoryVideosList(cat) }
 
@@ -373,7 +370,7 @@ class HomeFragment : Fragment() {
                     val adapter = VideoAdapter(onViewMoreClick = { openCategoryVideosList(cat) })
                     sectionRecycler.adapter = adapter
                     adapter.submitList(
-                        VideoListUtils.withViewMoreTile(orderedVideos, showCategoryViewMore)
+                        VideoListUtils.withViewMoreTile(orderedVideos, showCategoryViewAll && hasMoreInCategory)
                     )
                     binding.categorySectionsContainer.addView(sectionView)
                 }
