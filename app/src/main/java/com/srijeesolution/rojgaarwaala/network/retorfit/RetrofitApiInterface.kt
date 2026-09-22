@@ -176,6 +176,10 @@ interface RetrofitApiInterface {
         @Query("lat") lat: Double? = null,
         @Query("lng") lng: Double? = null,
         @Query("radius_km") radiusKm: Int? = null,
+        @Query("page") page: Int? = null,
+        @Query("per_page") perPage: Int? = null,
+        @Query("sort") sort: String? = null,
+        @Query("title") title: String? = null,
     ): Response<ImageListResponse>
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_NEARBY)
@@ -184,6 +188,13 @@ interface RetrofitApiInterface {
         @Query("lng") lng: Double,
         @Query("radius_km") radiusKm: Int = 15,
         @Query("limit") limit: Int = 2,
+    ): Response<NearbyJobsResponse>
+
+    @GET(NetworkConstants.JOB_ALERTS)
+    suspend fun getJobAlerts(
+        @Query("lat") lat: Double? = null,
+        @Query("lng") lng: Double? = null,
+        @Query("radius_km") radiusKm: Int? = null,
     ): Response<NearbyJobsResponse>
 
     @GET(NetworkConstants.SECTION_STORIES_GROUPED)

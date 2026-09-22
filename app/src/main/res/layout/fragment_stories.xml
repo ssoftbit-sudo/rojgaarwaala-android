@@ -56,6 +56,53 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/storiesCountLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_theme_chip_muted"
+            android:orientation="horizontal"
+            android:padding="3dp">
+
+            <ImageButton
+                android:id="@+id/storiesViewList"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/stories_view_list"
+                android:padding="7dp"
+                android:src="@drawable/ic_free_job_list"
+                app:tint="@color/search_hint" />
+
+            <ImageButton
+                android:id="@+id/storiesViewTile"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_free_job_view_selected"
+                android:contentDescription="@string/stories_view_tile"
+                android:padding="7dp"
+                android:src="@drawable/ic_free_job_tile"
+                app:tint="@color/brand_color_yellow" />
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Search Results Count -->
     <TextView
         android:id="@+id/searchResultsCount"

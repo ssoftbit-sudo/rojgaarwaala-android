@@ -52,7 +52,7 @@
             android:id="@+id/toolbarNotificationContainer"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <ImageButton
                 android:id="@+id/toolbarNotification"

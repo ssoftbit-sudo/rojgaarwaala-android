@@ -67,12 +67,21 @@ interface HomePageRepository {
         lat: Double? = null,
         lng: Double? = null,
         radiusKm: Int? = null,
+        page: Int? = null,
+        perPage: Int? = null,
+        sort: String? = null,
+        title: String? = null,
     ): Flow<ApiResult<ImageListResponse>>
     fun getNearbyScheduledImages(
         lat: Double,
         lng: Double,
         radiusKm: Int = 15,
         limit: Int = 2,
+    ): Flow<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>>
+    fun getJobAlerts(
+        lat: Double? = null,
+        lng: Double? = null,
+        radiusKm: Int? = null,
     ): Flow<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>>
     fun getSectionStoriesGrouped(): Flow<ApiResult<StoriesResponse>>
     fun getActiveStories(deviceKey: String): Flow<ApiResult<ActiveStoriesResponse>>

@@ -294,9 +294,17 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         }
     }
 
-    fun getScheduledImages(lat: Double? = null, lng: Double? = null, radiusKm: Int? = null) {
+    fun getScheduledImages(
+        lat: Double? = null,
+        lng: Double? = null,
+        radiusKm: Int? = null,
+        page: Int? = null,
+        perPage: Int? = null,
+        sort: String? = null,
+        title: String? = null,
+    ) {
         viewModelScope.launch {
-            homePageRepository.getScheduledImages(lat, lng, radiusKm).collectLatest{
+            homePageRepository.getScheduledImages(lat, lng, radiusKm, page, perPage, sort, title).collectLatest {
                 _imageListLiveData.postValue(it)
             }
         }
@@ -309,6 +317,17 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         viewModelScope.launch {
             homePageRepository.getNearbyScheduledImages(lat, lng, radiusKm, limit).collectLatest {
                 _nearbyJobsLiveData.postValue(it)
+            }
+        }
+    }
+
+    private var _jobAlertsLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = MutableLiveData()
+    val jobAlertsLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = _jobAlertsLiveData
+
+    fun getJobAlerts(lat: Double? = null, lng: Double? = null, radiusKm: Int? = null) {
+        viewModelScope.launch {
+            homePageRepository.getJobAlerts(lat, lng, radiusKm).collectLatest {
+                _jobAlertsLiveData.postValue(it)
             }
         }
     }

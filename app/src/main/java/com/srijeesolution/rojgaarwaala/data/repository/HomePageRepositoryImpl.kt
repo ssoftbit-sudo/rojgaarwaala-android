@@ -272,9 +272,21 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         lat: Double?,
         lng: Double?,
         radiusKm: Int?,
+        page: Int?,
+        perPage: Int?,
+        sort: String?,
+        title: String?,
     ) = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).getScheduledImages(lat, lng, radiusKm)
+            RetrofitApiService.create(BASE_URL).getScheduledImages(
+                lat,
+                lng,
+                radiusKm,
+                page,
+                perPage,
+                sort,
+                title,
+            )
         })
     }.flowOn(Dispatchers.IO)
 
@@ -286,6 +298,16 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
     ) = flow {
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).getNearbyScheduledImages(lat, lng, radiusKm, limit)
+        })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getJobAlerts(
+        lat: Double?,
+        lng: Double?,
+        radiusKm: Int?,
+    ) = flow {
+        emit(safeApiCall {
+            RetrofitApiService.create(BASE_URL).getJobAlerts(lat, lng, radiusKm)
         })
     }.flowOn(Dispatchers.IO)
 

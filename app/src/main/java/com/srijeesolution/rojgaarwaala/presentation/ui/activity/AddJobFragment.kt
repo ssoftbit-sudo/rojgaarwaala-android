@@ -16,6 +16,7 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -218,7 +219,7 @@ class AddJobFragment : Fragment() {
                             apiResponse.data?.message ?: "Job added successfully!",
                             Toast.LENGTH_SHORT
                         ).show()
-                        (activity as? MainActivity)?.selectTabFromFragment(0)
+                        (activity as? MainActivity)?.selectTabFromFragment(MainTabs.HOME)
                     } else {
                         Toast.makeText(
                             requireContext(),

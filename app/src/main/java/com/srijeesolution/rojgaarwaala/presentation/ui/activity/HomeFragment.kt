@@ -23,6 +23,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.CategoryVideo
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageData
 import com.srijeesolution.rojgaarwaala.data.remote.model.TopVideo
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.TopVideosAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.VideoAdapter
@@ -425,7 +426,7 @@ class HomeFragment : Fragment() {
         }
         sheet.findViewById<View>(R.id.nearbyJobsSeeAll).setOnClickListener {
             dialog.dismiss()
-            (activity as? MainActivity)?.selectTabFromFragment(3)
+            (activity as? MainActivity)?.selectTabFromFragment(MainTabs.FREE_JOB)
         }
         dialog.setContentView(sheet)
         dialog.show()

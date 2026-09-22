@@ -149,6 +149,10 @@
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
+            android:name=".presentation.ui.activity.JobAlertsActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
             android:name=".presentation.ui.activity.StoriesListActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
@@ -182,6 +186,10 @@
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
             android:name=".presentation.ui.activity.AppliedJobsActivity"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustPan|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.NotificationsActivity"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity

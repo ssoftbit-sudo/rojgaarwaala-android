@@ -315,7 +315,9 @@ data class ImageListResponse(
 
 data class ImageListData(
     @SerializedName("categoryImages")
-    val categoryImages: List<ImageSubItem>? = null
+    val categoryImages: List<ImageSubItem>? = null,
+    @SerializedName("pagination")
+    val pagination: VideoPagination? = null,
 )
 
 data class ImageSubItem(
@@ -344,6 +346,8 @@ data class ImageData(
     val areaName: String? = null,
     @SerializedName("salary_text")
     val salaryText: String? = null,
+    @SerializedName("offer")
+    val offer: String? = null,
     @SerializedName("shift_text")
     val shiftText: String? = null,
     @SerializedName("publish_date")

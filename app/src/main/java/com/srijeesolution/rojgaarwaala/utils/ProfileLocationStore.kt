@@ -14,6 +14,9 @@ object ProfileLocationStore {
                 .filter { it.isNotBlank() }
                 .joinToString(", "),
         )
+        profile.preferredJobCategory?.takeIf { it.isNotBlank() }?.let {
+            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.PREFERRED_JOB_CATEGORY, it))
+        }
     }
 
     fun save(sharedPrefs: SharedPrefs, latitude: Double?, longitude: Double?, address: String?) {
@@ -47,4 +50,7 @@ object ProfileLocationStore {
         val stored = sharedPrefs.getPrefs(SharedPrefsConstant.FREE_JOB_RADIUS_KM, 15)
         return stored.coerceIn(1, 30)
     }
+
+    fun preferredCategory(sharedPrefs: SharedPrefs): String =
+        sharedPrefs.getPrefs(SharedPrefsConstant.PREFERRED_JOB_CATEGORY, "") ?: ""
 }

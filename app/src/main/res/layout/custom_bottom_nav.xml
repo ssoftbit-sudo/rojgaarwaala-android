@@ -14,7 +14,84 @@
     android:paddingEnd="4dp"
     android:paddingBottom="8dp">
 
-    <!-- Home Tab -->
+    <LinearLayout
+        android:id="@+id/tabProfile"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingVertical="4dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:id="@+id/pillProfile"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconProfile"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/tab_unselected" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/textProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/profile"
+            android:textColor="@color/tab_unselected"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="center_horizontal"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tabCategories"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingVertical="4dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:id="@+id/pillCategories"
+            android:layout_width="52dp"
+            android:layout_height="32dp">
+
+            <ImageView
+                android:id="@+id/iconCategories"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_categories_bottom"
+                app:tint="@color/tab_unselected" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/textCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Categories"
+            android:textColor="@color/tab_unselected"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="center_horizontal"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/tabHome"
         android:layout_width="0dp"
@@ -55,87 +132,6 @@
             android:includeFontPadding="false" />
     </LinearLayout>
 
-    <!-- Add Job Tab -->
-    <LinearLayout
-        android:id="@+id/tabAddJob"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingVertical="4dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <FrameLayout
-            android:id="@+id/pillAddJob"
-            android:layout_width="52dp"
-            android:layout_height="32dp">
-
-            <ImageView
-                android:id="@+id/iconAddJob"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_add_job_bottom"
-                app:tint="@color/tab_unselected" />
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/textAddJob"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Add Job"
-            android:textColor="@color/tab_unselected"
-            android:textSize="9sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="4dp"
-            android:layout_gravity="center_horizontal"
-            android:includeFontPadding="false" />
-    </LinearLayout>
-
-    <!-- Categories Tab -->
-    <LinearLayout
-        android:id="@+id/tabCategories"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingVertical="4dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <FrameLayout
-            android:id="@+id/pillCategories"
-            android:layout_width="52dp"
-            android:layout_height="32dp">
-
-            <ImageView
-                android:id="@+id/iconCategories"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_categories_bottom"
-                app:tint="@color/tab_unselected" />
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/textCategories"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Categories"
-            android:textColor="@color/tab_unselected"
-            android:textSize="9sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="4dp"
-            android:layout_gravity="center_horizontal"
-            android:includeFontPadding="false" />
-    </LinearLayout>
-
-    <!-- Images Tab -->
     <LinearLayout
         android:id="@+id/tabImages"
         android:layout_width="0dp"
@@ -157,7 +153,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_image"
+                android:src="@drawable/ic_free_job_bag"
                 app:tint="@color/tab_unselected" />
         </FrameLayout>
 
@@ -175,7 +171,6 @@
             android:includeFontPadding="false" />
     </LinearLayout>
 
-    <!-- Stories Tab -->
     <LinearLayout
         android:id="@+id/tabStories"
         android:layout_width="0dp"
@@ -225,4 +220,4 @@
             android:includeFontPadding="false" />
     </LinearLayout>
 
-</LinearLayout> 
+</LinearLayout>

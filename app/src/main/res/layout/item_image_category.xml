@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="4dp"
+    android:paddingBottom="12dp">
 
     <!-- Category Header with Title and View All -->
     <LinearLayout
@@ -29,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="View All"
-            android:textColor="@color/gray_light_3"
+            android:textColor="@color/brand_color_yellow"
             android:textSize="14sp"
             android:background="?android:attr/selectableItemBackground"
             android:padding="8dp"

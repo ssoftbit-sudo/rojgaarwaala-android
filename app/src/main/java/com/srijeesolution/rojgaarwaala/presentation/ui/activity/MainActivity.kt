@@ -25,9 +25,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
-import com.srijeesolution.rojgaarwaala.presentation.viewmodel.JobApplicationsViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
+import com.srijeesolution.rojgaarwaala.utils.InAppNotification
+import com.srijeesolution.rojgaarwaala.utils.InAppNotificationInbox
+import com.srijeesolution.rojgaarwaala.utils.InAppNotificationStore
+import com.srijeesolution.rojgaarwaala.utils.JobAlertNavigation
+import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -51,26 +55,26 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     private lateinit var toolbarOverflow: ImageButton
     private lateinit var bottomNav: LinearLayout
 
+    private lateinit var tabProfile: LinearLayout
     private lateinit var tabHome: LinearLayout
-    private lateinit var tabAddJob: LinearLayout
     private lateinit var tabCategories: LinearLayout
     private lateinit var tabImages: LinearLayout
     private lateinit var tabStories: LinearLayout
 
+    private lateinit var iconProfile: ImageView
     private lateinit var iconHome: ImageView
-    private lateinit var iconAddJob: ImageView
     private lateinit var iconCategories: ImageView
     private lateinit var iconImages: ImageView
     private lateinit var iconStories: ImageView
 
+    private lateinit var textProfile: TextView
     private lateinit var textHome: TextView
-    private lateinit var textAddJob: TextView
     private lateinit var textCategories: TextView
     private lateinit var textImages: TextView
     private lateinit var textStories: TextView
 
+    private lateinit var pillProfile: FrameLayout
     private lateinit var pillHome: FrameLayout
-    private lateinit var pillAddJob: FrameLayout
     private lateinit var pillCategories: FrameLayout
     private lateinit var pillImages: FrameLayout
     private lateinit var pillStories: FrameLayout
@@ -79,12 +83,11 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
     private val mainToolbarViewModel: MainToolbarViewModel by viewModels()
     private val homePageViewModel: HomePageViewModel by viewModels()
-    private val jobApplicationsViewModel: JobApplicationsViewModel by viewModels()
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
 
-    private var currentTabIndex = 0
+    private var currentTabIndex = MainTabs.HOME
     private var notificationProcessed = false
 
     private val pickLocationLauncher = registerForActivityResult(
@@ -120,11 +123,10 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         setupToolbarChrome()
         setupBottomNav()
         setupStoriesNavBadgeObserver()
-        setupJobStatusObservers()
         preloadStories()
 
         if (savedInstanceState == null) {
-            selectTab(0)
+            selectTab(MainTabs.HOME)
         }
 
         handleNotificationNavigation(intent)
@@ -145,26 +147,26 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         toolbarOverflow = findViewById(R.id.toolbarOverflow)
         bottomNav = findViewById(R.id.customBottomNav)
 
+        tabProfile = findViewById(R.id.tabProfile)
         tabHome = findViewById(R.id.tabHome)
-        tabAddJob = findViewById(R.id.tabAddJob)
         tabCategories = findViewById(R.id.tabCategories)
         tabImages = findViewById(R.id.tabImages)
         tabStories = findViewById(R.id.tabStories)
 
+        iconProfile = findViewById(R.id.iconProfile)
         iconHome = findViewById(R.id.iconHome)
-        iconAddJob = findViewById(R.id.iconAddJob)
         iconCategories = findViewById(R.id.iconCategories)
         iconImages = findViewById(R.id.iconImages)
         iconStories = findViewById(R.id.iconStories)
 
+        textProfile = findViewById(R.id.textProfile)
         textHome = findViewById(R.id.textHome)
-        textAddJob = findViewById(R.id.textAddJob)
         textCategories = findViewById(R.id.textCategories)
         textImages = findViewById(R.id.textImages)
         textStories = findViewById(R.id.textStories)
 
+        pillProfile = findViewById(R.id.pillProfile)
         pillHome = findViewById(R.id.pillHome)
-        pillAddJob = findViewById(R.id.pillAddJob)
         pillCategories = findViewById(R.id.pillCategories)
         pillImages = findViewById(R.id.pillImages)
         pillStories = findViewById(R.id.pillStories)
@@ -214,18 +216,18 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
 
         toolbarNotification.setOnClickListener {
-            openJobStatusScreen()
+            openNotificationsScreen()
         }
 
         toolbarOverflow.setOnClickListener { showOverflowMenu() }
 
-        refreshJobStatusUi()
+        refreshNotificationUi()
     }
 
-    private fun setupJobStatusObservers() {
-        jobApplicationsViewModel.badgeCount.observe(this) { count ->
-            updateJobStatusBadge(count)
-        }
+    private fun openNotificationsScreen() {
+        InAppNotificationStore.markAllRead(sharedPrefs)
+        startActivity(Intent(this, NotificationsActivity::class.java))
+        refreshNotificationUi()
     }
 
     private fun openJobStatusScreen() {
@@ -250,7 +252,16 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
     }
 
-    private fun updateJobStatusBadge(count: Int) {
+    private fun openAddJob() {
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            selectTab(MainTabs.ADD_JOB)
+        } else {
+            startActivity(Intent(this, LoginActivity::class.java))
+            Toast.makeText(this, "Please login to add jobs", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateNotificationBadge(count: Int) {
         if (count > 0) {
             toolbarNotificationBadge.visibility = View.VISIBLE
             toolbarNotificationBadge.text = if (count > 9) "9+" else count.toString()
@@ -259,36 +270,34 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
     }
 
-    private fun refreshJobStatusUi() {
-        val loggedIn = sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)
-        val showOnHome = loggedIn && currentTabIndex == 0
-        toolbarNotificationContainer.visibility = if (showOnHome) View.VISIBLE else View.GONE
-        if (loggedIn) {
-            jobApplicationsViewModel.refreshApplications(isLoggedIn = true)
-        } else {
-            updateJobStatusBadge(0)
-        }
+    private fun refreshNotificationUi() {
+        toolbarNotificationContainer.visibility = View.VISIBLE
+        updateNotificationBadge(InAppNotificationStore.unreadCount(sharedPrefs))
     }
 
     private fun showOverflowMenu() {
         val popup = PopupMenu(this, toolbarOverflow)
-        popup.menu.add(0, MENU_PROFILE, 0, getString(R.string.profile))
-        popup.menu.add(0, MENU_HELP_DESK, 1, getString(R.string.help_desk))
-        popup.menu.add(0, MENU_PAID_APPLICATIONS, 2, "Paid applications")
-
-        popup.menu.add(0, MENU_LOCATION, 3, getString(R.string.change_location))
+        popup.menu.add(0, MENU_ADD_JOB, 0, getString(R.string.add_job))
+        popup.menu.add(0, MENU_JOB_STATUS, 1, getString(R.string.job_status))
+        popup.menu.add(0, MENU_PAID_APPLICATIONS, 2, getString(R.string.paid_applications))
+        popup.menu.add(0, MENU_HELP_DESK, 3, getString(R.string.help_desk))
+        popup.menu.add(0, MENU_LOCATION, 4, getString(R.string.change_location))
 
         val isDefaultLocation = HomeLocationDefaults.skipsDistrictFilter(
             mainToolbarViewModel.selectedLocation.value,
         )
         if (!isDefaultLocation) {
-            popup.menu.add(0, MENU_CLEAR_LOCATION, 4, getString(R.string.reset_all_chhattisgarh))
+            popup.menu.add(0, MENU_CLEAR_LOCATION, 5, getString(R.string.reset_all_chhattisgarh))
         }
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_PROFILE -> {
-                    openProfileSection()
+                MENU_ADD_JOB -> {
+                    openAddJob()
+                    true
+                }
+                MENU_JOB_STATUS -> {
+                    openJobStatusScreen()
                     true
                 }
                 MENU_HELP_DESK -> {
@@ -315,7 +324,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
     private fun openProfileSection() {
         if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-            startActivity(Intent(this, ProfileActivity::class.java))
+            selectTab(MainTabs.PROFILE)
         } else {
             startActivity(Intent(this, LoginActivity::class.java))
             Toast.makeText(this, "Please login to access profile", Toast.LENGTH_SHORT).show()
@@ -342,38 +351,33 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     }
 
     private fun setupBottomNav() {
-        tabHome.setOnClickListener { selectTab(0) }
-        tabAddJob.setOnClickListener {
-            if (sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
-                selectTab(1)
-            } else {
-                startActivity(Intent(this, LoginActivity::class.java))
-                Toast.makeText(this, "Please login to add jobs", Toast.LENGTH_SHORT).show()
-            }
-        }
-        tabCategories.setOnClickListener { selectTab(2) }
-        tabImages.setOnClickListener { selectTab(3) }
-        tabStories.setOnClickListener { selectTab(4) }
+        tabProfile.setOnClickListener { openProfileSection() }
+        tabCategories.setOnClickListener { selectTab(MainTabs.CATEGORIES) }
+        tabHome.setOnClickListener { selectTab(MainTabs.HOME) }
+        tabImages.setOnClickListener { selectTab(MainTabs.FREE_JOB) }
+        tabStories.setOnClickListener { selectTab(MainTabs.STORIES) }
     }
 
     private fun updateChromeForTab(index: Int) {
-        val isHome = index == 0
+        val isHome = index == MainTabs.HOME
+        mainToolbar.visibility = View.VISIBLE
         mainSearchRow.visibility = if (isHome) View.VISIBLE else View.GONE
         toolbarTitle.alpha = if (isHome) 1f else 0.92f
         toolbarTitle.text = getString(
             when (index) {
-                0 -> R.string.home
-                1 -> R.string.add_job
-                2 -> R.string.categories
-                3 -> R.string.free_job
-                4 -> R.string.stories
+                MainTabs.HOME -> R.string.home
+                MainTabs.PROFILE -> R.string.profile
+                MainTabs.ADD_JOB -> R.string.add_job
+                MainTabs.CATEGORIES -> R.string.categories
+                MainTabs.FREE_JOB -> R.string.free_job
+                MainTabs.STORIES -> R.string.stories
                 else -> R.string.app_name
             }
         )
     }
 
     private fun refreshNotificationBadgeUi() {
-        // Legacy FCM flag — job status badge is handled separately.
+        updateNotificationBadge(InAppNotificationStore.unreadCount(sharedPrefs))
     }
 
     private fun selectTab(index: Int) {
@@ -382,50 +386,53 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         val unselectedColor = ContextCompat.getColor(this, R.color.tab_unselected)
         val selectedIconColor = ContextCompat.getColor(this, R.color.app_background)
 
+        iconProfile.setColorFilter(unselectedColor)
         iconHome.setColorFilter(unselectedColor)
-        iconAddJob.setColorFilter(unselectedColor)
         iconCategories.setColorFilter(unselectedColor)
         iconImages.setColorFilter(unselectedColor)
         iconStories.setColorFilter(unselectedColor)
 
+        textProfile.setTextColor(unselectedColor)
         textHome.setTextColor(unselectedColor)
-        textAddJob.setTextColor(unselectedColor)
         textCategories.setTextColor(unselectedColor)
         textImages.setTextColor(unselectedColor)
         textStories.setTextColor(unselectedColor)
 
+        pillProfile.background = null
         pillHome.background = null
-        pillAddJob.background = null
         pillCategories.background = null
         pillImages.background = null
         pillStories.background = null
 
         when (index) {
-            0 -> {
+            MainTabs.HOME -> {
                 iconHome.setColorFilter(selectedIconColor)
                 textHome.setTextColor(selectedTextColor)
                 pillHome.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
                 showFragment(HomeFragment())
             }
-            1 -> {
-                iconAddJob.setColorFilter(selectedIconColor)
-                textAddJob.setTextColor(selectedTextColor)
-                pillAddJob.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+            MainTabs.PROFILE -> {
+                iconProfile.setColorFilter(selectedIconColor)
+                textProfile.setTextColor(selectedTextColor)
+                pillProfile.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                showFragment(ProfileFragment.newInstance())
+            }
+            MainTabs.ADD_JOB -> {
                 showFragment(AddJobFragment())
             }
-            2 -> {
+            MainTabs.CATEGORIES -> {
                 iconCategories.setColorFilter(selectedIconColor)
                 textCategories.setTextColor(selectedTextColor)
                 pillCategories.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
                 showFragment(CategoriesFragment())
             }
-            3 -> {
+            MainTabs.FREE_JOB -> {
                 iconImages.setColorFilter(selectedIconColor)
                 textImages.setTextColor(selectedTextColor)
                 pillImages.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
                 showFragment(ImagesFragment())
             }
-            4 -> {
+            MainTabs.STORIES -> {
                 iconStories.setColorFilter(selectedIconColor)
                 textStories.setTextColor(selectedTextColor)
                 pillStories.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
@@ -434,7 +441,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
             }
         }
         updateChromeForTab(index)
-        refreshJobStatusUi()
+        refreshNotificationUi()
     }
 
     private fun showFragment(fragment: Fragment) {
@@ -461,7 +468,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     override fun onResume() {
         super.onResume()
         refreshNotificationBadgeUi()
-        refreshJobStatusUi()
+        refreshNotificationUi()
         val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
         homePageViewModel.getActiveStories(deviceKey, forceRefresh = true)
         intent?.let { incoming ->
@@ -477,10 +484,10 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     }
 
     override fun onBackPressed() {
-        if (currentTabIndex == 0) {
+        if (currentTabIndex == MainTabs.HOME) {
             super.onBackPressed()
         } else {
-            selectTab(0)
+            selectTab(MainTabs.HOME)
         }
     }
 
@@ -494,6 +501,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
             if (notificationType.isNullOrEmpty()) notificationType = it.getStringExtra("type")
             if (notificationId.isNullOrEmpty()) notificationId = it.getStringExtra("id")
+            if (notificationId.isNullOrEmpty()) notificationId = it.getStringExtra("scheduled_image_id")
 
             if (notificationType.isNullOrEmpty() && notificationId.isNullOrEmpty()) {
                 it.data?.let { uri ->
@@ -513,15 +521,20 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 }
             }
 
-            when (notificationType) {
-                "home" -> selectTab(0)
+            val resolvedType = notificationType?.takeIf { it.isNotEmpty() } ?: return
+            if (!it.getBooleanExtra("from_inbox", false)) {
+                rememberIncomingNotification(it, resolvedType, notificationId ?: applicationId)
+            }
+
+            when (resolvedType) {
+                "home" -> selectTab(MainTabs.HOME)
                 "vlp" -> {
                     val videoIntent = Intent(this, CategoryVideosActivity::class.java)
                     videoIntent.putExtra("category_id", notificationId)
                     videoIntent.putExtra("category_title", "Videos")
                     startActivity(videoIntent)
                 }
-                "vdp" -> {
+                "vdp", "video_published" -> {
                     val videoIntent = Intent(this, VideoPlayerActivity::class.java)
                     videoIntent.putExtra("video_id", notificationId)
                     startActivity(videoIntent)
@@ -540,7 +553,6 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                     } else {
                         openJobStatusScreen()
                     }
-                    jobApplicationsViewModel.notifyJobStatusUpdated()
                 }
                 "ot_request" -> startActivity(Intent(this, OtReviewActivity::class.java))
                 "missed_punch_request" -> startActivity(Intent(this, BulkAttendanceActivity::class.java))
@@ -558,10 +570,13 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                     Intent(this, AttendanceRequestActivity::class.java)
                         .putExtra(AttendanceRequestActivity.EXTRA_MODE, AttendanceRequestActivity.MODE_MISSED),
                 )
+                "paper_cut_job", "scheduled_image", "free_job" -> {
+                    selectTab(JobAlertNavigation.TAB_FREE_JOB)
+                }
                 "attendance_punch_out_reminder",
                 "attendance_missed_punch",
                 "attendance_geofence_arrival" -> {
-                    val punch = if (notificationType == "attendance_punch_out_reminder") {
+                    val punch = if (resolvedType == "attendance_punch_out_reminder") {
                         AttendanceDashboardActivity.PUNCH_OUT
                     } else {
                         AttendanceDashboardActivity.PUNCH_IN
@@ -571,7 +586,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                             .putExtra(AttendanceDashboardActivity.EXTRA_PUNCH, punch),
                     )
                 }
-                else -> selectTab(0)
+                else -> selectTab(MainTabs.HOME)
             }
 
             it.removeExtra("notification_type")
@@ -579,8 +594,37 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
             it.removeExtra("type")
             it.removeExtra("id")
             it.removeExtra("from_notification")
+            it.removeExtra("from_inbox")
             notificationProcessed = true
         }
+    }
+
+    private fun rememberIncomingNotification(intent: Intent, type: String, targetId: String?) {
+        val resolvedId = InAppNotificationInbox.resolveTargetId(
+            id = targetId,
+            scheduledImageId = intent.getStringExtra("scheduled_image_id"),
+            videoId = intent.getStringExtra("video_id"),
+            applicationId = intent.getStringExtra("application_id"),
+            categoryId = intent.getStringExtra("category_id"),
+        )
+        val title = intent.getStringExtra("title")
+            ?: intent.getStringExtra("notification_title")
+            ?: ""
+        val body = intent.getStringExtra("body")
+            ?: intent.getStringExtra("notification_body")
+            ?: ""
+        InAppNotificationStore.add(
+            sharedPrefs,
+            InAppNotification(
+                type = type,
+                title = title.ifBlank { getString(R.string.app_name) },
+                body = body,
+                targetId = resolvedId,
+                receivedAt = System.currentTimeMillis(),
+                read = false,
+            ),
+        )
+        refreshNotificationUi()
     }
 
     private fun checkForBackgroundNotification() {
@@ -632,7 +676,8 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     }
 
     companion object {
-        private const val MENU_PROFILE = 1
+        private const val MENU_ADD_JOB = 1
+        private const val MENU_JOB_STATUS = 6
         private const val MENU_HELP_DESK = 4
         private const val MENU_PAID_APPLICATIONS = 5
         private const val MENU_LOCATION = 2

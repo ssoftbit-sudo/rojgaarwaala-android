@@ -1,17 +1,14 @@
 package com.srijeesolution.rojgaarwaala.utils
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.srijeesolution.rojgaarwaala.R
-import com.srijeesolution.rojgaarwaala.presentation.ui.activity.MainActivity
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
@@ -20,8 +17,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val TAG = "FirebaseMsgService"
         private const val CHANNEL_ID = NotificationUtils.CHANNEL_ID
-        private const val CHANNEL_NAME = "Rojgaarwaala Notifications"
-        private const val CHANNEL_DESCRIPTION = "Notifications from Rojgaarwaala app"
     }
 
     override fun onNewToken(token: String) {
@@ -35,6 +30,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         
         // Here you can send the token to your server
         sendRegistrationToServer(token)
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        NotificationUtils.ensureNotificationChannels(this)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -79,8 +79,14 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
 
         // Always create and show notification (even for background)
-        val type = remoteMessage.data["type"]
-        val id = remoteMessage.data["id"]
+        val type = remoteMessage.data["type"] ?: remoteMessage.data["notification_type"]
+        val id = InAppNotificationInbox.resolveTargetId(
+            id = remoteMessage.data["id"],
+            scheduledImageId = remoteMessage.data["scheduled_image_id"],
+            videoId = remoteMessage.data["video_id"],
+            applicationId = remoteMessage.data["application_id"],
+            categoryId = remoteMessage.data["category_id"],
+        ).ifBlank { null }
         val applicationId = remoteMessage.data["application_id"]
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Rojgaarwaala"
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "New notification"
@@ -126,7 +132,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             putExtra("notification_id", id)
             putExtra("type", type)
             putExtra("id", id)
+            putExtra("scheduled_image_id", id)
             putExtra("application_id", resolvedApplicationId)
+            putExtra("video_id", id)
+            putExtra("title", title)
+            putExtra("body", messageBody)
+            putExtra("from_notification", true)
             
             Log.d(TAG, "Intent created with data: $data")
             Log.d(TAG, "Intent package: $packageName")
@@ -153,28 +164,27 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // Create notification channel for Android O and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = CHANNEL_DESCRIPTION
-            }
-            notificationManager.createNotificationChannel(channel)
-            Log.d(TAG, "Notification channel created: $channelId")
-        }
+        NotificationUtils.ensureNotificationChannels(this)
 
         // Show in-app bell on MainActivity when user opens the app
         val sharedPrefs = SharedPrefs(this)
+        InAppNotificationStore.add(
+            sharedPrefs,
+            InAppNotification(
+                type = type.orEmpty(),
+                title = title ?: "Rojgaarwaala",
+                body = messageBody.orEmpty(),
+                targetId = (id ?: resolvedApplicationId).orEmpty(),
+                receivedAt = System.currentTimeMillis(),
+                read = false,
+            ),
+        )
         if (type == "job_application_status") {
             sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.JOB_STATUS_UPDATE_PENDING, true))
-        } else {
-            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.NOTIFICATION_BADGE_PENDING, true))
         }
 
         // Use a unique notification ID to ensure proper handling

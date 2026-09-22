@@ -3,187 +3,186 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/app_background">
+    android:background="@color/app_background"
+    android:orientation="vertical">
 
-
-    <!-- Search Bar -->
     <LinearLayout
+        android:id="@+id/freeJobSearchRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="52dp"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/search_bar_background"
+        android:orientation="horizontal"
         android:paddingStart="16dp"
-        android:paddingEnd="10dp"
-        android:layout_marginTop="5dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="4dp">
 
-        <ImageView
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:src="@android:drawable/ic_menu_search"
-            android:contentDescription="Search"
-            app:tint="@color/search_icon_tint" />
-
-        <EditText
-            android:id="@+id/searchBar"
-            style="@style/Widget.Rojgaarwaala.EditText.SearchField"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:minHeight="44dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:hint="Search images..."
+            android:background="@drawable/search_bar_background"
             android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:inputType="text"
-            android:imeOptions="actionDone"
-            android:maxLines="1" />
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="8dp">
 
-        <ImageView
-            android:id="@+id/clearSearchButton"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:contentDescription="Clear search"
-            android:visibility="gone"
-            android:clickable="true"
-            android:focusable="true"
-            app:tint="@color/search_hint" />
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="@color/search_icon_tint" />
 
+            <EditText
+                android:id="@+id/searchBar"
+                style="@style/Widget.Rojgaarwaala.EditText.SearchField"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="@string/free_job_search_hint"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:maxLines="1" />
+
+            <ImageView
+                android:id="@+id/clearSearchButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:contentDescription="@string/clear_search"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:visibility="gone"
+                app:tint="@color/search_hint" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Search Results Count -->
-    <TextView
-        android:id="@+id/searchResultsCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textColor="@color/gray_light_3"
-        android:textSize="12sp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone" />
-
     <LinearLayout
-        android:id="@+id/freeJobLocationHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:gravity="center_vertical"
         android:paddingStart="16dp"
+        android:paddingTop="10dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp">
 
         <TextView
-            android:id="@+id/freeJobAddressText"
-            android:layout_width="match_parent"
+            android:id="@+id/freeJobCountLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:textColor="@color/white"
-            android:textSize="14sp"
-            android:text="📍 प्रोफ़ाइल पता सेट करें" />
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/freeJobSortChip"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_theme_chip"
+            android:drawableEnd="@drawable/ic_chevron_down_white"
+            android:drawablePadding="2dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="8dp">
-
-            <TextView
-                android:id="@+id/freeJobRadiusLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="15 किमी" />
-
-            <SeekBar
-                android:id="@+id/freeJobRadiusSeek"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="29"
-                android:progress="14" />
-        </LinearLayout>
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="6dp"
+            android:text="@string/free_job_newest"
+            android:textColor="@color/accent"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_theme_chip_muted"
+            android:orientation="horizontal"
+            android:padding="3dp">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Your current location"
-                android:textColor="@color/search_hint"
-                android:textSize="13sp" />
+            <ImageButton
+                android:id="@+id/freeJobViewList"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_free_job_view_selected"
+                android:contentDescription="@string/free_job_view_list"
+                android:padding="7dp"
+                android:src="@drawable/ic_free_job_list"
+                app:tint="@color/brand_color_yellow" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/freeJobUseGpsSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <ImageButton
+                android:id="@+id/freeJobViewTile"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/free_job_view_tile"
+                android:padding="7dp"
+                android:src="@drawable/ic_free_job_tile"
+                app:tint="@color/search_hint" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Divider -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:background="@color/gray_light_3"
-        android:alpha="0.4" />
+    <TextView
+        android:id="@+id/searchResultsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textColor="@color/search_hint"
+        android:textSize="12sp"
+        android:visibility="gone" />
 
-    <!-- Content Area -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/imagesRecyclerView"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="16dp"
-        android:visibility="visible"
-        android:scrollbars="vertical"
-        android:overScrollMode="never"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:layout_weight="1">
 
-    <!-- No Results Found Message -->
-    <LinearLayout
-        android:id="@+id/noResultsLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="32dp"
-        android:visibility="gone">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/imagesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp"
+            android:scrollbars="vertical" />
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@android:drawable/ic_menu_search"
-            android:contentDescription="No results"
+        <ProgressBar
+            android:id="@+id/freeJobProgress"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:theme="@style/ThemeOverlay.App.ProgressBarWhite"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/freeJobLoadMoreProgress"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|center_horizontal"
             android:layout_marginBottom="16dp"
-            app:tint="@color/gray_light_3" />
+            android:theme="@style/ThemeOverlay.App.ProgressBarWhite"
+            android:visibility="gone" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No results found"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+        <LinearLayout
+            android:id="@+id/noResultsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Try searching with different keywords"
-            android:textColor="@color/gray_light_3"
-            android:textSize="14sp"
-            android:gravity="center" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/free_job_empty"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
 
-    </LinearLayout>
-
-</LinearLayout> 
+</LinearLayout>

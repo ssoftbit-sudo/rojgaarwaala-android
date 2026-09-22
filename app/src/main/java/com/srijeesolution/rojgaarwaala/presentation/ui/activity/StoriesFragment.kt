@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.CircleStory
 import com.srijeesolution.rojgaarwaala.data.remote.model.Story
 import com.srijeesolution.rojgaarwaala.data.remote.model.TimeGroup
@@ -22,9 +23,12 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentStoriesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesCategoryAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesCircleAdapter
+import com.srijeesolution.rojgaarwaala.presentation.adaptor.StoriesListAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
+import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -43,6 +47,7 @@ class StoriesFragment : Fragment() {
 
     private var allTimeGroups: List<TimeGroup> = emptyList()
     private var isSearchMode = false
+    private var viewMode = FreeJobFeed.ViewMode.TILE
 
     private val storyViewerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -119,6 +124,9 @@ class StoriesFragment : Fragment() {
             openCircleStoryViewer(index)
         }
         binding.storyCirclesRecyclerView.adapter = circleAdapter
+        binding.storiesViewList.setOnClickListener { setViewMode(FreeJobFeed.ViewMode.LIST) }
+        binding.storiesViewTile.setOnClickListener { setViewMode(FreeJobFeed.ViewMode.TILE) }
+        styleViewToggle()
     }
 
     private fun setupSearch() {
@@ -258,12 +266,7 @@ class StoriesFragment : Fragment() {
 
         if (timeGroups.isNotEmpty()) {
             binding.storiesRecyclerView.visibility = View.VISIBLE
-            storiesAdapter = StoriesCategoryAdapter(
-                timeGroups,
-                onStoryClick = { story -> onStoryClick(story) },
-                onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
-            )
-            binding.storiesRecyclerView.adapter = storiesAdapter
+            bindStories(timeGroups)
         } else if (activeCircleStories.isEmpty()) {
             binding.storiesRecyclerView.visibility = View.GONE
         }
@@ -274,16 +277,70 @@ class StoriesFragment : Fragment() {
         allTimeGroups = timeGroupsWithStories
 
         if (timeGroupsWithStories.isNotEmpty()) {
-            storiesAdapter = StoriesCategoryAdapter(
-                timeGroupsWithStories,
-                onStoryClick = { story -> onStoryClick(story) },
-                onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) }
-            )
-            binding.storiesRecyclerView.adapter = storiesAdapter
+            bindStories(timeGroupsWithStories)
             binding.storiesRecyclerView.visibility = View.VISIBLE
         } else if (activeCircleStories.isEmpty()) {
             showEmptyState()
         }
+    }
+
+    private fun setViewMode(mode: FreeJobFeed.ViewMode) {
+        viewMode = mode
+        styleViewToggle()
+        val visibleGroups = if (isSearchMode) currentFilteredGroups() else allTimeGroups
+        if (visibleGroups.isNotEmpty()) {
+            bindStories(visibleGroups)
+        }
+    }
+
+    private fun currentFilteredGroups(): List<TimeGroup> {
+        val query = binding.searchBar.text?.toString()?.trim().orEmpty()
+        if (query.isEmpty()) return allTimeGroups
+        val lowerQuery = query.lowercase()
+        return allTimeGroups.mapNotNull { timeGroup ->
+            val filteredStories = timeGroup.stories?.filter { story ->
+                story.title?.lowercase()?.contains(lowerQuery) == true ||
+                    story.description?.lowercase()?.contains(lowerQuery) == true ||
+                    timeGroup.title?.lowercase()?.contains(lowerQuery) == true
+            } ?: emptyList()
+            if (filteredStories.isNotEmpty()) timeGroup.copy(stories = filteredStories) else null
+        }
+    }
+
+    private fun bindStories(timeGroups: List<TimeGroup>) {
+        val total = timeGroups.sumOf { it.stories?.size ?: 0 }
+        binding.storiesCountLabel.text = getString(R.string.stories_count_label, total)
+        if (viewMode == FreeJobFeed.ViewMode.LIST) {
+            val rows = timeGroups.flatMap { group ->
+                group.stories.orEmpty().map { it to group.title }
+            }
+            binding.storiesRecyclerView.adapter = StoriesListAdapter(
+                rows.map { it.first },
+                groupTitle = { story -> rows.firstOrNull { it.first === story }?.second },
+                onStoryClick = { story -> onStoryClick(story) },
+            )
+        } else {
+            storiesAdapter = StoriesCategoryAdapter(
+                timeGroups,
+                onStoryClick = { story -> onStoryClick(story) },
+                onViewAllClick = { timeGroup -> onViewAllClick(timeGroup) },
+            )
+            binding.storiesRecyclerView.adapter = storiesAdapter
+        }
+    }
+
+    private fun styleViewToggle() {
+        val listSelected = viewMode == FreeJobFeed.ViewMode.LIST
+        val yellow = ContextCompat.getColor(requireContext(), R.color.brand_color_yellow)
+        val muted = ContextCompat.getColor(requireContext(), R.color.search_hint)
+        binding.storiesViewList.setBackgroundResource(
+            if (listSelected) R.drawable.bg_free_job_view_selected else android.R.color.transparent,
+        )
+        binding.storiesViewTile.setBackgroundResource(
+            if (listSelected) android.R.color.transparent else R.drawable.bg_free_job_view_selected,
+        )
+        binding.storiesViewList.setColorFilter(if (listSelected) yellow else muted)
+        binding.storiesViewTile.setColorFilter(if (listSelected) muted else yellow)
     }
 
     @SuppressLint("UnsafeOptInUsageError")

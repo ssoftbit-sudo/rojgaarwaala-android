@@ -6,8 +6,10 @@ object SharedPrefsConstant {
     const val USER_SKIP_STATUS = "user_skip_status"
     const val USER_LOGIN_SKIP_STATUS = "user_log_in_skip_status"
     const val FCM_TOKEN = "fcm_token"
-    /** Set when a push is shown; cleared when user taps the bell in MainActivity. */
+    /** Set when a push is shown; cleared when user opens the bell inbox. */
     const val NOTIFICATION_BADGE_PENDING = "notification_badge_pending"
+    /** JSON list of user-specific in-app notifications shown under the bell. */
+    const val IN_APP_NOTIFICATIONS = "in_app_notifications"
     /** Persisted district / location label for home filters. */
     const val HOME_SELECTED_LOCATION = "home_selected_location"
     /** Anonymous device id for story seen state. */
@@ -31,4 +33,5 @@ object SharedPrefsConstant {
     const val PROFILE_MAP_ADDRESS = "profile_map_address"
     const val FREE_JOB_RADIUS_KM = "free_job_radius_km"
     const val NEARBY_JOBS_POPUP_DATE = "nearby_jobs_popup_date"
+    const val PREFERRED_JOB_CATEGORY = "preferred_job_category"
 }

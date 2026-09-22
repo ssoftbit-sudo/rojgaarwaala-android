@@ -27,6 +27,12 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
             Log.w("RojgaarwalaApplication", "Firebase init failed; continuing", t)
         }
 
+        try {
+            NotificationUtils.ensureNotificationChannels(this)
+        } catch (t: Throwable) {
+            Log.w("RojgaarwalaApplication", "Notification channel setup failed; continuing", t)
+        }
+
         registerActivityLifecycleCallbacks(SecureWindowLifecycleCallbacks())
         registerActivityLifecycleCallbacks(EdgeToEdgeLifecycleCallbacks())
     }

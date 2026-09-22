@@ -161,6 +161,12 @@ class SplashActivity : AppCompatActivity(),
                 Intent(this, LoginActivity::class.java)
             }
         }
+        this.intent.extras?.let { extras ->
+            if (!extras.isEmpty) {
+                intent.putExtras(extras)
+            }
+        }
+        this.intent.data?.let { intent.data = it }
         startActivity(intent)
         finish()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

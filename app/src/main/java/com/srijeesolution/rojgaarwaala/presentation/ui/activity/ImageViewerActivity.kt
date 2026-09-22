@@ -19,6 +19,7 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.JobMapPins
 import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
 import com.srijeesolution.rojgaarwaala.utils.LocationSuggestions
@@ -189,9 +190,11 @@ class ImageViewerActivity : AppCompatActivity(),
             binding.uploadTimeLabel.text = publishMeta.ifEmpty { "Recently posted" }
 
             val location = resolveImageLocation(image)
-            if (location.isNotEmpty()) {
+            val distance = JobMapPins.distanceLabel(image.distanceKm)
+            val locationLine = listOf(location, distance).filter { it.isNotBlank() }.joinToString(" · ")
+            if (locationLine.isNotEmpty()) {
                 binding.videoLocationLabel.visibility = View.VISIBLE
-                binding.videoLocationLabel.text = location
+                binding.videoLocationLabel.text = locationLine
             } else {
                 binding.videoLocationLabel.visibility = View.GONE
             }
