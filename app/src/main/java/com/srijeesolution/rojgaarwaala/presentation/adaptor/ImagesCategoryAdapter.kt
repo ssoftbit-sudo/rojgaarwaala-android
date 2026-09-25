@@ -10,10 +10,17 @@ import com.srijeesolution.rojgaarwaala.databinding.ItemImageCategoryBinding
 import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class ImagesCategoryAdapter(
-    private val categories: List<ImageSubItem>,
     private val onImageClick: (ImageSubItem, Int) -> Unit,
     private val onViewAllClick: (ImageSubItem) -> Unit
 ) : RecyclerView.Adapter<ImagesCategoryAdapter.CategoryViewHolder>() {
+
+    private val categories = mutableListOf<ImageSubItem>()
+
+    fun submit(newCategories: List<ImageSubItem>) {
+        categories.clear()
+        categories.addAll(newCategories)
+        notifyDataSetChanged()
+    }
 
     inner class CategoryViewHolder(private val binding: ItemImageCategoryBinding) : RecyclerView.ViewHolder(binding.root) {
         
@@ -24,10 +31,10 @@ class ImagesCategoryAdapter(
                 
                 // Limit to first 4 images for display
                 val allImages = category.images ?: emptyList()
-                val displayImages = allImages.take(4)
+                val displayImages = allImages.take(6)
                 
                 // Show View All button only if there are more than 4 images
-                if (allImages.size > 4) {
+                if (allImages.size > 6) {
                     categoryViewAll.visibility = View.VISIBLE
                     // Setup View All click listener
                     categoryViewAll.setOnClickListener {

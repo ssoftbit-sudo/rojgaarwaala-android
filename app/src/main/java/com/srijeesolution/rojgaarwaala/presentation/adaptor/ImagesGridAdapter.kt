@@ -12,6 +12,7 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageData
 import com.srijeesolution.rojgaarwaala.databinding.ItemImageGridBinding
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.ApplyFormActivity
+import com.srijeesolution.rojgaarwaala.utils.JobMapPins
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 
 class ImagesGridAdapter(
@@ -39,7 +40,7 @@ class ImagesGridAdapter(
                 val title = image.title.orEmpty()
                 imageTitle.text = title
                 imageTitle.visibility = if (title.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
-                val distance = image.distanceKm?.let { "📍 आपसे $it किमी दूर" }
+                val distance = JobMapPins.distanceLabel(image.distanceKm).takeIf { it.isNotBlank() }?.let { "📍 $it" }
                 val whenPosted = TimeUtils.formatPublishMeta(root.context, image.publishDate, image.createdAt)
                 val meta = listOfNotNull(distance, whenPosted.takeIf { it.isNotBlank() }).joinToString(" · ")
                 imageTime.text = meta

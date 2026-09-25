@@ -98,6 +98,43 @@ object FreeJobFeed {
         }
     }
 
+    fun appendItems(existing: List<FreeJobItem>, incoming: List<FreeJobItem>): List<FreeJobItem> {
+        if (existing.isEmpty()) return incoming
+        val seen = existing.mapNotNull { it.job.id }.toSet()
+        return existing + incoming.filter { it.job.id == null || it.job.id !in seen }
+    }
+
+    fun withDistances(items: List<FreeJobItem>, userLat: Double?, userLng: Double?): List<FreeJobItem> {
+        if (userLat == null || userLng == null) return items
+        return items.map { item ->
+            val job = item.job
+            if (job.distanceKm != null || job.latitude == null || job.longitude == null) {
+                item
+            } else {
+                item.copy(job = job.copy(distanceKm = JobMapPins.kmBetween(userLat, userLng, job.latitude, job.longitude)))
+            }
+        }
+    }
+
+    fun categoriesWithDistances(
+        categories: List<ImageSubItem>,
+        userLat: Double?,
+        userLng: Double?,
+    ): List<ImageSubItem> {
+        if (userLat == null || userLng == null) return categories
+        return categories.map { category ->
+            category.copy(
+                images = category.images?.map { job ->
+                    if (job.distanceKm != null || job.latitude == null || job.longitude == null) {
+                        job
+                    } else {
+                        job.copy(distanceKm = JobMapPins.kmBetween(userLat, userLng, job.latitude, job.longitude))
+                    }
+                },
+            )
+        }
+    }
+
     fun mergeCategories(existing: List<ImageSubItem>, incoming: List<ImageSubItem>): List<ImageSubItem> {
         if (existing.isEmpty()) return incoming
         val merged = existing.associateBy { it.id }.toMutableMap()

@@ -49,6 +49,9 @@ interface HomePageRepository {
         imageFile: MultipartBody.Part?,
         logoFile: MultipartBody.Part?,
         locations: List<String> = emptyList(),
+        latitude: Double? = null,
+        longitude: Double? = null,
+        radiusKm: Int? = null,
     ): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCategoriesData(): Flow<ApiResult<HomePagBaseApiModel>>
     fun getCityList(): Flow<ApiResult<HomePagBaseApiModel>>
@@ -73,10 +76,11 @@ interface HomePageRepository {
         title: String? = null,
     ): Flow<ApiResult<ImageListResponse>>
     fun getNearbyScheduledImages(
-        lat: Double,
-        lng: Double,
+        lat: Double? = null,
+        lng: Double? = null,
         radiusKm: Int = 15,
         limit: Int = 2,
+        allCategories: Boolean = false,
     ): Flow<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>>
     fun getJobAlerts(
         lat: Double? = null,
@@ -99,5 +103,8 @@ interface HomePageRepository {
         imageFile: MultipartBody.Part?,
         logoFile: MultipartBody.Part?,
         locations: List<String> = emptyList(),
+        latitude: Double? = null,
+        longitude: Double? = null,
+        radiusKm: Int? = null,
     ): Flow<ApiResult<HomePagBaseApiModel>>
 }

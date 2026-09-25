@@ -41,17 +41,15 @@ import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
 import com.srijeesolution.rojgaarwaala.utils.VideoCacheManager
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.JobMapPins
+import com.srijeesolution.rojgaarwaala.utils.NewJobPopupStore
 import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoListUtils
 import com.srijeesolution.rojgaarwaala.utils.VideoLocationFilter
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
-import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import javax.inject.Inject
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import android.util.Log
 
 @AndroidEntryPoint
@@ -382,35 +380,37 @@ class HomeFragment : Fragment() {
     }
 
     private fun maybeLoadNearbyJobs() {
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        if (sharedPrefs.getPrefs(SharedPrefsConstant.NEARBY_JOBS_POPUP_DATE, "") == today) return
-        val lat = ProfileLocationStore.latitude(sharedPrefs) ?: return
-        val lng = ProfileLocationStore.longitude(sharedPrefs) ?: return
         homePageViewModel.getNearbyScheduledImages(
-            lat,
-            lng,
-            ProfileLocationStore.radiusKm(sharedPrefs),
-            2,
+            lat = ProfileLocationStore.latitude(sharedPrefs),
+            lng = ProfileLocationStore.longitude(sharedPrefs),
+            radiusKm = ProfileLocationStore.radiusKm(sharedPrefs),
+            limit = 6,
+            allCategories = true,
         )
     }
 
     private fun observeNearbyJobs() {
         homePageViewModel.nearbyJobsLiveData.observe(viewLifecycleOwner) { result ->
             val jobs = (result as? ApiResult.Success)?.data?.data?.images.orEmpty()
-            if (jobs.isNotEmpty()) {
-                showNearbyJobsSheet(jobs)
+            val unseen = NewJobPopupStore.unseen(sharedPrefs, jobs)
+            if (unseen.isNotEmpty()) {
+                showNearbyJobsSheet(unseen)
             }
         }
     }
 
     private fun showNearbyJobsSheet(jobs: List<ImageData>) {
         val ctx = context ?: return
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.NEARBY_JOBS_POPUP_DATE, today))
+        NewJobPopupStore.markSeen(sharedPrefs, jobs)
         val dialog = BottomSheetDialog(ctx)
         val sheet = layoutInflater.inflate(R.layout.dialog_nearby_jobs, null)
         val cards = sheet.findViewById<android.widget.LinearLayout>(R.id.nearbyJobsCards)
-        jobs.take(2).forEach { job ->
+        val withDistance = JobMapPins.withDistanceFrom(
+            jobs,
+            ProfileLocationStore.latitude(sharedPrefs),
+            ProfileLocationStore.longitude(sharedPrefs),
+        )
+        withDistance.take(6).forEach { job ->
             val card = layoutInflater.inflate(R.layout.item_nearby_job_card, cards, false)
             card.findViewById<android.widget.TextView>(R.id.nearbyJobTitle).text =
                 job.title.orEmpty().ifBlank { "Free Job" }
@@ -419,9 +419,9 @@ class HomeFragment : Fragment() {
             val posted = TimeUtils.formatPublishMeta(ctx, job.publishDate, job.createdAt)
             card.findViewById<android.widget.TextView>(R.id.nearbyJobMeta).text =
                 listOfNotNull(place, salary, posted.takeIf { it.isNotBlank() }).joinToString(" · ")
-            val distance = job.distanceKm
+            val distance = JobMapPins.distanceLabel(job.distanceKm)
             card.findViewById<android.widget.TextView>(R.id.nearbyJobDistance).text =
-                if (distance != null) "📍 आपसे $distance किमी दूर" else ""
+                if (distance.isNotBlank()) "📍 $distance" else ""
             cards.addView(card)
         }
         sheet.findViewById<View>(R.id.nearbyJobsSeeAll).setOnClickListener {

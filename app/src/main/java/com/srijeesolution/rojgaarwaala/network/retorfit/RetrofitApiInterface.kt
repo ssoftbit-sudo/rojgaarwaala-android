@@ -110,6 +110,9 @@ interface RetrofitApiInterface {
         @Part image: MultipartBody.Part? = null,
         @Part logo: MultipartBody.Part? = null,
         @Part locations: List<MultipartBody.Part> = emptyList(),
+        @Part("latitude") latitude: RequestBody? = null,
+        @Part("longitude") longitude: RequestBody? = null,
+        @Part("radius_km") radiusKm: RequestBody? = null,
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.CATEGORIES_LIST)
@@ -167,6 +170,9 @@ interface RetrofitApiInterface {
         @Part image: MultipartBody.Part? = null,
         @Part logo: MultipartBody.Part? = null,
         @Part locations: List<MultipartBody.Part> = emptyList(),
+        @Part("latitude") latitude: RequestBody? = null,
+        @Part("longitude") longitude: RequestBody? = null,
+        @Part("radius_km") radiusKm: RequestBody? = null,
     ): Response<HomePagBaseApiModel>
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_GROUPED)
@@ -184,10 +190,11 @@ interface RetrofitApiInterface {
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_NEARBY)
     suspend fun getNearbyScheduledImages(
-        @Query("lat") lat: Double,
-        @Query("lng") lng: Double,
-        @Query("radius_km") radiusKm: Int = 15,
+        @Query("lat") lat: Double? = null,
+        @Query("lng") lng: Double? = null,
+        @Query("radius_km") radiusKm: Int? = 15,
         @Query("limit") limit: Int = 2,
+        @Query("all_categories") allCategories: Int? = null,
     ): Response<NearbyJobsResponse>
 
     @GET(NetworkConstants.JOB_ALERTS)

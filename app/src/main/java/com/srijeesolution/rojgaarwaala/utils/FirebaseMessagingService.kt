@@ -156,10 +156,16 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val channelId = CHANNEL_ID
         val defaultSoundUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
         
+        val notificationTitle = title ?: "Rojgaarwaala"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(title ?: "Rojgaarwaala")
+            .setContentTitle(notificationTitle)
             .setContentText(messageBody)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .setBigContentTitle(notificationTitle)
+                    .bigText(messageBody),
+            )
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)

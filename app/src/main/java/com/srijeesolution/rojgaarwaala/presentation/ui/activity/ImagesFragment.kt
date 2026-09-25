@@ -32,10 +32,16 @@ import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.FreeJobItem
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.ImageLocationFilter
+import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ImagesFragment : Fragment() {
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
 
     private var _binding: FragmentImagesBinding? = null
     private val binding get() = _binding!!
@@ -43,6 +49,7 @@ class ImagesFragment : Fragment() {
     private lateinit var mainToolbarViewModel: MainToolbarViewModel
 
     private var allCategories: List<ImageSubItem> = emptyList()
+    private var listedItems: List<FreeJobItem> = emptyList()
     private var viewMode = FreeJobFeed.ViewMode.LIST
     private var sort = FreeJobFeed.Sort.NEWEST
     private var hasLoaded = false
@@ -50,6 +57,9 @@ class ImagesFragment : Fragment() {
     private var hasMorePages = false
     private var isLoadingPage = false
     private var serverTotal: Int? = null
+    private var boundMode: FreeJobFeed.ViewMode? = null
+    private var listAdapter: FreeJobCardsAdapter? = null
+    private var categoryAdapter: ImagesCategoryAdapter? = null
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchReload = Runnable { reloadFromStart() }
 
@@ -73,7 +83,9 @@ class ImagesFragment : Fragment() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy <= 0 || isLoadingPage || !hasMorePages) return
                 val manager = recyclerView.layoutManager as? LinearLayoutManager ?: return
-                if (manager.findLastVisibleItemPosition() >= manager.itemCount - 3) {
+                if (!recyclerView.canScrollVertically(1) ||
+                    manager.findLastVisibleItemPosition() >= manager.itemCount - 1
+                ) {
                     loadPage(currentPage + 1, append = true)
                 }
             }
@@ -123,10 +135,13 @@ class ImagesFragment : Fragment() {
                     serverTotal = pagination?.total
                     hasMorePages = pagination?.hasMore == true
                     currentPage = page
-                    allCategories = if (page <= 1) {
-                        incoming
+                    val incomingItems = FreeJobFeed.flatten(incoming)
+                    if (page <= 1) {
+                        allCategories = incoming
+                        listedItems = incomingItems
                     } else {
-                        FreeJobFeed.mergeCategories(allCategories, incoming)
+                        allCategories = FreeJobFeed.mergeCategories(allCategories, incoming)
+                        listedItems = FreeJobFeed.appendItems(listedItems, incomingItems)
                     }
                     render()
                 }
@@ -144,6 +159,8 @@ class ImagesFragment : Fragment() {
         currentPage = 1
         hasMorePages = false
         serverTotal = null
+        listedItems = emptyList()
+        boundMode = null
         loadPage(1, append = false)
     }
 
@@ -171,7 +188,9 @@ class ImagesFragment : Fragment() {
     }
 
     private fun setViewMode(mode: FreeJobFeed.ViewMode) {
+        if (viewMode == mode) return
         viewMode = mode
+        boundMode = null
         render()
     }
 
@@ -211,19 +230,31 @@ class ImagesFragment : Fragment() {
         }
     }
 
-    private fun render() {
-        val categories = filteredCategories()
-        val items = FreeJobFeed.flatten(categories)
-        val located = FreeJobFeed.sortedItems(FreeJobFeed.withLocation(items), sort)
-        val posterCategories = FreeJobFeed.sortedCategories(
-            FreeJobFeed.categoriesWithoutLocation(categories),
-            sort,
-        )
-        val visibleCount = if (viewMode == FreeJobFeed.ViewMode.LIST) {
-            located.size
-        } else {
-            posterCategories.sumOf { it.images.orEmpty().size }
+    private fun userLat(): Double? = ProfileLocationStore.latitude(sharedPrefs)
+
+    private fun userLng(): Double? = ProfileLocationStore.longitude(sharedPrefs)
+
+    private fun displayedListItems(): List<FreeJobItem> {
+        val query = binding.searchBar.text?.toString()?.trim().orEmpty().lowercase()
+        val locationQuery = districtQuery()
+        val filtered = listedItems.filter { item ->
+            val image = item.job
+            val searchOk = query.isEmpty() ||
+                image.title?.lowercase()?.contains(query) == true ||
+                image.description?.lowercase()?.contains(query) == true ||
+                item.categoryTitle?.lowercase()?.contains(query) == true
+            val locationOk = !FreeJobFeed.hasLocation(image) ||
+                locationQuery.isEmpty() ||
+                ImageLocationFilter.matches(image, locationQuery)
+            searchOk && locationOk
         }
+        return FreeJobFeed.withDistances(filtered, userLat(), userLng())
+    }
+
+    private fun render() {
+        val categories = FreeJobFeed.categoriesWithDistances(filteredCategories(), userLat(), userLng())
+        val items = displayedListItems()
+        val visibleCount = if (viewMode == FreeJobFeed.ViewMode.LIST) items.size else categories.sumOf { it.images?.size ?: 0 }
         val count = if (districtQuery().isEmpty()) {
             serverTotal ?: visibleCount
         } else {
@@ -236,9 +267,9 @@ class ImagesFragment : Fragment() {
         styleViewToggle()
 
         if (viewMode == FreeJobFeed.ViewMode.LIST) {
-            bindList(located)
+            bindList(items)
         } else {
-            bindTiles(posterCategories)
+            bindTiles(categories)
         }
     }
 
@@ -249,28 +280,43 @@ class ImagesFragment : Fragment() {
         }
         binding.noResultsLayout.visibility = View.GONE
         binding.imagesRecyclerView.visibility = View.VISIBLE
-        binding.imagesRecyclerView.adapter = FreeJobCardsAdapter(
-            cards,
-            onClick = { item -> openLocatedJob(item) },
-            onViewMap = { item -> openJobOnMap(item) },
-        )
+        if (boundMode != FreeJobFeed.ViewMode.LIST || listAdapter == null) {
+            binding.imagesRecyclerView.layoutManager = LinearLayoutManager(context)
+            listAdapter = FreeJobCardsAdapter(
+                onClick = { item -> openLocatedJob(item) },
+                onViewMap = { item -> openJobOnMap(item) },
+            )
+            binding.imagesRecyclerView.adapter = listAdapter
+            categoryAdapter = null
+            boundMode = FreeJobFeed.ViewMode.LIST
+        }
+        listAdapter?.submit(cards)
     }
 
-    private fun bindTiles(images: List<ImageSubItem>) {
-        if (images.isEmpty()) {
+    private fun bindTiles(categories: List<ImageSubItem>) {
+        if (categories.isEmpty()) {
             showEmpty()
             return
         }
         binding.noResultsLayout.visibility = View.GONE
         binding.imagesRecyclerView.visibility = View.VISIBLE
-        binding.imagesRecyclerView.adapter = ImagesCategoryAdapter(
-            images,
-            onImageClick = { category, imageIndex -> onPosterClick(category, imageIndex) },
-            onViewAllClick = { category -> onViewAllClick(category) },
-        )
+        if (boundMode != FreeJobFeed.ViewMode.TILE || categoryAdapter == null) {
+            binding.imagesRecyclerView.layoutManager = LinearLayoutManager(context)
+            categoryAdapter = ImagesCategoryAdapter(
+                onImageClick = { category, index -> onPosterClick(category, index) },
+                onViewAllClick = { category -> onViewAllClick(category) },
+            )
+            binding.imagesRecyclerView.adapter = categoryAdapter
+            listAdapter = null
+            boundMode = FreeJobFeed.ViewMode.TILE
+        }
+        categoryAdapter?.submit(categories)
     }
 
     private fun showEmpty() {
+        boundMode = null
+        listAdapter = null
+        categoryAdapter = null
         binding.imagesRecyclerView.adapter = null
         binding.imagesRecyclerView.visibility = View.GONE
         binding.noResultsLayout.visibility = if (hasLoaded) View.VISIBLE else View.GONE

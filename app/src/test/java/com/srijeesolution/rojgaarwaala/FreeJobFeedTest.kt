@@ -23,6 +23,12 @@ class FreeJobFeedTest {
         assertEquals(listOf(1, 3), FreeJobFeed.withLocation(items).map { it.job.id })
         assertEquals(listOf(2), FreeJobFeed.withoutLocation(items).map { it.job.id })
         assertEquals(listOf(2), FreeJobFeed.categoriesWithoutLocation(categories).flatMap { it.images.orEmpty() }.map { it.id })
+        assertEquals(
+            listOf(1, 3, 2),
+            FreeJobFeed.sortedCategories(categories, FreeJobFeed.Sort.NEWEST)
+                .flatMap { it.images.orEmpty() }
+                .map { it.id },
+        )
     }
 
     @Test
@@ -87,6 +93,16 @@ class FreeJobFeedTest {
     }
 
     @Test
+    fun `append keeps already loaded jobs in place`() {
+        val first = listOf(FreeJobItem(ImageData(id = 10, title = "Nurse"), "Hospital"))
+        val extra = listOf(
+            FreeJobItem(ImageData(id = 11, title = "Helper"), "Hospital"),
+            FreeJobItem(ImageData(id = 10, title = "Nurse"), "Hospital"),
+        )
+        val merged = FreeJobFeed.appendItems(first, extra)
+        assertEquals(listOf(10, 11), merged.map { it.job.id })
+    }
+
     fun `newest first puts later dates at the top`() {
         val older = FreeJobItem(ImageData(id = 1, title = "Old", createdAt = "2026-01-01 10:00:00"), "Hospital")
         val newer = FreeJobItem(ImageData(id = 2, title = "New", createdAt = "2026-09-20 10:00:00"), "Hospital")

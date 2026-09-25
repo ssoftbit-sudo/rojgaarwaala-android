@@ -573,6 +573,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 "paper_cut_job", "scheduled_image", "free_job" -> {
                     selectTab(JobAlertNavigation.TAB_FREE_JOB)
                 }
+                "attendance_punch_in_reminder",
                 "attendance_punch_out_reminder",
                 "attendance_missed_punch",
                 "attendance_geofence_arrival" -> {

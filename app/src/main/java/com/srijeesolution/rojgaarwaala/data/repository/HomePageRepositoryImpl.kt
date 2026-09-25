@@ -129,6 +129,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         imageFile: MultipartBody.Part?,
         logoFile: MultipartBody.Part?,
         locations: List<String>,
+        latitude: Double?,
+        longitude: Double?,
+        radiusKm: Int?,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
@@ -143,6 +146,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     locations = locations.map { location ->
                         MultipartBody.Part.createFormData("locations[]", location)
                     },
+                    latitude = latitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    longitude = longitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    radiusKm = radiusKm?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
                 )
             })
         }.flowOn(Dispatchers.IO)
@@ -242,6 +248,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         imageFile: MultipartBody.Part?,
         logoFile: MultipartBody.Part?,
         locations: List<String>,
+        latitude: Double?,
+        longitude: Double?,
+        radiusKm: Int?,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         return flow {
             emit(safeApiCall {
@@ -257,6 +266,9 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     locations = locations.map { location ->
                         MultipartBody.Part.createFormData("locations[]", location)
                     },
+                    latitude = latitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    longitude = longitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    radiusKm = radiusKm?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
                 )
             })
         }.flowOn(Dispatchers.IO)
@@ -291,13 +303,20 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
     }.flowOn(Dispatchers.IO)
 
     override fun getNearbyScheduledImages(
-        lat: Double,
-        lng: Double,
+        lat: Double?,
+        lng: Double?,
         radiusKm: Int,
         limit: Int,
+        allCategories: Boolean,
     ) = flow {
         emit(safeApiCall {
-            RetrofitApiService.create(BASE_URL).getNearbyScheduledImages(lat, lng, radiusKm, limit)
+            RetrofitApiService.create(BASE_URL).getNearbyScheduledImages(
+                lat,
+                lng,
+                radiusKm,
+                limit,
+                if (allCategories) 1 else null,
+            )
         })
     }.flowOn(Dispatchers.IO)
 

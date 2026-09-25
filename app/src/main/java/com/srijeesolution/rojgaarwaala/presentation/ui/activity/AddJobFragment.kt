@@ -16,6 +16,7 @@ import com.srijeesolution.rojgaarwaala.databinding.FragmentAddJobBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
 import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
@@ -70,6 +71,10 @@ class AddJobFragment : Fragment() {
     private var existingLogoUrl: String? = null
     
     private val companyJobLocations = mutableListOf<String>()
+    private var jobPinLat: Double? = null
+    private var jobPinLng: Double? = null
+    private var jobPinAddress: String? = null
+    private var jobRadiusKm: Int = 15
     
     // Activity result launchers for file selection
     private val pdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -86,6 +91,24 @@ class AddJobFragment : Fragment() {
         ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let { handleLogoSelection(it) }
+    }
+
+    private val jobMapPinLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            jobPinLat = data.getDoubleExtra(MapPinActivity.EXTRA_LAT, MapPinActivity.DEFAULT_LAT)
+            jobPinLng = data.getDoubleExtra(MapPinActivity.EXTRA_LNG, MapPinActivity.DEFAULT_LNG)
+            jobPinAddress = data.getStringExtra(MapPinActivity.EXTRA_ADDRESS)
+            val place = jobPinAddress.orEmpty()
+            if (place.isNotBlank() && companyJobLocations.none { it.equals(place, ignoreCase = true) }) {
+                companyJobLocations.removeAll { it.equals(HomeLocationDefaults.ALL_CHHATTISGARH, ignoreCase = true) }
+                companyJobLocations.add(place)
+                renderCompanyLocationChips()
+            }
+            renderJobPinState()
+        }
     }
 
     private val companyLocationsLauncher = registerForActivityResult(
@@ -183,6 +206,44 @@ class AddJobFragment : Fragment() {
                 )
             }
             companyLocationsLauncher.launch(intent)
+        }
+        binding.pinJobOnMapBtn.setOnClickListener {
+            val intent = Intent(requireContext(), MapPinActivity::class.java)
+            jobPinLat?.let { intent.putExtra(MapPinActivity.EXTRA_LAT, it) }
+            jobPinLng?.let { intent.putExtra(MapPinActivity.EXTRA_LNG, it) }
+            jobMapPinLauncher.launch(intent)
+        }
+        binding.publishAllChhattisgarhBtn.setOnClickListener {
+            jobPinLat = null
+            jobPinLng = null
+            jobPinAddress = null
+            companyJobLocations.clear()
+            companyJobLocations.add(HomeLocationDefaults.ALL_CHHATTISGARH)
+            renderCompanyLocationChips()
+            renderJobPinState()
+        }
+        binding.jobRadiusSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                jobRadiusKm = progress + 1
+                binding.jobRadiusLabel.text = getString(R.string.add_job_radius_label, jobRadiusKm)
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) = Unit
+        })
+        binding.jobRadiusSeekBar.progress = jobRadiusKm - 1
+        renderJobPinState()
+    }
+
+    private fun renderJobPinState() {
+        val pinned = jobPinLat != null && jobPinLng != null
+        binding.jobPinAddressText.visibility = if (pinned) View.VISIBLE else View.GONE
+        binding.jobRadiusRow.visibility = if (pinned) View.VISIBLE else View.GONE
+        if (pinned) {
+            binding.jobPinAddressText.text = getString(
+                R.string.add_job_pinned_at,
+                jobPinAddress.orEmpty().ifBlank { getString(R.string.map_pin_coords, jobPinLat, jobPinLng) },
+            )
+            binding.jobRadiusLabel.text = getString(R.string.add_job_radius_label, jobRadiusKm)
         }
     }
 
@@ -420,7 +481,8 @@ class AddJobFragment : Fragment() {
         // Call the new multipart update API method
         homePageViewModel.updateJobWithFiles(
             id, jobTitle, jobDescription, jobCategory, jobResponsibility,
-            pdfPart, imagePart, logoPart, companyJobLocations.toList()
+            pdfPart, imagePart, logoPart, companyJobLocations.toList(),
+            jobPinLat, jobPinLng, if (jobPinLat != null) jobRadiusKm else null,
         )
     }
 
@@ -449,7 +511,8 @@ class AddJobFragment : Fragment() {
         // Call the new multipart API method
         homePageViewModel.onSubmitJobWithFiles(
             jobTitle, jobDescription, jobCategory, jobResponsibility,
-            pdfPart, imagePart, logoPart, companyJobLocations.toList()
+            pdfPart, imagePart, logoPart, companyJobLocations.toList(),
+            jobPinLat, jobPinLng, if (jobPinLat != null) jobRadiusKm else null,
         )
     }
 

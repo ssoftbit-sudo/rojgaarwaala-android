@@ -8,14 +8,22 @@ import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.FreeJobItem
+import com.srijeesolution.rojgaarwaala.utils.JobMapPins
 import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.TimeUtils
 
 class FreeJobCardsAdapter(
-    private val items: List<FreeJobItem>,
     private val onClick: (FreeJobItem) -> Unit,
     private val onViewMap: (FreeJobItem) -> Unit,
 ) : RecyclerView.Adapter<FreeJobCardsAdapter.Holder>() {
+
+    private val items = mutableListOf<FreeJobItem>()
+
+    fun submit(newItems: List<FreeJobItem>) {
+        items.clear()
+        items.addAll(newItems)
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val view = LayoutInflater.from(parent.context)
@@ -38,7 +46,9 @@ class FreeJobCardsAdapter(
         holder.salary.text = salary
         holder.salary.visibility = if (salary.isBlank()) View.GONE else View.VISIBLE
         val place = FreeJobFeed.placeLine(job)
-        holder.place.text = place.ifBlank { holder.itemView.context.getString(R.string.free_job_location_available) }
+        val distance = JobMapPins.distanceLabel(job.distanceKm)
+        holder.place.text = listOf(place, distance).filter { it.isNotBlank() }.joinToString(" · ")
+            .ifBlank { holder.itemView.context.getString(R.string.free_job_location_available) }
         val canOpenMap = FreeJobFeed.mapGeoUri(job) != null
         holder.viewMap.visibility = if (canOpenMap) View.VISIBLE else View.GONE
         holder.itemView.setOnClickListener { onClick(item) }

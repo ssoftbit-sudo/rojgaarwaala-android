@@ -33,5 +33,6 @@ object SharedPrefsConstant {
     const val PROFILE_MAP_ADDRESS = "profile_map_address"
     const val FREE_JOB_RADIUS_KM = "free_job_radius_km"
     const val NEARBY_JOBS_POPUP_DATE = "nearby_jobs_popup_date"
+    const val SEEN_NEW_JOB_IDS = "seen_new_job_ids"
     const val PREFERRED_JOB_CATEGORY = "preferred_job_category"
 }

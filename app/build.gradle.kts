@@ -33,8 +33,8 @@ android {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 23
         targetSdk = 36
-        versionCode = 35
-        versionName = "2.0.17"
+        versionCode = 38
+        versionName = "2.0.20"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndkVersion = "28.2.13676358"
         manifestPlaceholders["mapsApiKey"] = mapsApiKey

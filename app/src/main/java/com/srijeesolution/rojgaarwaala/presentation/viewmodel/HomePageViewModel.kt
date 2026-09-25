@@ -179,11 +179,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         imageFile: okhttp3.MultipartBody.Part?,
         logoFile: okhttp3.MultipartBody.Part?,
         locations: List<String> = emptyList(),
+        latitude: Double? = null,
+        longitude: Double? = null,
+        radiusKm: Int? = null,
     ) {
         viewModelScope.launch {
             homePageRepository.onSubmitJobWithFiles(
                 jobTitle, jobDescription, jobCategory, jobResponsibility,
-                pdfFile, imageFile, logoFile, locations
+                pdfFile, imageFile, logoFile, locations, latitude, longitude, radiusKm
             ).collectLatest{
                 _jobSubmitLiveData.postValue(it)
             }
@@ -313,9 +316,15 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
     private var _nearbyJobsLiveData : MutableLiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = MutableLiveData()
     val nearbyJobsLiveData : LiveData<ApiResult<com.srijeesolution.rojgaarwaala.data.remote.model.NearbyJobsResponse>> = _nearbyJobsLiveData
 
-    fun getNearbyScheduledImages(lat: Double, lng: Double, radiusKm: Int = 15, limit: Int = 2) {
+    fun getNearbyScheduledImages(
+        lat: Double? = null,
+        lng: Double? = null,
+        radiusKm: Int = 15,
+        limit: Int = 2,
+        allCategories: Boolean = false,
+    ) {
         viewModelScope.launch {
-            homePageRepository.getNearbyScheduledImages(lat, lng, radiusKm, limit).collectLatest {
+            homePageRepository.getNearbyScheduledImages(lat, lng, radiusKm, limit, allCategories).collectLatest {
                 _nearbyJobsLiveData.postValue(it)
             }
         }
@@ -456,11 +465,14 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         imageFile: okhttp3.MultipartBody.Part?,
         logoFile: okhttp3.MultipartBody.Part?,
         locations: List<String> = emptyList(),
+        latitude: Double? = null,
+        longitude: Double? = null,
+        radiusKm: Int? = null,
     ) {
         viewModelScope.launch {
             homePageRepository.updateJobWithFiles(
                 id, jobTitle, jobDescription, jobCategory, jobResponsibility,
-                pdfFile, imageFile, logoFile, locations
+                pdfFile, imageFile, logoFile, locations, latitude, longitude, radiusKm
             ).collectLatest{
                 _updateJobLiveData.postValue(it)
             }
