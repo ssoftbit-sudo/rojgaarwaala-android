@@ -36,6 +36,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeToday
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendanceViewModel
 import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
+import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import android.os.Handler
 import android.os.Looper
 import androidx.viewpager2.widget.ViewPager2
@@ -108,11 +109,13 @@ class HomeFragment : Fragment() {
         observeNearbyJobs()
         maybeLoadNearbyJobs()
         attendanceViewModel.dashboardLiveData.observe(viewLifecycleOwner) { result ->
-            val today = (result as? ApiResult.Success)?.data?.data?.today
+            val payload = (result as? ApiResult.Success)?.data?.data
+            val today = payload?.today
             val factory = today?.factory
             if (factory != null) {
                 FactoryGeofenceMonitor.register(requireContext(), factory)
             }
+            PunchReminderSync.apply(requireContext(), sharedPrefs, payload)
             bindHomeAttendance(today)
         }
         callApi()

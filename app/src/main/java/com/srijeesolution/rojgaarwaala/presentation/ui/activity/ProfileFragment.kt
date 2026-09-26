@@ -23,6 +23,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
 import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
+import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant.USER_AUTH_TOKEN
@@ -455,6 +456,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun logoutUser() {
+        PunchReminderSync.clear(requireContext(), sharedPrefs)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS)
         Toast.makeText(requireContext(), getString(R.string.profile_logged_out), Toast.LENGTH_SHORT).show()
@@ -471,6 +473,7 @@ class ProfileFragment : Fragment() {
                 is ApiResult.Success -> {
                     if (apiResponse.data?.dataObj != null) {
                         showLoading(false)
+                        PunchReminderSync.clear(requireContext(), sharedPrefs)
                         sharedPrefs.removeSharedPrefs(USER_AUTH_TOKEN)
                         sharedPrefs.removeSharedPrefs(USER_LOGGED_IN_STATUS)
                         sharedPrefs.removeSharedPrefs(USER_SKIP_STATUS)

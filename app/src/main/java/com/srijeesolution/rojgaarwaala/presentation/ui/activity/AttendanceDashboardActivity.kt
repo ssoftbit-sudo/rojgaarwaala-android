@@ -42,8 +42,11 @@ import com.srijeesolution.rojgaarwaala.utils.LocationHelper
 import com.srijeesolution.rojgaarwaala.utils.LocationPermissionPolicy
 import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
 import com.srijeesolution.rojgaarwaala.utils.PunchOutOutcome
+import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class AttendanceDashboardActivity : AppCompatActivity() {
@@ -64,6 +67,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAttendanceDashboardBinding
     private val viewModel: EmployeeAttendanceViewModel by viewModels()
+
+    @Inject
+    lateinit var sharedPrefs: SharedPrefs
 
     // Registered during construction so the permission / settings launchers are ready
     // before the activity reaches STARTED.
@@ -344,6 +350,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.dailyWageText.text =
             if (dailyWage == null) "" else "रोज़ की मजदूरी ${WageFormatter.format(dailyWage)}"
         binding.dailyWageText.visibility = if (dailyWage == null) View.GONE else View.VISIBLE
+
+        PunchReminderSync.apply(this, sharedPrefs, data)
 
         binding.punchInTimeText.text = today?.punchInAt?.takeIf { it.isNotBlank() } ?: "--"
         binding.punchOutTimeText.text = today?.punchOutAt?.takeIf { it.isNotBlank() } ?: "--"

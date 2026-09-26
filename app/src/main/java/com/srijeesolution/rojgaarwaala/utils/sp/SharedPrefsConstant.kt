@@ -35,4 +35,9 @@ object SharedPrefsConstant {
     const val NEARBY_JOBS_POPUP_DATE = "nearby_jobs_popup_date"
     const val SEEN_NEW_JOB_IDS = "seen_new_job_ids"
     const val PREFERRED_JOB_CATEGORY = "preferred_job_category"
+    const val PUNCH_DUTY_START = "punch_duty_start"
+    const val PUNCH_DUTY_END = "punch_duty_end"
+    const val PUNCH_IN_DONE_TODAY = "punch_in_done_today"
+    const val PUNCH_OUT_DONE_TODAY = "punch_out_done_today"
+    const val PUNCH_REMINDER_DATE = "punch_reminder_date"
 }

@@ -63,14 +63,18 @@ object FreeJobFeed {
     }
 
     fun mapGeoUri(job: ImageData): String? {
+        val place = placeLine(job)
+        val query = if (place.isNotBlank()) {
+            URLEncoder.encode(place, StandardCharsets.UTF_8.name()).replace("+", "%20")
+        } else {
+            null
+        }
         val lat = job.latitude
         val lng = job.longitude
         if (lat != null && lng != null) {
-            return "geo:$lat,$lng?q=$lat,$lng"
+            return if (query != null) "geo:$lat,$lng?q=$query" else "geo:$lat,$lng?q=$lat,$lng"
         }
-        val place = placeLine(job)
-        if (place.isBlank()) return null
-        val query = URLEncoder.encode(place, StandardCharsets.UTF_8.name()).replace("+", "%20")
+        if (query == null) return null
         return "geo:0,0?q=$query"
     }
 

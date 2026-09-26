@@ -7,6 +7,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.srijeesolution.rojgaarwaala.BuildConfig
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -29,6 +30,12 @@ class RojgaarwalaApplication : Application(), DefaultLifecycleObserver {
 
         try {
             NotificationUtils.ensureNotificationChannels(this)
+            val prefs = SharedPrefs(this)
+            if (PunchReminderStore.dutyStart(prefs).isNotBlank() ||
+                PunchReminderStore.dutyEnd(prefs).isNotBlank()
+            ) {
+                PunchReminderScheduler.schedule(this, prefs)
+            }
         } catch (t: Throwable) {
             Log.w("RojgaarwalaApplication", "Notification channel setup failed; continuing", t)
         }

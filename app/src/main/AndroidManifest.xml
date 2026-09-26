@@ -41,6 +41,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Declared explicitly for Firebase Analytics (Play AD_ID policy / targetSdk 33+) -->
@@ -230,6 +232,14 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.srijeesolution.rojgaarwaala.ACTION_FACTORY_ARRIVAL" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".utils.PunchReminderReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.srijeesolution.rojgaarwaala.ACTION_PUNCH_REMINDER" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

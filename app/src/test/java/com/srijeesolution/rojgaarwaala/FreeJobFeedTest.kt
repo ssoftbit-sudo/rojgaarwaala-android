@@ -71,6 +71,17 @@ class FreeJobFeedTest {
     fun `map uri uses coordinates when present otherwise searches the place`() {
         val pinned = ImageData(id = 6, title = "Nurse", latitude = 21.25, longitude = 81.63)
         assertEquals("geo:21.25,81.63?q=21.25,81.63", FreeJobFeed.mapGeoUri(pinned))
+        val clinic = ImageData(
+            id = 9,
+            title = "Nurse",
+            areaName = "Sita Memorial Multispeciality Dental Clinic, Samta Colony, Raipur",
+            latitude = 21.25,
+            longitude = 81.63,
+        )
+        assertEquals(
+            "geo:21.25,81.63?q=Sita%20Memorial%20Multispeciality%20Dental%20Clinic%2C%20Samta%20Colony%2C%20Raipur",
+            FreeJobFeed.mapGeoUri(clinic),
+        )
         val cityOnly = ImageData(id = 7, title = "Helper", location = "Raipur, Chhattisgarh")
         assertEquals("geo:0,0?q=Raipur%2C%20Chhattisgarh", FreeJobFeed.mapGeoUri(cityOnly))
         val poster = ImageData(id = 8, title = "Paper cut")
