@@ -41,4 +41,13 @@ object JobMapPins {
             "आपसे $km किमी दूर"
         }
     }
+
+    fun distanceChipLabel(km: Double?): String {
+        if (km == null) return ""
+        return if (km < 1.0) {
+            "आपसे ${(km * 1000).roundToInt()} मी की दूरी"
+        } else {
+            "आपसे $km किमी की दूरी"
+        }
+    }
 }

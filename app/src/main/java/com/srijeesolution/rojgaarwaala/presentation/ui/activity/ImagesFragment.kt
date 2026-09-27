@@ -24,7 +24,6 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.FragmentImagesBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
-import com.srijeesolution.rojgaarwaala.presentation.adaptor.FreeJobCardsAdapter
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesCategoryAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
@@ -49,7 +48,6 @@ class ImagesFragment : Fragment() {
     private lateinit var mainToolbarViewModel: MainToolbarViewModel
 
     private var allCategories: List<ImageSubItem> = emptyList()
-    private var listedItems: List<FreeJobItem> = emptyList()
     private var viewMode = FreeJobFeed.ViewMode.LIST
     private var sort = FreeJobFeed.Sort.NEWEST
     private var hasLoaded = false
@@ -58,7 +56,6 @@ class ImagesFragment : Fragment() {
     private var isLoadingPage = false
     private var serverTotal: Int? = null
     private var boundMode: FreeJobFeed.ViewMode? = null
-    private var listAdapter: FreeJobCardsAdapter? = null
     private var categoryAdapter: ImagesCategoryAdapter? = null
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchReload = Runnable { reloadFromStart() }
@@ -135,13 +132,10 @@ class ImagesFragment : Fragment() {
                     serverTotal = pagination?.total
                     hasMorePages = pagination?.hasMore == true
                     currentPage = page
-                    val incomingItems = FreeJobFeed.flatten(incoming)
                     if (page <= 1) {
                         allCategories = incoming
-                        listedItems = incomingItems
                     } else {
                         allCategories = FreeJobFeed.mergeCategories(allCategories, incoming)
-                        listedItems = FreeJobFeed.appendItems(listedItems, incomingItems)
                     }
                     render()
                 }
@@ -159,7 +153,6 @@ class ImagesFragment : Fragment() {
         currentPage = 1
         hasMorePages = false
         serverTotal = null
-        listedItems = emptyList()
         boundMode = null
         loadPage(1, append = false)
     }
@@ -234,27 +227,16 @@ class ImagesFragment : Fragment() {
 
     private fun userLng(): Double? = ProfileLocationStore.longitude(sharedPrefs)
 
-    private fun displayedListItems(): List<FreeJobItem> {
-        val query = binding.searchBar.text?.toString()?.trim().orEmpty().lowercase()
-        val locationQuery = districtQuery()
-        val filtered = listedItems.filter { item ->
-            val image = item.job
-            val searchOk = query.isEmpty() ||
-                image.title?.lowercase()?.contains(query) == true ||
-                image.description?.lowercase()?.contains(query) == true ||
-                item.categoryTitle?.lowercase()?.contains(query) == true
-            val locationOk = !FreeJobFeed.hasLocation(image) ||
-                locationQuery.isEmpty() ||
-                ImageLocationFilter.matches(image, locationQuery)
-            searchOk && locationOk
-        }
-        return FreeJobFeed.withDistances(filtered, userLat(), userLng())
+    private fun displayedCategories(): List<ImageSubItem> {
+        return FreeJobFeed.sortedCategories(
+            FreeJobFeed.categoriesWithDistances(filteredCategories(), userLat(), userLng()),
+            sort,
+        )
     }
 
     private fun render() {
-        val categories = FreeJobFeed.categoriesWithDistances(filteredCategories(), userLat(), userLng())
-        val items = displayedListItems()
-        val visibleCount = if (viewMode == FreeJobFeed.ViewMode.LIST) items.size else categories.sumOf { it.images?.size ?: 0 }
+        val categories = displayedCategories()
+        val visibleCount = categories.sumOf { it.images?.size ?: 0 }
         val count = if (districtQuery().isEmpty()) {
             serverTotal ?: visibleCount
         } else {
@@ -265,57 +247,33 @@ class ImagesFragment : Fragment() {
             if (sort == FreeJobFeed.Sort.NEWEST) R.string.free_job_newest else R.string.free_job_oldest,
         )
         styleViewToggle()
-
-        if (viewMode == FreeJobFeed.ViewMode.LIST) {
-            bindList(items)
-        } else {
-            bindTiles(categories)
-        }
+        bindCategories(categories)
     }
 
-    private fun bindList(cards: List<FreeJobItem>) {
-        if (cards.isEmpty()) {
-            showEmpty()
-            return
-        }
-        binding.noResultsLayout.visibility = View.GONE
-        binding.imagesRecyclerView.visibility = View.VISIBLE
-        if (boundMode != FreeJobFeed.ViewMode.LIST || listAdapter == null) {
-            binding.imagesRecyclerView.layoutManager = LinearLayoutManager(context)
-            listAdapter = FreeJobCardsAdapter(
-                onClick = { item -> openLocatedJob(item) },
-                onViewMap = { item -> openJobOnMap(item) },
-            )
-            binding.imagesRecyclerView.adapter = listAdapter
-            categoryAdapter = null
-            boundMode = FreeJobFeed.ViewMode.LIST
-        }
-        listAdapter?.submit(cards)
-    }
-
-    private fun bindTiles(categories: List<ImageSubItem>) {
+    private fun bindCategories(categories: List<ImageSubItem>) {
         if (categories.isEmpty()) {
             showEmpty()
             return
         }
         binding.noResultsLayout.visibility = View.GONE
         binding.imagesRecyclerView.visibility = View.VISIBLE
-        if (boundMode != FreeJobFeed.ViewMode.TILE || categoryAdapter == null) {
+        if (boundMode != viewMode || categoryAdapter == null) {
             binding.imagesRecyclerView.layoutManager = LinearLayoutManager(context)
             categoryAdapter = ImagesCategoryAdapter(
+                viewMode = viewMode,
                 onImageClick = { category, index -> onPosterClick(category, index) },
                 onViewAllClick = { category -> onViewAllClick(category) },
+                onListClick = { item -> openLocatedJob(item) },
+                onViewMap = { item -> openJobOnMap(item) },
             )
             binding.imagesRecyclerView.adapter = categoryAdapter
-            listAdapter = null
-            boundMode = FreeJobFeed.ViewMode.TILE
+            boundMode = viewMode
         }
         categoryAdapter?.submit(categories)
     }
 
     private fun showEmpty() {
         boundMode = null
-        listAdapter = null
         categoryAdapter = null
         binding.imagesRecyclerView.adapter = null
         binding.imagesRecyclerView.visibility = View.GONE
@@ -337,15 +295,11 @@ class ImagesFragment : Fragment() {
     }
 
     private fun openLocatedJob(item: FreeJobItem) {
-        startActivity(
-            Intent(context, ImageViewerActivity::class.java).apply {
-                putParcelableArrayListExtra(
-                    "scheduled_images",
-                    arrayListOf(toScheduledImage(item.job)),
-                )
-                putExtra("current_index", 0)
-                putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, item.categoryTitle ?: getString(R.string.free_job))
-            },
+        val jobs = displayedCategories().flatMap { it.images.orEmpty() }
+        openJobViewer(
+            jobs,
+            FreeJobFeed.indexOfJob(jobs, item.job),
+            item.categoryTitle ?: getString(R.string.free_job),
         )
     }
 
@@ -363,16 +317,22 @@ class ImagesFragment : Fragment() {
     }
 
     private fun onPosterClick(category: ImageSubItem, imageIndex: Int) {
-        val images = category.images ?: emptyList()
-        if (imageIndex !in images.indices) return
+        val clicked = category.images?.getOrNull(imageIndex) ?: return
+        val jobs = displayedCategories().flatMap { it.images.orEmpty() }
+        openJobViewer(jobs, FreeJobFeed.indexOfJob(jobs, clicked), category.title)
+    }
+
+    private fun openJobViewer(jobs: List<ImageData>, index: Int, category: String?) {
+        if (jobs.isEmpty()) return
+        val start = index.coerceIn(0, jobs.lastIndex)
         startActivity(
             Intent(context, ImageViewerActivity::class.java).apply {
                 putParcelableArrayListExtra(
                     "scheduled_images",
-                    arrayListOf(toScheduledImage(images[imageIndex])),
+                    ArrayList(jobs.map { toScheduledImage(it) }),
                 )
-                putExtra("current_index", 0)
-                putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, category.title)
+                putExtra("current_index", start)
+                putExtra(ImageViewerActivity.EXTRA_IMAGE_CATEGORY, category)
             },
         )
     }

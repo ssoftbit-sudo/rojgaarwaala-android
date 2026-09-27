@@ -34,7 +34,8 @@ class FreeJobCardsAdapter(
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val item = items[position]
         val job = item.job
-        val company = FreeJobFeed.companyName(item)
+        val category = item.categoryTitle?.trim().orEmpty()
+        val company = category.ifBlank { FreeJobFeed.companyName(item) }
         holder.avatar.text = company.firstOrNull()?.uppercaseChar()?.toString() ?: "R"
         holder.company.text = company
         holder.title.text = JobTitleCopy.display(job.title, holder.itemView.context.getString(R.string.free_job))
@@ -42,13 +43,20 @@ class FreeJobCardsAdapter(
         val posted = TimeUtils.formatPublishMeta(holder.itemView.context, job.publishDate, job.createdAt)
         holder.meta.text = listOf(shift, posted).filter { it.isNotBlank() }.joinToString("  ·  ")
         holder.meta.visibility = if (holder.meta.text.isNullOrBlank()) View.GONE else View.VISIBLE
+        val distance = JobMapPins.distanceChipLabel(job.distanceKm)
+        holder.distanceChip.text = distance
+        holder.distanceChip.visibility = if (distance.isBlank()) View.GONE else View.VISIBLE
+        holder.metaRow.visibility =
+            if (holder.meta.visibility == View.GONE && holder.distanceChip.visibility == View.GONE) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
         val salary = FreeJobFeed.salaryLine(job)
         holder.salary.text = salary
         holder.salary.visibility = if (salary.isBlank()) View.GONE else View.VISIBLE
         val place = FreeJobFeed.placeLine(job)
-        val distance = JobMapPins.distanceLabel(job.distanceKm)
-        holder.place.text = listOf(place, distance).filter { it.isNotBlank() }.joinToString(" · ")
-            .ifBlank { holder.itemView.context.getString(R.string.free_job_location_available) }
+        holder.place.text = place.ifBlank { holder.itemView.context.getString(R.string.free_job_location_available) }
         val canOpenMap = FreeJobFeed.mapGeoUri(job) != null
         holder.viewMap.visibility = if (canOpenMap) View.VISIBLE else View.GONE
         holder.itemView.setOnClickListener { onClick(item) }
@@ -61,7 +69,9 @@ class FreeJobCardsAdapter(
         val avatar: TextView = view.findViewById(R.id.freeJobAvatar)
         val company: TextView = view.findViewById(R.id.freeJobCompany)
         val title: TextView = view.findViewById(R.id.freeJobTitle)
+        val metaRow: View = view.findViewById(R.id.freeJobMetaRow)
         val meta: TextView = view.findViewById(R.id.freeJobMeta)
+        val distanceChip: TextView = view.findViewById(R.id.freeJobDistanceChip)
         val salary: TextView = view.findViewById(R.id.freeJobSalary)
         val place: TextView = view.findViewById(R.id.freeJobPlace)
         val viewMap: TextView = view.findViewById(R.id.freeJobViewMap)

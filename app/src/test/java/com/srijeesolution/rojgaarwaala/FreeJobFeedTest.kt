@@ -114,10 +114,43 @@ class FreeJobFeedTest {
         assertEquals(listOf(10, 11), merged.map { it.job.id })
     }
 
+    @Test
+    fun `viewer swipe wraps to the next job in the opened list`() {
+        val jobs = listOf(
+            ImageData(id = 1, title = "Nurse"),
+            ImageData(id = 2, title = "Helper"),
+            ImageData(id = 3, title = "Driver"),
+        )
+        assertEquals(1, FreeJobFeed.indexOfJob(jobs, ImageData(id = 2, title = "Helper")))
+        assertEquals(0, FreeJobFeed.nextIndex(2, jobs.size))
+        assertEquals(2, FreeJobFeed.previousIndex(0, jobs.size))
+        assertEquals(0, FreeJobFeed.nextIndex(0, 1))
+    }
+
+    @Test
     fun `newest first puts later dates at the top`() {
         val older = FreeJobItem(ImageData(id = 1, title = "Old", createdAt = "2026-01-01 10:00:00"), "Hospital")
         val newer = FreeJobItem(ImageData(id = 2, title = "New", createdAt = "2026-09-20 10:00:00"), "Hospital")
         assertEquals(listOf(2, 1), FreeJobFeed.sortedItems(listOf(older, newer), FreeJobFeed.Sort.NEWEST).map { it.job.id })
         assertEquals(listOf(1, 2), FreeJobFeed.sortedItems(listOf(older, newer), FreeJobFeed.Sort.OLDEST).map { it.job.id })
+    }
+
+    @Test
+    fun `a new job lifts its category to the top of the feed`() {
+        val hospital = ImageSubItem(
+            id = 1,
+            title = "Hospital",
+            images = listOf(ImageData(id = 10, title = "Nurse", createdAt = "2026-01-01 10:00:00")),
+        )
+        val driver = ImageSubItem(
+            id = 2,
+            title = "Driver",
+            images = listOf(ImageData(id = 20, title = "Helper", createdAt = "2026-09-26 18:00:00")),
+        )
+        val newest = FreeJobFeed.sortedCategories(listOf(hospital, driver), FreeJobFeed.Sort.NEWEST)
+        assertEquals(listOf(2, 1), newest.map { it.id })
+        assertEquals("Driver", newest.first().title)
+        val oldest = FreeJobFeed.sortedCategories(listOf(hospital, driver), FreeJobFeed.Sort.OLDEST)
+        assertEquals(listOf(1, 2), oldest.map { it.id })
     }
 }

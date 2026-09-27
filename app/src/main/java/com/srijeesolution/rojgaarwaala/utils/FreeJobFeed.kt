@@ -157,4 +157,26 @@ object FreeJobFeed {
         }
         return order.mapNotNull { merged[it] }
     }
+
+    fun sameJob(a: ImageData, b: ImageData): Boolean {
+        if (a.id != null && b.id != null) {
+            return a.id == b.id
+        }
+        return a.imageUrl == b.imageUrl && a.title == b.title
+    }
+
+    fun indexOfJob(jobs: List<ImageData>, job: ImageData): Int {
+        val index = jobs.indexOfFirst { sameJob(it, job) }
+        return if (index >= 0) index else 0
+    }
+
+    fun nextIndex(current: Int, size: Int): Int {
+        if (size <= 1) return current.coerceAtLeast(0)
+        return (current + 1).mod(size)
+    }
+
+    fun previousIndex(current: Int, size: Int): Int {
+        if (size <= 1) return current.coerceAtLeast(0)
+        return (current - 1).mod(size)
+    }
 }

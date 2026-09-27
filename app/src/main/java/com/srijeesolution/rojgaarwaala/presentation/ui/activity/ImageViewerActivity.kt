@@ -19,6 +19,7 @@ import com.bumptech.glide.request.target.Target
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
+import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.JobMapPins
 import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
@@ -362,28 +363,23 @@ class ImageViewerActivity : AppCompatActivity(),
     }
 
     private fun updateArrowVisibility() {
-        binding.leftArrowButton.visibility =
-            if (currentIndex > 0) View.VISIBLE else View.GONE
-        binding.rightArrowButton.visibility =
-            if (imageList != null && currentIndex < imageList!!.size - 1) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+        val canSwipe = (imageList?.size ?: 0) > 1
+        binding.leftArrowButton.visibility = if (canSwipe) View.VISIBLE else View.GONE
+        binding.rightArrowButton.visibility = if (canSwipe) View.VISIBLE else View.GONE
     }
 
     private fun navigateToPrevious() {
-        if (imageList != null && currentIndex > 0) {
-            currentIndex--
-            loadImageAtIndex(currentIndex)
-        }
+        val list = imageList ?: return
+        if (list.size <= 1) return
+        currentIndex = FreeJobFeed.previousIndex(currentIndex, list.size)
+        loadImageAtIndex(currentIndex)
     }
 
     private fun navigateToNext() {
-        if (imageList != null && currentIndex < imageList!!.size - 1) {
-            currentIndex++
-            loadImageAtIndex(currentIndex)
-        }
+        val list = imageList ?: return
+        if (list.size <= 1) return
+        currentIndex = FreeJobFeed.nextIndex(currentIndex, list.size)
+        loadImageAtIndex(currentIndex)
     }
 
     private fun loadImageAtIndex(index: Int) {

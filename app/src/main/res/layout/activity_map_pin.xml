@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end|top"
                 android:layout_margin="16dp"
-                android:background="@drawable/bg_theme_chip"
+                android:background="@drawable/bg_map_pin_dark_chip"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -77,7 +77,7 @@
                 android:paddingEnd="14dp"
                 android:paddingBottom="10dp"
                 android:text="@string/map_pin_my_location"
-                android:textColor="@color/accent"
+                android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </FrameLayout>

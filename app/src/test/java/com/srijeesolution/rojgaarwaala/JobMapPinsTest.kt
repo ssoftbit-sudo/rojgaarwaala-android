@@ -27,6 +27,7 @@ class JobMapPinsTest {
         val km = withKm.first().distanceKm
         assertTrue(km != null && km > 0)
         assertTrue(JobMapPins.distanceLabel(km).startsWith("आपसे"))
+        assertTrue(JobMapPins.distanceChipLabel(km).endsWith("की दूरी"))
     }
 
     @Test

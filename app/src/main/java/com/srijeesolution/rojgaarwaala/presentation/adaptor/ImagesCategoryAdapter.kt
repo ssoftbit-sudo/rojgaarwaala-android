@@ -4,14 +4,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem
 import com.srijeesolution.rojgaarwaala.databinding.ItemImageCategoryBinding
+import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
+import com.srijeesolution.rojgaarwaala.utils.FreeJobItem
 import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class ImagesCategoryAdapter(
+    private val viewMode: FreeJobFeed.ViewMode,
     private val onImageClick: (ImageSubItem, Int) -> Unit,
-    private val onViewAllClick: (ImageSubItem) -> Unit
+    private val onViewAllClick: (ImageSubItem) -> Unit,
+    private val onListClick: (FreeJobItem) -> Unit = {},
+    private val onViewMap: (FreeJobItem) -> Unit = {},
 ) : RecyclerView.Adapter<ImagesCategoryAdapter.CategoryViewHolder>() {
 
     private val categories = mutableListOf<ImageSubItem>()
@@ -23,52 +29,47 @@ class ImagesCategoryAdapter(
     }
 
     inner class CategoryViewHolder(private val binding: ItemImageCategoryBinding) : RecyclerView.ViewHolder(binding.root) {
-        
+
         fun bind(category: ImageSubItem) {
             binding.apply {
-                // Set category title
-                categoryTitle.text = category.title ?: ""
-                
-                // Limit to first 4 images for display
-                val allImages = category.images ?: emptyList()
-                val displayImages = allImages.take(6)
-                
-                // Show View All button only if there are more than 4 images
-                if (allImages.size > 6) {
-                    categoryViewAll.visibility = View.VISIBLE
-                    // Setup View All click listener
-                    categoryViewAll.setOnClickListener {
-                        onViewAllClick(category)
-                    }
+                categoryTitle.text = category.title.orEmpty().ifBlank { "Free Job" }
+                categoryViewAll.visibility = View.VISIBLE
+                categoryViewAll.setOnClickListener { onViewAllClick(category) }
+
+                val allImages = category.images.orEmpty()
+                val displayImages = if (viewMode == FreeJobFeed.ViewMode.TILE) {
+                    allImages.take(TILE_PREVIEW)
                 } else {
-                    categoryViewAll.visibility = View.GONE
+                    allImages
                 }
-                
-                // Clear previous adapter and decorations to avoid showing extra items
+
                 imagesRecyclerView.adapter = null
                 imagesRecyclerView.layoutManager = null
                 imagesRecyclerView.clearOnScrollListeners()
-                
-                // Setup nested RecyclerView for images with GridLayoutManager (2 columns like stories)
-                imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
-                
-                // Remove all existing decorations and add fresh one
                 while (imagesRecyclerView.itemDecorationCount > 0) {
                     imagesRecyclerView.removeItemDecorationAt(0)
                 }
-                imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
-                
-                // Optimize for smooth scrolling
-                imagesRecyclerView.setHasFixedSize(true)
-                imagesRecyclerView.isNestedScrollingEnabled = false
-                
-                // Create adapter with exactly 4 items (or fewer if less than 4 available)
-                val imagesAdapter = ImagesGridAdapter { image, imageIndex ->
-                    // Since displayImages is the first 4 images from allImages, the index matches directly
-                    onImageClick(category, imageIndex)
+
+                if (viewMode == FreeJobFeed.ViewMode.LIST) {
+                    imagesRecyclerView.layoutManager = LinearLayoutManager(itemView.context)
+                    val cards = FreeJobCardsAdapter(
+                        onClick = onListClick,
+                        onViewMap = onViewMap,
+                    )
+                    cards.submit(displayImages.map { FreeJobItem(job = it, categoryTitle = category.title) })
+                    imagesRecyclerView.adapter = cards
+                } else {
+                    imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
+                    imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
+                    val imagesAdapter = ImagesGridAdapter { _, imageIndex ->
+                        onImageClick(category, imageIndex)
+                    }
+                    imagesAdapter.submitList(displayImages)
+                    imagesRecyclerView.adapter = imagesAdapter
                 }
-                imagesAdapter.submitList(displayImages)
-                imagesRecyclerView.adapter = imagesAdapter
+
+                imagesRecyclerView.setHasFixedSize(false)
+                imagesRecyclerView.isNestedScrollingEnabled = false
             }
         }
     }
@@ -83,4 +84,8 @@ class ImagesCategoryAdapter(
     }
 
     override fun getItemCount(): Int = categories.size
-} 
+
+    companion object {
+        private const val TILE_PREVIEW = 6
+    }
+}
