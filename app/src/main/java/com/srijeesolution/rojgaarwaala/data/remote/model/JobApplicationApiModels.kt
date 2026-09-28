@@ -25,6 +25,7 @@ data class JobApplicationApiData(
     @SerializedName("already_paid") val alreadyPaid: Boolean? = false,
     // Verify endpoint result.
     @SerializedName("paid") val paid: Boolean? = false,
+    @SerializedName("pending") val pending: Boolean? = null,
     @SerializedName("status") val paymentState: String? = null,
     @SerializedName("reason") val reason: String? = null,
 )

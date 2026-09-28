@@ -43,14 +43,25 @@ class PaymentActivity : AppCompatActivity() {
     binding = ActivityPaymentBinding.inflate(layoutInflater)
     setContentView(binding.root)
 
-    applicationId = intent.getStringExtra(EXTRA_APPLICATION_ID)?.toIntOrNull() ?: 0
+    applicationId = intent.getStringExtra(EXTRA_APPLICATION_ID)?.toIntOrNull()
+      ?: intent.data?.getQueryParameter("application_id")?.toIntOrNull()
+      ?: savedInstanceState?.getInt(STATE_APPLICATION_ID, 0)
+      ?: 0
     amountPaise = intent.getIntExtra(EXTRA_AMOUNT_PAISE, DEFAULT_AMOUNT_PAISE)
+    paymentPageOpened = savedInstanceState?.getBoolean(STATE_PAGE_OPENED) ?: false
 
     binding.priceText.text = formatAmount(amountPaise)
     binding.backButton.setOnClickListener { finish() }
     binding.payButton.setOnClickListener { startPayment() }
 
     observeViewModel()
+    handleReturn(intent)
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putInt(STATE_APPLICATION_ID, applicationId)
+    outState.putBoolean(STATE_PAGE_OPENED, paymentPageOpened)
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -59,7 +70,11 @@ class PaymentActivity : AppCompatActivity() {
 
     // Arrived back from the gateway's receipt page. The status in the deep link
     // is only a hint — the server is the one that decides.
-    if (intent.data?.scheme == RETURN_SCHEME && applicationId > 0) {
+    handleReturn(intent)
+  }
+
+  private fun handleReturn(intent: Intent?) {
+    if (intent?.data?.scheme == RETURN_SCHEME && applicationId > 0) {
       paymentPageOpened = false
       viewModel.verifyPayment(applicationId)
     }
@@ -119,6 +134,11 @@ class PaymentActivity : AppCompatActivity() {
         is PaymentState.NotPaid -> {
           setPayButton(enabled = true, label = "Try again")
           showHint(state.reason ?: "Payment was not completed. You have not been charged.")
+        }
+
+        is PaymentState.Confirming -> {
+          setPayButton(enabled = false, label = "Confirming…")
+          showHint(state.message)
         }
 
         is PaymentState.Error -> {
@@ -188,5 +208,7 @@ class PaymentActivity : AppCompatActivity() {
 
     private const val RETURN_SCHEME = "rojgaarwaala"
     private const val DEFAULT_AMOUNT_PAISE = 10000
+    private const val STATE_APPLICATION_ID = "application_id"
+    private const val STATE_PAGE_OPENED = "payment_page_opened"
   }
 }

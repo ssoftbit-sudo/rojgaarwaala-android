@@ -8,6 +8,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.utils.PaymentErrorMapper
+import com.srijeesolution.rojgaarwaala.utils.PaymentVerifyDecision
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -38,7 +39,14 @@ class PaymentViewModel @Inject constructor(
     private set
 
   fun startPayment(applicationId: Int) {
-    if (_state.value is PaymentState.Preparing) return
+    when (_state.value) {
+      is PaymentState.Preparing,
+      is PaymentState.Verifying,
+      is PaymentState.Confirming,
+      PaymentState.Paid,
+      -> return
+      else -> Unit
+    }
 
     _state.value = PaymentState.Preparing
     viewModelScope.launch {
@@ -80,11 +88,13 @@ class PaymentViewModel @Inject constructor(
   }
 
   /**
-   * Asks the server for the real outcome. Retried a few times because the
-   * customer can return before the gateway has finished settling.
+   * Asks the server for the real outcome. Retried while Inquiry is catching up
+   * with a just-completed UPI payment. A hard decline stops immediately.
    */
   fun verifyPayment(applicationId: Int, attempt: Int = 1) {
-    if (_state.value is PaymentState.Verifying && attempt == 1) return
+    if (attempt == 1 && (_state.value is PaymentState.Verifying || _state.value is PaymentState.Paid)) {
+      return
+    }
 
     _state.value = PaymentState.Verifying
     viewModelScope.launch {
@@ -93,24 +103,38 @@ class PaymentViewModel @Inject constructor(
           val data = (result as? ApiResult.Success)?.data?.data
           val reachedServer = result is ApiResult.Success
 
-          if (data?.paid == true) {
-            awaitingGatewayResult = false
-            currentOrderId = null
-            _state.value = PaymentState.Paid
-            return@collectLatest
-          }
+          when (
+            PaymentVerifyDecision.next(
+              paid = data?.paid,
+              pending = data?.pending,
+              reachedServer = reachedServer,
+              attempt = attempt,
+              maxAttempts = MAX_VERIFY_ATTEMPTS,
+            )
+          ) {
+            PaymentVerifyDecision.Action.PAID -> {
+              awaitingGatewayResult = false
+              currentOrderId = null
+              _state.value = PaymentState.Paid
+            }
 
-          if (attempt < MAX_VERIFY_ATTEMPTS) {
-            delay(VERIFY_RETRY_DELAY_MS)
-            verifyPayment(applicationId, attempt + 1)
-            return@collectLatest
-          }
+            PaymentVerifyDecision.Action.RETRY -> {
+              delay(VERIFY_RETRY_DELAY_MS)
+              verifyPayment(applicationId, attempt + 1)
+            }
 
-          awaitingGatewayResult = false
-          _state.value = if (reachedServer) {
-            PaymentState.NotPaid(data?.reason)
-          } else {
-            PaymentState.Error("Could not confirm the payment. Check My Applications in a minute.")
+            PaymentVerifyDecision.Action.CONFIRMING -> {
+              awaitingGatewayResult = false
+              _state.value = PaymentState.Confirming(
+                data?.reason
+                  ?: "We're confirming your payment. Check My Applications in a minute. Do not pay again.",
+              )
+            }
+
+            PaymentVerifyDecision.Action.NOT_PAID -> {
+              awaitingGatewayResult = false
+              _state.value = PaymentState.NotPaid(data?.reason)
+            }
           }
         }
     }
@@ -145,11 +169,14 @@ class PaymentViewModel @Inject constructor(
 
     data class NotPaid(val reason: String?) : PaymentState
 
+    /** Inquiry has not settled yet. Must not start a second charge. */
+    data class Confirming(val message: String) : PaymentState
+
     data class Error(val message: String) : PaymentState
   }
 
   private companion object {
-    const val MAX_VERIFY_ATTEMPTS = 3
-    const val VERIFY_RETRY_DELAY_MS = 2500L
+    const val MAX_VERIFY_ATTEMPTS = 10
+    const val VERIFY_RETRY_DELAY_MS = 3000L
   }
 }
