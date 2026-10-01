@@ -89,6 +89,7 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         address: String?,
         latitude: Double?,
         longitude: Double?,
+        preferredJobCategories: String?,
     ): Flow<ApiResult<HomePagBaseApiModel>> {
         val text = "text/plain".toMediaTypeOrNull()
         return flow {
@@ -106,6 +107,7 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                     latitude = latitude?.toString()?.toRequestBody(text),
                     longitude = longitude?.toString()?.toRequestBody(text),
                     preferredJobCategory = preferredJobCategory.toRequestBody(text),
+                    preferredJobCategories = preferredJobCategories?.toRequestBody(text),
                     resume = resumePart,
                 )
             })

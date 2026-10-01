@@ -12,6 +12,7 @@ import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls
 import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiService
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -150,11 +151,12 @@ class SplashActivity : AppCompatActivity(),
 
     private fun navigateNext() {
         keepSplash = false
+        val loggedIn = sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)
         val intent = when {
-            sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false) -> {
-                Intent(this, MainActivity::class.java)
+            loggedIn && !ProfileGate.isComplete(sharedPrefs) -> {
+                ProfileGate.requiredProfileIntent(this)
             }
-            sharedPrefs.getPrefs(SharedPrefsConstant.USER_SKIP_STATUS, false) -> {
+            loggedIn -> {
                 Intent(this, MainActivity::class.java)
             }
             else -> {

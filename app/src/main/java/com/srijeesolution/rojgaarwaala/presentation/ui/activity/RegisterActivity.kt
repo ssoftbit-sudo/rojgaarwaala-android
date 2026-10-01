@@ -12,6 +12,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityLoginBinding
 import com.srijeesolution.rojgaarwaala.databinding.ActivityRegisterBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,7 +68,10 @@ class RegisterActivity : AppCompatActivity() {
                         )
                         Toast.makeText(this,"Successfully logged in!", Toast.LENGTH_SHORT).show()
                         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, true))
-                        val intent = Intent(this, MainActivity::class.java)
+                        ProfileGate.remember(sharedPrefs, false)
+                        sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_SKIP_STATUS)
+                        val intent = ProfileGate.requiredProfileIntent(this)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         startActivity(intent)
                         finish()
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

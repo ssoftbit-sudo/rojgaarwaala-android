@@ -22,6 +22,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -33,6 +34,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
@@ -46,6 +48,7 @@ class ProfileFragment : Fragment() {
     private var categoryDialog: AlertDialog? = null
     private var categoryPickerRequested = false
     private var categoriesObserverRegistered = false
+    private var selectedCategories: MutableList<String> = mutableListOf()
     private var resumeFile: File? = null
     private var existingResumeUrl: String? = null
     private var cityValue: String = ""
@@ -106,6 +109,7 @@ class ProfileFragment : Fragment() {
         binding.appVersionText.text =
             "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
         binding.profileHeaderBar.visibility = if (fromOtp) View.VISIBLE else View.GONE
+        binding.profileBackButton.visibility = if (fromOtp) View.GONE else View.VISIBLE
 
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
@@ -127,8 +131,16 @@ class ProfileFragment : Fragment() {
 
         binding.updateProfileButton.text = saveButtonIdleLabel()
         binding.updateProfileButton.setOnClickListener {
+            if (fromOtp && !isProfileDirty() && ProfileGate.isComplete(sharedPrefs)) {
+                openAppHome()
+                return@setOnClickListener
+            }
             if (fromOtp && !isProfileDirty()) {
-                requireActivity().finish()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.profile_required_to_continue),
+                    Toast.LENGTH_SHORT,
+                ).show()
                 return@setOnClickListener
             }
             validateAndUpdateProfile()
@@ -169,10 +181,12 @@ class ProfileFragment : Fragment() {
         selectedAddress = userProfile.address.orEmpty()
         selectedLat = userProfile.latitude
         selectedLng = userProfile.longitude
-        binding.preferredJobCategoryEditText.setText(userProfile.preferredJobCategory)
+        selectedCategories = preferredCategoriesFromProfile(userProfile).toMutableList()
+        binding.preferredJobCategoryEditText.setText(selectedCategories.joinToString(", "))
         binding.districtEditText.text = userProfile.district.orEmpty()
         showSavedAddress()
         ProfileLocationStore.save(sharedPrefs, userProfile)
+        ProfileGate.remember(sharedPrefs, userProfile)
         existingResumeUrl = userProfile.resumeUrl
         if (!existingResumeUrl.isNullOrBlank()) {
             binding.profileResumeFileName.text = getString(R.string.profile_resume_saved)
@@ -243,6 +257,7 @@ class ProfileFragment : Fragment() {
                     binding.updateProfileButton.text = saveButtonIdleLabel()
                     val payload = apiResponse.data
                     if (payload?.status == true) {
+                        payload.dataObj?.userDetails?.let { populateProfile(it) }
                         if (isProfileUpdateCalled) {
                             isProfileUpdateCalled = false
                             resumeFile = null
@@ -252,11 +267,17 @@ class ProfileFragment : Fragment() {
                                 Toast.LENGTH_SHORT,
                             ).show()
                             if (fromOtp) {
-                                requireActivity().finish()
-                                return@observe
+                                if (ProfileGate.isComplete(sharedPrefs)) {
+                                    openAppHome()
+                                } else {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        getString(R.string.profile_required_to_continue),
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                                }
                             }
                         }
-                        payload.dataObj?.userDetails?.let { populateProfile(it) }
                     } else {
                         Toast.makeText(
                             requireContext(),
@@ -284,7 +305,7 @@ class ProfileFragment : Fragment() {
         val firstname = binding.firstNameEditText.text.toString().trim()
         val mobile = binding.mobileEditText.text.toString().trim()
         val email = binding.emailEditText.text.toString().trim()
-        val preferredCategory = binding.preferredJobCategoryEditText.text.toString().trim()
+        val preferredCategory = selectedCategoriesFromField().joinToString(", ")
         val district = binding.districtEditText.text?.toString()?.trim().orEmpty()
 
         if (firstname.isEmpty()) {
@@ -340,17 +361,49 @@ class ProfileFragment : Fragment() {
             pincode = pincodeValue,
             district = district,
             colony = colonyValue,
-            preferredJobCategory = preferredCategory,
+            preferredJobCategory = selectedCategoriesFromField().firstOrNull().orEmpty(),
             resumePart = resumePart,
             address = selectedAddress.takeIf { it.isNotBlank() },
             latitude = selectedLat,
             longitude = selectedLng,
+            preferredJobCategories = JSONArray(selectedCategoriesFromField()).toString(),
         )
     }
 
     private fun openCategoryPicker() {
         categoryPickerRequested = true
         homePageViewModel.getCategoriesData()
+    }
+
+    private fun preferredCategoriesFromProfile(userProfile: UserData): List<String> {
+        val fromList = userProfile.preferredJobCategories
+            .orEmpty()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(3)
+        if (fromList.isNotEmpty()) {
+            return fromList
+        }
+        return userProfile.preferredJobCategory
+            .orEmpty()
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(3)
+    }
+
+    private fun selectedCategoriesFromField(): List<String> {
+        if (selectedCategories.isNotEmpty()) {
+            return selectedCategories.take(3)
+        }
+        return binding.preferredJobCategoryEditText.text.toString()
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(3)
     }
 
     private fun observeCategoriesDropdown() {
@@ -370,15 +423,47 @@ class ProfileFragment : Fragment() {
                         return@observe
                     }
                     if (categoryDialog?.isShowing == true) return@observe
+                    val checked = BooleanArray(titles.size) { titles[it] in selectedCategoriesFromField() }
+                    val picks = selectedCategoriesFromField().toMutableList()
                     categoryDialog = AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.profile_category_picker))
-                        .setItems(titles.toTypedArray()) { _, which ->
-                            binding.preferredJobCategoryEditText.setText(titles[which])
+                        .setMultiChoiceItems(titles.toTypedArray(), checked) { dialog, which, isChecked ->
+                            val name = titles[which]
+                            if (isChecked) {
+                                if (picks.size >= 3) {
+                                    (dialog as AlertDialog).listView.setItemChecked(which, false)
+                                    Toast.makeText(
+                                        requireContext(),
+                                        getString(R.string.profile_category_max),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    return@setMultiChoiceItems
+                                }
+                                if (name !in picks) picks.add(name)
+                            } else {
+                                picks.remove(name)
+                            }
+                        }
+                        .setPositiveButton(android.R.string.ok) { _, _ ->
+                            if (picks.isEmpty()) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.profile_category_required),
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@setPositiveButton
+                            }
+                            selectedCategories = picks.toMutableList()
+                            binding.preferredJobCategoryEditText.setText(selectedCategories.joinToString(", "))
                             binding.preferredJobCategoryEditText.error = null
                             sharedPrefs.setPrefsData(
-                                Pair(SharedPrefsConstant.PREFERRED_JOB_CATEGORY, titles[which])
+                                Pair(
+                                    SharedPrefsConstant.PREFERRED_JOB_CATEGORY,
+                                    selectedCategories.joinToString(", "),
+                                )
                             )
                         }
+                        .setNegativeButton(android.R.string.cancel, null)
                         .also { it.setOnDismissListener { categoryDialog = null } }
                         .show()
                 }
@@ -442,6 +527,13 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun openAppHome() {
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        requireActivity().finish()
+    }
+
     private fun parseApiErrorMessage(error: ApiError?): String? {
         val body = error?.errorBody.orEmpty()
         if (body.isNotBlank()) {
@@ -459,6 +551,7 @@ class ProfileFragment : Fragment() {
         PunchReminderSync.clear(requireContext(), sharedPrefs)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
         sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS)
+        ProfileGate.clear(sharedPrefs)
         Toast.makeText(requireContext(), getString(R.string.profile_logged_out), Toast.LENGTH_SHORT).show()
         val intent = Intent(requireContext(), LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -477,6 +570,7 @@ class ProfileFragment : Fragment() {
                         sharedPrefs.removeSharedPrefs(USER_AUTH_TOKEN)
                         sharedPrefs.removeSharedPrefs(USER_LOGGED_IN_STATUS)
                         sharedPrefs.removeSharedPrefs(USER_SKIP_STATUS)
+                        ProfileGate.clear(sharedPrefs)
                         startActivity(Intent(requireContext(), LoginActivity::class.java))
                         requireActivity().finish()
                     }

@@ -34,6 +34,7 @@ import com.srijeesolution.rojgaarwaala.utils.JobAlertNavigation
 import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -107,6 +108,16 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!sharedPrefs.getPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false)) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+        if (!ProfileGate.isComplete(sharedPrefs)) {
+            startActivity(ProfileGate.requiredProfileIntent(this))
+            finish()
+            return
+        }
         setContentView(R.layout.activity_main)
 
         NotificationUtils.requestNotificationPermission(this)

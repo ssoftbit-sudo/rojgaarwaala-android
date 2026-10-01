@@ -76,7 +76,7 @@
     <string name="add_job_radius_label">Radius: %1$d km</string>
     <string name="add_job_pinned_at">पिन: %1$s</string>
     <string name="job_preferences_section_title">नौकरी की पसंद</string>
-    <string name="job_preferences_section_hint">पसंदीदा काम और पता सेट करें। नियोक्ता इसी प्रोफ़ाइल से आपको ढूँढ सकते हैं।</string>
+    <string name="job_preferences_section_hint">2 या 3 पसंदीदा काम चुनें और पता सेट करें। नियोक्ता इसी प्रोफ़ाइल से आपको ढूँढ सकते हैं।</string>
     <string name="profile_title">प्रोफ़ाइल</string>
     <string name="profile_heading">अपनी जानकारी अपडेट करें</string>
     <string name="profile_heading_hint">संपर्क जानकारी सही रखें ताकि नियोक्ता आप तक जल्दी पहुँच सकें।</string>
@@ -90,8 +90,8 @@
     <string name="profile_pincode_hint">पिनकोड लिखें</string>
     <string name="profile_colony">कॉलोनी / इलाका</string>
     <string name="profile_colony_hint">कॉलोनी या इलाका लिखें</string>
-    <string name="profile_preferred_job">पसंदीदा काम</string>
-    <string name="profile_preferred_job_hint">काम चुनने के लिए टैप करें</string>
+    <string name="profile_preferred_job">पसंदीदा काम (2–3)</string>
+    <string name="profile_preferred_job_hint">2 या 3 काम चुनने के लिए टैप करें</string>
     <string name="profile_district">जिला</string>
     <string name="profile_district_hint">जिला चुनने के लिए टैप करें</string>
     <string name="profile_address">पूरा पता</string>
@@ -102,6 +102,7 @@
     <string name="profile_resume_choose">चुनें</string>
     <string name="profile_save">प्रोफ़ाइल सेव करें</string>
     <string name="profile_confirm">कन्फर्म करें</string>
+    <string name="profile_required_to_continue">ऐप इस्तेमाल करने से पहले प्रोफ़ाइल पूरी करें</string>
     <string name="profile_saving">सेव हो रहा है...</string>
     <string name="profile_logout">लॉग आउट</string>
     <string name="profile_name_required">नाम ज़रूरी है</string>
@@ -116,7 +117,8 @@
     <string name="profile_logged_out">लॉग आउट हो गया</string>
     <string name="profile_resume_saved">प्रोफ़ाइल पर सेव रिज्यूमे</string>
     <string name="profile_resume_selected">चुना: %1$s</string>
-    <string name="profile_category_picker">कैटेगरी चुनें</string>
+    <string name="profile_category_picker">2 या 3 कैटेगरी चुनें</string>
+    <string name="profile_category_max">ज्यादा से ज्यादा 3 कैटेगरी चुनें</string>
     <string name="profile_no_categories">कैटेगरी नहीं मिली</string>
     <string name="profile_categories_failed">कैटेगरी लोड नहीं हुई</string>
     <string name="map_pin_title">पता सेट करें</string>

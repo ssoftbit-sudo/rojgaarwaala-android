@@ -93,6 +93,7 @@ interface RetrofitApiInterface {
         @Part("latitude") latitude: RequestBody? = null,
         @Part("longitude") longitude: RequestBody? = null,
         @Part("preferred_job_category") preferredJobCategory: RequestBody,
+        @Part("preferred_job_categories") preferredJobCategories: RequestBody? = null,
         @Part resume: MultipartBody.Part? = null,
     ): Response<HomePagBaseApiModel>
 

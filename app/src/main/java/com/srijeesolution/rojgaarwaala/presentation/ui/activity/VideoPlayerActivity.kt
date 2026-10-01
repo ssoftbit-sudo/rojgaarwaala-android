@@ -24,6 +24,7 @@ import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.EdgeToEdgeHelper
 import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -713,6 +714,7 @@ class VideoPlayerActivity : AppCompatActivity(),
         if (result.message?.statusCode == 401) {
             sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false))
             sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
+            ProfileGate.clear(sharedPrefs)
             Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
         }

@@ -39,13 +39,7 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
-        binding.skipButton.setOnClickListener {
-            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_SKIP_STATUS, true))
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-            finishAffinity()
-        }
+        binding.skipButton.visibility = View.GONE
     }
 
     private fun hideKeyboard() {

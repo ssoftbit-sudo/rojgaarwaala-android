@@ -214,7 +214,9 @@
                         android:textSize="16sp"
                         android:focusable="false"
                         android:clickable="true"
-                        android:cursorVisible="false" />
+                        android:cursorVisible="false"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
 
                     <TextView
                         android:layout_width="wrap_content"

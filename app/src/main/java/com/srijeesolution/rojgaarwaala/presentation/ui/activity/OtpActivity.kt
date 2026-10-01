@@ -13,7 +13,7 @@ import com.srijeesolution.rojgaarwaala.databinding.ActivityOtpBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
-import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
+import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
@@ -125,16 +125,18 @@ class OtpActivity : AppCompatActivity() {
                             dataObj.token?.let { token ->
                                 sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_AUTH_TOKEN, token))
                             }
+                            ProfileGate.remember(sharedPrefs, dataObj.userDetails)
                         }
                         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, true))
+                        sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_SKIP_STATUS)
                         Toast.makeText(this, "Successfully logged in!", Toast.LENGTH_SHORT).show()
-                        startActivities(
-                            arrayOf(
-                                Intent(this, MainActivity::class.java),
-                                Intent(this, ProfileActivity::class.java)
-                                    .putExtra(AuthNavigation.EXTRA_FROM_OTP, true),
-                            ),
-                        )
+                        val next = if (ProfileGate.needsCompletion(apiResponse.data.dataObj?.userDetails)) {
+                            ProfileGate.requiredProfileIntent(this)
+                        } else {
+                            Intent(this, MainActivity::class.java)
+                        }
+                        next.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        startActivity(next)
                         finish()
                     } else {
                         Toast.makeText(

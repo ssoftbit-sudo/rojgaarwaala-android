@@ -136,10 +136,14 @@ data class UserData(
     val longitude: Double? = null,
     @SerializedName("preferred_job_category")
     val preferredJobCategory: String? = null,
+    @SerializedName("preferred_job_categories")
+    val preferredJobCategories: List<String>? = null,
     @SerializedName("resume_url")
     val resumeUrl: String? = null,
     @SerializedName("candidate_profile_complete")
     val candidateProfileComplete: Boolean? = null,
+    @SerializedName("needs_profile_completion")
+    val needsProfileCompletion: Boolean? = null,
     @SerializedName("is_employee")
     val isEmployee: Boolean? = false,
 )
