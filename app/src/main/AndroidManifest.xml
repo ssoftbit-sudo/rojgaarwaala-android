@@ -101,7 +101,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="rojgaarwaala" />
+                <!-- Notification links only. rojgaarwaala://payment belongs to
+                     PaymentActivity; matching it here too made Android show an
+                     "Open with" chooser when the receipt page returned. -->
+                <data android:scheme="rojgaarwaala" android:host="notification" />
             </intent-filter>
         </activity>
         <activity
