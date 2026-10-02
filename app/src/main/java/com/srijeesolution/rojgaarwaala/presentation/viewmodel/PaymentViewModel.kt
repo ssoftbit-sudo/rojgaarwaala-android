@@ -2,16 +2,22 @@ package com.srijeesolution.rojgaarwaala.presentation.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.srijeesolution.rojgaarwaala.data.remote.model.VerifyPaymentRequest
 import com.srijeesolution.rojgaarwaala.domain.repository.JobApplicationRepository
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
+import com.srijeesolution.rojgaarwaala.utils.ApplicationPaymentCopy
 import com.srijeesolution.rojgaarwaala.utils.PaymentErrorMapper
 import com.srijeesolution.rojgaarwaala.utils.PaymentVerifyDecision
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,18 +31,35 @@ import javax.inject.Inject
 @HiltViewModel
 class PaymentViewModel @Inject constructor(
   private val repository: JobApplicationRepository,
+  private val savedState: SavedStateHandle,
 ) : ViewModel() {
 
   private val _state = MutableLiveData<PaymentState>(PaymentState.Idle)
   val state: LiveData<PaymentState> = _state
 
-  /** Set once the order call succeeds, so a resumed screen knows what to verify. */
-  var currentOrderId: String? = null
-    private set
+  /**
+   * Set once the order call succeeds, so a resumed screen knows what to verify.
+   * Kept in saved state: Android often kills the app while GPay is open.
+   */
+  var currentOrderId: String?
+    get() = savedState[KEY_ORDER_ID]
+    private set(value) {
+      savedState[KEY_ORDER_ID] = value
+    }
 
   /** True between opening the payment page and settling the outcome. */
-  var awaitingGatewayResult: Boolean = false
-    private set
+  var awaitingGatewayResult: Boolean
+    get() = savedState[KEY_AWAITING] ?: false
+    private set(value) {
+      savedState[KEY_AWAITING] = value
+    }
+
+  private val _paidWhileAway = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+  /** Fires when the server marks the fee paid while the payment tab is still open. */
+  val paidWhileAway: SharedFlow<Unit> = _paidWhileAway
+
+  private var awayPolling: Job? = null
 
   fun startPayment(applicationId: Int) {
     when (_state.value) {
@@ -140,6 +163,47 @@ class PaymentViewModel @Inject constructor(
     }
   }
 
+  /** The deep link back from the receipt page names the order it is about. */
+  fun rememberOrderId(orderId: String?) {
+    if (!orderId.isNullOrBlank()) {
+      currentOrderId = orderId
+    }
+  }
+
+  /**
+   * Watches the application while the customer is on the gateway page. The
+   * webhook or the signed receipt marks it paid on the server, and the screen
+   * then closes the tab itself instead of waiting for the customer to.
+   *
+   * Reads our own record only, so it does not hammer the gateway's Inquiry.
+   */
+  fun startAwayPolling(applicationId: Int) {
+    if (awayPolling?.isActive == true || !awaitingGatewayResult) return
+
+    awayPolling = viewModelScope.launch {
+      repeat(AWAY_POLL_MAX_ATTEMPTS) {
+        delay(AWAY_POLL_INTERVAL_MS)
+
+        val result = repository.getApplication(applicationId)
+          .firstOrNull { it !is ApiResult.Loading }
+        val application = (result as? ApiResult.Success)?.data?.data?.application
+
+        if (ApplicationPaymentCopy.isPaid(application?.paymentStatus)) {
+          awaitingGatewayResult = false
+          currentOrderId = null
+          _state.value = PaymentState.Paid
+          _paidWhileAway.tryEmit(Unit)
+          return@launch
+        }
+      }
+    }
+  }
+
+  fun stopAwayPolling() {
+    awayPolling?.cancel()
+    awayPolling = null
+  }
+
   /** The customer dismissed the payment page without a redirect. */
   fun onPaymentPageDismissed() {
     if (_state.value is PaymentState.OpenPaymentPage) {
@@ -178,5 +242,13 @@ class PaymentViewModel @Inject constructor(
   private companion object {
     const val MAX_VERIFY_ATTEMPTS = 10
     const val VERIFY_RETRY_DELAY_MS = 3000L
+
+    const val AWAY_POLL_INTERVAL_MS = 3000L
+
+    /** About ten minutes, long enough for a slow UPI approval. */
+    const val AWAY_POLL_MAX_ATTEMPTS = 200
+
+    const val KEY_ORDER_ID = "payment_order_id"
+    const val KEY_AWAITING = "payment_awaiting_result"
   }
 }

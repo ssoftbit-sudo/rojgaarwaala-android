@@ -170,11 +170,12 @@
         <activity
             android:name=".presentation.ui.activity.PaymentActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden">
-            <!-- The gateway receipt page bounces the browser back here. singleTop
-                 keeps the waiting screen instead of stacking a second copy. -->
+            <!-- The gateway receipt page bounces the browser back here. singleTask
+                 reuses the waiting screen and clears the Custom Tab above it, so
+                 the payment page closes instead of staying behind the app. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

@@ -11,11 +11,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityPaymentBinding
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.PaymentViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.PaymentViewModel.PaymentState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -23,8 +25,9 @@ import java.util.Locale
  * Hosts the job application fee payment.
  *
  * Checkout happens on the gateway's own page inside a Custom Tab, so no card
- * data passes through this app. When the customer comes back — by deep link or
- * by dismissing the tab — the server is asked what actually happened.
+ * data passes through this app. The tab is closed for the customer as soon as
+ * the server sees the payment; otherwise they come back by the receipt page's
+ * deep link or by dismissing the tab, and the server is asked what happened.
  */
 @AndroidEntryPoint
 class PaymentActivity : AppCompatActivity() {
@@ -56,6 +59,23 @@ class PaymentActivity : AppCompatActivity() {
 
     observeViewModel()
     handleReturn(intent)
+
+    // Collected while stopped too: that is exactly when the tab is on top.
+    lifecycleScope.launch {
+      viewModel.paidWhileAway.collect { closePaymentPage() }
+    }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    viewModel.stopAwayPolling()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    if (paymentPageOpened && applicationId > 0) {
+      viewModel.startAwayPolling(applicationId)
+    }
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
@@ -68,6 +88,11 @@ class PaymentActivity : AppCompatActivity() {
     super.onNewIntent(intent)
     setIntent(intent)
 
+    // singleTask: a fresh launch from Apply arrives here when the screen exists.
+    (intent.getStringExtra(EXTRA_APPLICATION_ID)?.toIntOrNull()
+      ?: intent.data?.getQueryParameter("application_id")?.toIntOrNull())
+      ?.let { applicationId = it }
+
     // Arrived back from the gateway's receipt page. The status in the deep link
     // is only a hint — the server is the one that decides.
     handleReturn(intent)
@@ -76,7 +101,26 @@ class PaymentActivity : AppCompatActivity() {
   private fun handleReturn(intent: Intent?) {
     if (intent?.data?.scheme == RETURN_SCHEME && applicationId > 0) {
       paymentPageOpened = false
+      viewModel.rememberOrderId(intent.data?.getQueryParameter("order_id"))
       viewModel.verifyPayment(applicationId)
+    }
+  }
+
+  /**
+   * Brings this screen back over the Custom Tab. The tab sits above us in the
+   * same task, so CLEAR_TOP finishes it — the customer does not have to tap ✕.
+   */
+  private fun closePaymentPage() {
+    paymentPageOpened = false
+    try {
+      startActivity(
+        Intent(this, PaymentActivity::class.java)
+          .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+      )
+    } catch (e: RuntimeException) {
+      // Some Android versions refuse to launch from behind another app's
+      // screen. The state is already Paid, so closing the tab still lands on
+      // the success path.
     }
   }
 
@@ -133,7 +177,10 @@ class PaymentActivity : AppCompatActivity() {
 
         is PaymentState.NotPaid -> {
           setPayButton(enabled = true, label = "Try again")
-          showHint(state.reason ?: "Payment was not completed. You have not been charged.")
+          showHint(
+            state.reason
+              ?: "Payment was not confirmed. If money was debited, it will be confirmed automatically or refunded. Check My Applications before paying again.",
+          )
         }
 
         is PaymentState.Confirming -> {
