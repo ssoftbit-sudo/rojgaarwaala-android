@@ -423,14 +423,24 @@ class ProfileFragment : Fragment() {
                         return@observe
                     }
                     if (categoryDialog?.isShowing == true) return@observe
-                    val checked = BooleanArray(titles.size) { titles[it] in selectedCategoriesFromField() }
-                    val picks = selectedCategoriesFromField().toMutableList()
+                    // Saved names can differ in case from the list ("Helper" vs
+                    // "helper"). Matching them exactly left the saved one unticked
+                    // while it still used up one of the three slots.
+                    val picks = selectedCategoriesFromField()
+                        .mapNotNull { saved -> titles.firstOrNull { it.equals(saved, ignoreCase = true) } }
+                        .distinct()
+                        .take(3)
+                        .toMutableList()
+                    val checked = BooleanArray(titles.size) { titles[it] in picks }
                     categoryDialog = AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.profile_category_picker))
                         .setMultiChoiceItems(titles.toTypedArray(), checked) { dialog, which, isChecked ->
                             val name = titles[which]
                             if (isChecked) {
                                 if (picks.size >= 3) {
+                                    // The dialog redraws rows from `checked`, so
+                                    // clearing only the row left a 4th tick showing.
+                                    checked[which] = false
                                     (dialog as AlertDialog).listView.setItemChecked(which, false)
                                     Toast.makeText(
                                         requireContext(),
