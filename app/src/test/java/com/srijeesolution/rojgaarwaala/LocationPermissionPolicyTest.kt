@@ -1,10 +1,10 @@
 package com.srijeesolution.rojgaarwaala
 
-import android.os.Build
 import com.srijeesolution.rojgaarwaala.utils.LocationPermissionPolicy
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class LocationPermissionPolicyTest {
 
@@ -16,59 +16,15 @@ class LocationPermissionPolicyTest {
     }
 
     @Test
-    fun `never auto-prompts for allow all the time during punch`() {
-        assertFalse(
-            LocationPermissionPolicy.shouldPromptBackgroundLocation(
-                sdkInt = Build.VERSION_CODES.Q,
-                foregroundGranted = true,
-                backgroundGranted = false,
-                punchInProgress = true,
-            ),
-        )
-    }
+    fun `manifest never asks for background location`() {
+        val manifest = listOf("src/main/AndroidManifest.xml", "app/src/main/AndroidManifest.xml")
+            .map { File(it) }
+            .first { it.exists() }
+            .readText()
 
-    @Test
-    fun `never auto-prompts for allow all the time on the punch screen`() {
-        assertFalse(
-            LocationPermissionPolicy.shouldPromptBackgroundLocation(
-                sdkInt = Build.VERSION_CODES.R,
-                foregroundGranted = true,
-                backgroundGranted = false,
-                punchInProgress = false,
-            ),
-        )
-        assertFalse(
-            LocationPermissionPolicy.shouldPromptBackgroundLocation(
-                sdkInt = Build.VERSION_CODES.Q,
-                foregroundGranted = false,
-                backgroundGranted = false,
-                punchInProgress = false,
-            ),
-        )
-    }
-
-    @Test
-    fun `arrival geofence stays optional when the user picked while using the app`() {
-        assertFalse(
-            LocationPermissionPolicy.canRegisterArrivalGeofence(
-                sdkInt = Build.VERSION_CODES.Q,
-                foregroundGranted = true,
-                backgroundGranted = false,
-            ),
-        )
-        assertTrue(
-            LocationPermissionPolicy.canRegisterArrivalGeofence(
-                sdkInt = Build.VERSION_CODES.Q,
-                foregroundGranted = true,
-                backgroundGranted = true,
-            ),
-        )
-        assertTrue(
-            LocationPermissionPolicy.canRegisterArrivalGeofence(
-                sdkInt = Build.VERSION_CODES.P,
-                foregroundGranted = true,
-                backgroundGranted = false,
-            ),
-        )
+        // The only mention allowed is the rule that strips it from merged libraries.
+        val mention = Regex("""<uses-permission[^>]*ACCESS_BACKGROUND_LOCATION[^>]*>""").findAll(manifest).toList()
+        assertTrue(mention.size == 1 && mention[0].value.contains("tools:node=\"remove\""))
+        assertFalse(manifest.contains("FactoryArrivalReceiver"))
     }
 }

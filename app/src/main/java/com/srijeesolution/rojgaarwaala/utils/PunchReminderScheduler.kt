@@ -14,17 +14,25 @@ object PunchReminderScheduler {
     const val REQUEST_PUNCH_IN = 8101
     const val REQUEST_PUNCH_OUT = 8102
 
+    /**
+     * One alarm per kind, keyed by a fixed request code, so calling this again on
+     * every login, sync or app start replaces the pending alarm instead of adding
+     * a second one.
+     */
     fun schedule(context: Context, prefs: SharedPrefs) {
         val now = System.currentTimeMillis()
-        val inAt = PunchReminderTimes.nextFireMillis(
+        val punchedIn = PunchReminderStore.punchedInToday(prefs)
+        val inAt = PunchReminderTimes.nextReminderMillis(
             PunchReminderStore.dutyStart(prefs),
             now,
-            PunchReminderStore.punchedInToday(prefs),
+            doneToday = punchedIn,
         )
-        val outAt = PunchReminderTimes.nextFireMillis(
+        // Punch-out reminders only matter once the employee has punched in today.
+        // Punching in reschedules, which brings today's punch-out window back.
+        val outAt = PunchReminderTimes.nextReminderMillis(
             PunchReminderStore.dutyEnd(prefs),
             now,
-            PunchReminderStore.punchedOutToday(prefs),
+            doneToday = !punchedIn || PunchReminderStore.punchedOutToday(prefs),
         )
         setAlarm(context, REQUEST_PUNCH_IN, true, inAt)
         setAlarm(context, REQUEST_PUNCH_OUT, false, outAt)
@@ -44,16 +52,20 @@ object PunchReminderScheduler {
             manager.cancel(pending)
             return
         }
+        // Android 12+ denies exact alarms unless the user allowed "Alarms & reminders".
+        // The fallback must still fire while the phone sleeps in a pocket, which a
+        // plain set() does not, or the 2-minute punch-in reminders go quiet.
+        val exactAllowed = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || manager.canScheduleExactAlarms()
+        if (!exactAllowed) {
+            manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pending)
+            return
+        }
         val show = pendingIntent(context, requestCode, punchIn)
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                manager.setAlarmClock(AlarmManager.AlarmClockInfo(atMillis, show), pending)
-            } else {
-                manager.setExact(AlarmManager.RTC_WAKEUP, atMillis, pending)
-            }
+            manager.setAlarmClock(AlarmManager.AlarmClockInfo(atMillis, show), pending)
         } catch (t: Throwable) {
             Log.w("PunchReminder", "exact alarm failed, falling back", t)
-            manager.set(AlarmManager.RTC_WAKEUP, atMillis, pending)
+            manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pending)
         }
     }
 

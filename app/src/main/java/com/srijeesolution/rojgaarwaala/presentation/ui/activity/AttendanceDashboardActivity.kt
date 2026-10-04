@@ -1,14 +1,16 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
-import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,15 +38,15 @@ import com.srijeesolution.rojgaarwaala.presentation.viewmodel.EmployeeAttendance
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorMapper
 import com.srijeesolution.rojgaarwaala.utils.AttendanceErrorParser
 import com.srijeesolution.rojgaarwaala.utils.AttendanceHindi
-import com.srijeesolution.rojgaarwaala.utils.FactoryGeofenceMonitor
 import com.srijeesolution.rojgaarwaala.utils.GeofenceEvaluator
 import com.srijeesolution.rojgaarwaala.utils.LocationHelper
-import com.srijeesolution.rojgaarwaala.utils.LocationPermissionPolicy
 import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
 import com.srijeesolution.rojgaarwaala.utils.PunchOutOutcome
+import com.srijeesolution.rojgaarwaala.utils.PunchInReminderPolicy
 import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
+import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -405,24 +407,37 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         }
 
         renderGeofence()
-        registerArrivalGeofenceIfAllowed()
         maybeStartPendingPunch()
+        if (!authorised && !employeeInactive && today?.hasActiveAssignment != false) {
+            maybeAskForExactAlarms()
+        }
     }
 
-    private fun registerArrivalGeofenceIfAllowed() {
-        if (authorisedStaff) return
-        val hasBackground = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
-        if (LocationPermissionPolicy.canRegisterArrivalGeofence(
-                sdkInt = Build.VERSION.SDK_INT,
-                foregroundGranted = locationHelper.hasLocationPermission(),
-                backgroundGranted = hasBackground,
-            )
+    /**
+     * Without "Alarms & reminders", Android may hold a reminder for up to an hour,
+     * so the first punch-in reminder of the morning could arrive after duty. Asked
+     * once; reminders still work (less punctually) if the employee says no.
+     */
+    private fun maybeAskForExactAlarms() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val alarms = getSystemService(AlarmManager::class.java) ?: return
+        if (alarms.canScheduleExactAlarms()) return
+        if (sharedPrefs.getPrefs(SharedPrefsConstant.EXACT_ALARM_PROMPTED, false)) return
+        sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.EXACT_ALARM_PROMPTED, true))
+
+        showSettingsDialog(
+            title = "समय पर रिमाइंडर",
+            message = "Punch In रिमाइंडर ठीक समय पर आएं, इसके लिए अगली स्क्रीन में " +
+                "'Alarms & reminders' चालू करें।",
+            positiveLabel = "चालू करें",
         ) {
-            FactoryGeofenceMonitor.register(this, todayFactory)
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")),
+                )
+            } catch (e: ActivityNotFoundException) {
+                // Some OEM builds hide this screen; reminders keep their inexact timing.
+            }
         }
     }
 
@@ -430,10 +445,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         if (pendingPunchConsumed || punchInProgress || employeeInactive) return
         if (!locationHelper.hasLocationPermission()) return
         when (pendingPunchAction) {
-            PUNCH_IN -> if (serverCanPunchIn) {
-                pendingPunchConsumed = true
-                startPunchFlow(isPunchIn = true)
-            }
+            // A punch-in reminder only opens the screen. The GPS check shows whether
+            // the employee is at the factory; they still tap Punch In themselves.
+            PUNCH_IN -> Unit
             PUNCH_OUT -> if (serverCanPunchOut) {
                 pendingPunchConsumed = true
                 confirmPunchOut()
@@ -479,7 +493,13 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             ?.let { GeofenceEvaluator.formatDistance(it) }
             .orEmpty()
 
-        binding.geofenceMessageText.text = trackingError?.message ?: evaluation.message
+        // Waiting to punch in: say plainly whether they have reached the factory.
+        val arrival = if (serverCanPunchIn && trackingError == null) {
+            PunchInReminderPolicy.arrivalMessage(evaluation.status, evaluation.distanceMetres)
+        } else {
+            null
+        }
+        binding.geofenceMessageText.text = trackingError?.message ?: arrival ?: evaluation.message
         binding.geofenceMessageText.setTextColor(
             ContextCompat.getColor(
                 this,
@@ -686,9 +706,16 @@ class AttendanceDashboardActivity : AppCompatActivity() {
 
     private fun observePunchResults() {
         viewModel.punchInLiveData.observe(this) { result ->
+            // Recorded on the server: today's 2-minute reminders stop right away.
+            if (result is ApiResult.Success && result.data?.status != false) {
+                PunchReminderSync.onPunchedIn(this, sharedPrefs)
+            }
             handlePunchResult(result, "पंच इन लग गया")
         }
         viewModel.punchOutLiveData.observe(this) { result ->
+            if (result is ApiResult.Success && result.data?.status != false) {
+                PunchReminderSync.onPunchedOut(this, sharedPrefs)
+            }
             handlePunchResult(result, "पंच आउट लग गया")
         }
     }

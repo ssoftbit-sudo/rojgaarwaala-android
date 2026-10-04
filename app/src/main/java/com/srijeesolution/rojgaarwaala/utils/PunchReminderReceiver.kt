@@ -11,6 +11,12 @@ import com.srijeesolution.rojgaarwaala.presentation.ui.activity.AttendanceDashbo
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 
 class PunchReminderReceiver : BroadcastReceiver() {
+    companion object {
+        /** Fixed id: each 2-minute reminder replaces the last one instead of stacking. */
+        const val PUNCH_IN_NOTIFICATION_ID = 8113
+        const val PUNCH_OUT_NOTIFICATION_ID = 8114
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val prefs = SharedPrefs(context.applicationContext)
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
@@ -26,14 +32,15 @@ class PunchReminderReceiver : BroadcastReceiver() {
         val punchIn = intent.getBooleanExtra(PunchReminderScheduler.EXTRA_PUNCH_IN, true)
         val duty = if (punchIn) PunchReminderStore.dutyStart(prefs) else PunchReminderStore.dutyEnd(prefs)
         if (duty.isBlank()) return
-        val alreadyDone = if (punchIn) {
-            PunchReminderStore.punchedInToday(prefs)
+        // Keeps firing every 2 minutes until the punch is recorded on the server.
+        // Showing a reminder never counts as done, and nothing here reads GPS.
+        val pending = if (punchIn) {
+            !PunchReminderStore.punchedInToday(prefs)
         } else {
-            PunchReminderStore.punchedOutToday(prefs)
+            PunchReminderStore.punchedInToday(prefs) && !PunchReminderStore.punchedOutToday(prefs)
         }
-        if (!alreadyDone) {
+        if (pending && PunchReminderTimes.inReminderWindow(duty, System.currentTimeMillis())) {
             showNotification(context, punchIn)
-            PunchReminderStore.markDone(prefs, punchIn)
         }
         PunchReminderScheduler.schedule(context, prefs)
     }
@@ -45,9 +52,9 @@ class PunchReminderReceiver : BroadcastReceiver() {
         } else {
             AttendanceDashboardActivity.PUNCH_OUT
         }
-        val title = if (punchIn) "Punch In याद रखें" else "Punch Out याद रखें"
+        val title = if (punchIn) PunchInReminderPolicy.NOTIFICATION_TITLE else "Punch Out याद रखें"
         val body = if (punchIn) {
-            "क्या आप आ गए हैं? अपना Punch In करना न भूलें!"
+            PunchInReminderPolicy.NOTIFICATION_BODY
         } else {
             "क्या आप घर जा रहे हैं? अपना Punch Out करना न भूलें!"
         }
@@ -77,6 +84,6 @@ class PunchReminderReceiver : BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .build()
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(if (punchIn) 8113 else 8114, notification)
+        manager.notify(if (punchIn) PUNCH_IN_NOTIFICATION_ID else PUNCH_OUT_NOTIFICATION_ID, notification)
     }
 }

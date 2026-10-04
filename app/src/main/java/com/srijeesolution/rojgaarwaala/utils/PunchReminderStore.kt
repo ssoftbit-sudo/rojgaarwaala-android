@@ -7,6 +7,20 @@ import java.util.Date
 import java.util.Locale
 
 object PunchReminderStore {
+    /**
+     * The employee's factory, kept so reminders and the arrival check have the
+     * latest values from the last login or dashboard sync.
+     */
+    fun saveFactory(prefs: SharedPrefs, name: String?, latitude: Double?, longitude: Double?, radius: Int?) {
+        prefs.setPrefsData(Pair(SharedPrefsConstant.PUNCH_FACTORY_NAME, name.orEmpty()))
+        prefs.setPrefsData(Pair(SharedPrefsConstant.PUNCH_FACTORY_LAT, latitude?.toString().orEmpty()))
+        prefs.setPrefsData(Pair(SharedPrefsConstant.PUNCH_FACTORY_LNG, longitude?.toString().orEmpty()))
+        prefs.setPrefsData(Pair(SharedPrefsConstant.PUNCH_FACTORY_RADIUS, radius ?: 0))
+    }
+
+    fun factoryName(prefs: SharedPrefs): String =
+        prefs.getPrefs(SharedPrefsConstant.PUNCH_FACTORY_NAME, "").orEmpty()
+
     fun save(
         prefs: SharedPrefs,
         dutyStart: String?,
@@ -53,6 +67,10 @@ object PunchReminderStore {
         prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_IN_DONE_TODAY)
         prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_OUT_DONE_TODAY)
         prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_REMINDER_DATE)
+        prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_FACTORY_NAME)
+        prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_FACTORY_LAT)
+        prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_FACTORY_LNG)
+        prefs.removeSharedPrefs(SharedPrefsConstant.PUNCH_FACTORY_RADIUS)
     }
 
     fun todayDate(nowMillis: Long = System.currentTimeMillis()): String {

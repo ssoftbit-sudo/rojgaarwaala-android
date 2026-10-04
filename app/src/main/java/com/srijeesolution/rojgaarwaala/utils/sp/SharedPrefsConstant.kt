@@ -41,4 +41,9 @@ object SharedPrefsConstant {
     const val PUNCH_IN_DONE_TODAY = "punch_in_done_today"
     const val PUNCH_OUT_DONE_TODAY = "punch_out_done_today"
     const val PUNCH_REMINDER_DATE = "punch_reminder_date"
+    const val PUNCH_FACTORY_NAME = "punch_factory_name"
+    const val PUNCH_FACTORY_LAT = "punch_factory_lat"
+    const val PUNCH_FACTORY_LNG = "punch_factory_lng"
+    const val PUNCH_FACTORY_RADIUS = "punch_factory_radius"
+    const val EXACT_ALARM_PROMPTED = "exact_alarm_prompted"
 }

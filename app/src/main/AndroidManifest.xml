@@ -39,7 +39,12 @@
     <!-- Foreground-only location, used to geo-verify employee attendance punches. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Never background location: punch-in reminders are time-based and GPS is
+         read only while the attendance screen is open. Removed here too so no
+         library can merge it back in and re-trigger the Play declaration. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
+        tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -231,13 +236,6 @@
             android:theme="@style/AppTheme.NoSplash"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
 
-        <receiver
-            android:name=".utils.FactoryArrivalReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.srijeesolution.rojgaarwaala.ACTION_FACTORY_ARRIVAL" />
-            </intent-filter>
-        </receiver>
         <receiver
             android:name=".utils.PunchReminderReceiver"
             android:exported="true">
