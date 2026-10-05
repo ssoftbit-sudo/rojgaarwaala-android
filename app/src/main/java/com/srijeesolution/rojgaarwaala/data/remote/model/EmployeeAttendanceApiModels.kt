@@ -64,6 +64,10 @@ data class EmployeeToday(
     @SerializedName("earned_wage") val earnedWage: Double? = null,
     @SerializedName("can_request_ot") val canRequestOt: Boolean? = false,
     @SerializedName("can_request_missed_punch") val canRequestMissedPunch: Boolean? = false,
+    /** The employee said from the app that they are not coming today. */
+    @SerializedName("self_absent") val selfAbsent: Boolean? = false,
+    @SerializedName("absent_reason") val absentReason: String? = null,
+    @SerializedName("can_mark_absent") val canMarkAbsent: Boolean? = false,
 )
 
 data class EmployeeMonthSummary(
@@ -80,6 +84,10 @@ data class PunchRequest(
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("accuracy") val accuracy: Double,
+)
+
+data class MarkAbsentRequest(
+    @SerializedName("reason") val reason: String?,
 )
 
 data class PunchResponse(
@@ -269,6 +277,8 @@ data class TeamMember(
     @SerializedName("status") val status: String? = null,
     @SerializedName("status_label") val statusLabel: String? = null,
     @SerializedName("punch_in_at") val punchInAt: String? = null,
+    @SerializedName("self_absent") val selfAbsent: Boolean? = false,
+    @SerializedName("absent_reason") val absentReason: String? = null,
 )
 
 data class BulkPunchRequest(

@@ -19,6 +19,7 @@ object AttendanceErrorMapper {
     const val POOR_ACCURACY = "poor_accuracy"
     const val FACTORY_LOCATION_MISSING = "factory_location_missing"
     const val STAFF_DOES_NOT_PUNCH = "staff_does_not_punch"
+    const val ABSENT_NOT_ALLOWED = "absent_not_allowed"
 
     const val UNAUTHENTICATED_MESSAGE = "आपका सेशन खत्म हो गया है। फिर से लॉगिन करें।"
     const val GENERIC_MESSAGE = "कुछ गड़बड़ हो गई। फिर कोशिश करें।"
@@ -45,6 +46,7 @@ object AttendanceErrorMapper {
                 fallback ?: "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।"
             STAFF_DOES_NOT_PUNCH ->
                 "आप हाजिरी नहीं लगाते। वर्कर की हाजिरी और OT अप्रूव करें।"
+            ABSENT_NOT_ALLOWED -> "आज की हाजिरी पहले ही लग चुकी है, इसलिए गैरहाजिर नहीं लगा सकते।"
             else -> fallback ?: GENERIC_MESSAGE
         }
     }
@@ -61,6 +63,7 @@ object AttendanceErrorMapper {
     /** The backend already moved on, so the screen has to re-sync with it. */
     fun shouldRefreshDashboard(errorCode: String?): Boolean =
         errorCode == ALREADY_PUNCHED_IN ||
+            errorCode == ABSENT_NOT_ALLOWED ||
             errorCode == NOT_PUNCHED_IN ||
             errorCode == ALREADY_PUNCHED_OUT
 }

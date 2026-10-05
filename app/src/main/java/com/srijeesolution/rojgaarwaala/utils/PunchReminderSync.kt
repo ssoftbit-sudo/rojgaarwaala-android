@@ -27,21 +27,24 @@ object PunchReminderSync {
             longitude = factory?.longitude,
             radius = factory?.geofenceRadius,
         )
-        val punchedIn = PunchInReminderPolicy.attendanceRecorded(
+        val selfAbsent = SelfAbsentPolicy.silencesReminders(today?.selfAbsent, today?.punchInAt)
+        val punchedIn = selfAbsent || PunchInReminderPolicy.attendanceRecorded(
             punchInAt = today?.punchInAt,
             attendanceMarked = today?.attendanceMarked,
             canPunchIn = today?.canPunchIn,
         )
+        // No punch-in is coming, so there is no punch-out to remind about either.
+        val punchedOut = selfAbsent || !today?.punchOutAt.isNullOrBlank()
         PunchReminderStore.save(
             prefs = prefs,
             dutyStart = dutyStart,
             dutyEnd = dutyEnd,
             punchedInToday = punchedIn,
-            punchedOutToday = !today?.punchOutAt.isNullOrBlank(),
+            punchedOutToday = punchedOut,
             today = today?.date?.takeIf { it.isNotBlank() } ?: PunchReminderStore.todayDate(),
         )
         if (punchedIn) dismiss(context, PunchReminderReceiver.PUNCH_IN_NOTIFICATION_ID)
-        if (!today?.punchOutAt.isNullOrBlank()) dismiss(context, PunchReminderReceiver.PUNCH_OUT_NOTIFICATION_ID)
+        if (punchedOut) dismiss(context, PunchReminderReceiver.PUNCH_OUT_NOTIFICATION_ID)
         PunchReminderScheduler.schedule(context, prefs)
     }
 
@@ -58,6 +61,15 @@ object PunchReminderSync {
     /** Same for punch-out: today's punch-out reminders stop once it is recorded. */
     fun onPunchedOut(context: Context, prefs: SharedPrefs) {
         PunchReminderStore.markDone(prefs, punchIn = false)
+        dismiss(context, PunchReminderReceiver.PUNCH_OUT_NOTIFICATION_ID)
+        PunchReminderScheduler.schedule(context, prefs)
+    }
+
+    /** The employee marked themselves absent: neither reminder has anything left to ask today. */
+    fun onMarkedAbsent(context: Context, prefs: SharedPrefs) {
+        PunchReminderStore.markDone(prefs, punchIn = true)
+        PunchReminderStore.markDone(prefs, punchIn = false)
+        dismiss(context, PunchReminderReceiver.PUNCH_IN_NOTIFICATION_ID)
         dismiss(context, PunchReminderReceiver.PUNCH_OUT_NOTIFICATION_ID)
         PunchReminderScheduler.schedule(context, prefs)
     }

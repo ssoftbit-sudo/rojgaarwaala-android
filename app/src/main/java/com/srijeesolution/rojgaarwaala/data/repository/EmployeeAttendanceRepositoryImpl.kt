@@ -7,6 +7,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MarkAbsentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
@@ -42,6 +43,10 @@ class EmployeeAttendanceRepositoryImpl @Inject constructor() :
 
     override fun punchOut(request: PunchRequest): Flow<ApiResult<PunchResponse>> = flow {
         emit(safeApiCall { RetrofitApiService.create(BASE_URL).employeePunchOut(request) })
+    }.flowOn(Dispatchers.IO)
+
+    override fun markAbsent(request: MarkAbsentRequest): Flow<ApiResult<PunchResponse>> = flow {
+        emit(safeApiCall { RetrofitApiService.create(BASE_URL).employeeMarkAbsent(request) })
     }.flowOn(Dispatchers.IO)
 
     override fun getAttendance(month: String): Flow<ApiResult<AttendanceListResponse>> = flow {

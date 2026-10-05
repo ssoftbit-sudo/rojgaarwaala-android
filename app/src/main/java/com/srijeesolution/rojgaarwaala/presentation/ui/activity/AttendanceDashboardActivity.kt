@@ -44,6 +44,7 @@ import com.srijeesolution.rojgaarwaala.utils.PunchElapsedFormatter
 import com.srijeesolution.rojgaarwaala.utils.PunchOutOutcome
 import com.srijeesolution.rojgaarwaala.utils.PunchInReminderPolicy
 import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
+import com.srijeesolution.rojgaarwaala.utils.SelfAbsentPolicy
 import com.srijeesolution.rojgaarwaala.utils.WageFormatter
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
@@ -89,6 +90,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
     private var employeeInactive = false
     private var serverCanPunchIn = false
     private var serverCanPunchOut = false
+    private var serverCanMarkAbsent = false
+    private var selfAbsent = false
     private var attendanceMarked = false
     private var dashboardLoaded = false
     private var authorisedStaff = false
@@ -145,6 +148,7 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         binding.errorRetryButton.setOnClickListener { viewModel.loadDashboard() }
         binding.punchInButton.setOnClickListener { startPunchFlow(isPunchIn = true) }
         binding.punchOutButton.setOnClickListener { confirmPunchOut() }
+        binding.markAbsentButton.setOnClickListener { confirmMarkAbsent() }
 
         setupMap()
         observeDashboard()
@@ -380,6 +384,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         todayFactory = today?.factory
         serverCanPunchIn = today?.canPunchIn == true
         serverCanPunchOut = today?.canPunchOut == true
+        serverCanMarkAbsent = SelfAbsentPolicy.canOffer(today?.canMarkAbsent, today?.selfAbsent)
+        selfAbsent = today?.selfAbsent == true
+        binding.selfAbsentText.text = SelfAbsentPolicy.notice(today?.absentReason)
         attendanceMarked = today?.attendanceMarked == true
         dashboardLoaded = true
 
@@ -512,6 +519,8 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         if (employeeInactive || punchBlockedByError || punchInProgress) {
             binding.punchInButton.visibility = View.GONE
             binding.punchOutButton.visibility = View.GONE
+            binding.markAbsentButton.visibility = View.GONE
+            binding.selfAbsentText.visibility = View.GONE
             binding.dutyHintText.visibility = View.GONE
             binding.dayCompleteText.visibility = View.GONE
             return
@@ -528,6 +537,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
         applyPunchButtonState(binding.punchInButton, visible = serverCanPunchIn, enabled = enabled)
         applyPunchButtonState(binding.punchOutButton, visible = serverCanPunchOut, enabled = enabled)
         binding.dutyHintText.visibility = if (serverCanPunchIn) View.VISIBLE else View.GONE
+        // Needs no location, so it is never gated on the geofence like the punches are.
+        binding.markAbsentButton.visibility = if (serverCanMarkAbsent) View.VISIBLE else View.GONE
+        binding.selfAbsentText.visibility = if (selfAbsent) View.VISIBLE else View.GONE
 
         binding.dayCompleteText.visibility =
             if (!serverCanPunchIn && !serverCanPunchOut && attendanceMarked) {
@@ -639,12 +651,39 @@ class AttendanceDashboardActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * Pick a reason, then confirm: the day is unpaid, so a stray tap must not be
+     * able to mark it.
+     */
+    private fun confirmMarkAbsent() {
+        if (punchInProgress) return
+        val reasons = SelfAbsentPolicy.REASONS
+        var selected = 0
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("आज नहीं आएंगे? कारण चुनें")
+            .setSingleChoiceItems(reasons.toTypedArray(), selected) { _, which -> selected = which }
+            .setPositiveButton("हाँ, आज गैरहाजिर") { dialog, _ ->
+                dialog.dismiss()
+                if (punchInProgress) return@setPositiveButton
+                punchInProgress = true
+                hidePunchMessage()
+                binding.punchInButton.visibility = View.GONE
+                binding.punchOutButton.visibility = View.GONE
+                binding.markAbsentButton.visibility = View.GONE
+                showPunchProgress("गैरहाजिरी लग रही है...")
+                viewModel.markAbsent(reasons[selected])
+            }
+            .setNegativeButton("रद्द करें", null)
+            .show()
+    }
+
     private fun startPunchFlow(isPunchIn: Boolean) {
         if (punchInProgress) return
         punchInProgress = true
         hidePunchMessage()
         binding.punchInButton.visibility = View.GONE
         binding.punchOutButton.visibility = View.GONE
+        binding.markAbsentButton.visibility = View.GONE
         showPunchProgress("आपकी लोकेशन ले रहे हैं...")
 
         locationHelper.requestCurrentLocation { result ->
@@ -717,6 +756,12 @@ class AttendanceDashboardActivity : AppCompatActivity() {
                 PunchReminderSync.onPunchedOut(this, sharedPrefs)
             }
             handlePunchResult(result, "पंच आउट लग गया")
+        }
+        viewModel.markAbsentLiveData.observe(this) { result ->
+            if (result is ApiResult.Success && result.data?.status != false) {
+                PunchReminderSync.onMarkedAbsent(this, sharedPrefs)
+            }
+            handlePunchResult(result, "आज की गैरहाजिरी लग गई")
         }
     }
 

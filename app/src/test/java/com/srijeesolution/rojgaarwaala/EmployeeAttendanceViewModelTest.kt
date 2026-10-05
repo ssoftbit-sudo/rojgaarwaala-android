@@ -24,6 +24,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchAttendance
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchData
+import com.srijeesolution.rojgaarwaala.data.remote.model.MarkAbsentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
@@ -101,6 +102,9 @@ class EmployeeAttendanceViewModelTest {
             punchOutRequest = request
             return flowOf(punchOutResult)
         }
+
+        override fun markAbsent(request: MarkAbsentRequest): Flow<ApiResult<PunchResponse>> =
+            flowOf(ApiResult.Success(PunchResponse(status = true)))
 
         override fun getAttendance(month: String): Flow<ApiResult<AttendanceListResponse>> {
             attendanceMonth = month

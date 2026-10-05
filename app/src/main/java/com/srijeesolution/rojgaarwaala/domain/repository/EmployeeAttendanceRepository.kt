@@ -14,6 +14,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MarkAbsentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
@@ -26,6 +27,8 @@ interface EmployeeAttendanceRepository {
     fun punchIn(request: PunchRequest): Flow<ApiResult<PunchResponse>>
 
     fun punchOut(request: PunchRequest): Flow<ApiResult<PunchResponse>>
+
+    fun markAbsent(request: MarkAbsentRequest): Flow<ApiResult<PunchResponse>>
 
     fun getAttendance(month: String): Flow<ApiResult<AttendanceListResponse>>
 

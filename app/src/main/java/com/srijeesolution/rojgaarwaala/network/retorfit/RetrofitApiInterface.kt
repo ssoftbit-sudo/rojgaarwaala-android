@@ -24,6 +24,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeeDashboardRespon
 import com.srijeesolution.rojgaarwaala.data.remote.model.EmployeePaymentsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.FactoryTermsResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MarkAbsentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.BulkPunchRequest
@@ -295,6 +296,9 @@ interface RetrofitApiInterface {
 
     @POST(NetworkConstants.EMPLOYEE_PUNCH_OUT)
     suspend fun employeePunchOut(@Body request: PunchRequest): Response<PunchResponse>
+
+    @POST(NetworkConstants.EMPLOYEE_MARK_ABSENT)
+    suspend fun employeeMarkAbsent(@Body request: MarkAbsentRequest): Response<PunchResponse>
 
     @GET(NetworkConstants.EMPLOYEE_ATTENDANCE)
     suspend fun getEmployeeAttendance(@Query("month") month: String): Response<AttendanceListResponse>

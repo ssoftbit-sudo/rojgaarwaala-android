@@ -10,6 +10,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchItem
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.MissedPunchReviewResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamMember
+import com.srijeesolution.rojgaarwaala.utils.SelfAbsentPolicy
 import com.srijeesolution.rojgaarwaala.databinding.ActivityBulkAttendanceBinding
 import com.srijeesolution.rojgaarwaala.databinding.ItemOtReviewBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -178,7 +179,12 @@ class BulkAttendanceActivity : AppCompatActivity() {
         checkBoxes.clear()
         members.forEach { member ->
             val box = CheckBox(this).apply {
-                text = "${member.employeeCode} — ${member.name} (${AttendanceHindi.status(member.statusLabel)})"
+                val status = SelfAbsentPolicy.teamStatus(
+                    AttendanceHindi.status(member.statusLabel),
+                    member.selfAbsent,
+                    member.absentReason,
+                )
+                text = "${member.employeeCode} — ${member.name} ($status)"
                 setTextColor(0xFFFFFFFF.toInt())
                 isEnabled = member.attendanceMarked != true
                 isChecked = member.attendanceMarked != true

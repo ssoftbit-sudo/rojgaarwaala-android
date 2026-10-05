@@ -18,6 +18,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.MonthlySummaryResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestBody
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtRequestResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.OtReviewResponse
+import com.srijeesolution.rojgaarwaala.data.remote.model.MarkAbsentRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.PunchResponse
 import com.srijeesolution.rojgaarwaala.data.remote.model.TeamResponse
@@ -41,6 +42,9 @@ class EmployeeAttendanceViewModel @Inject constructor(
 
     private val _punchOutLiveData = MutableLiveData<ApiResult<PunchResponse>>()
     val punchOutLiveData: LiveData<ApiResult<PunchResponse>> = _punchOutLiveData
+
+    private val _markAbsentLiveData = MutableLiveData<ApiResult<PunchResponse>>()
+    val markAbsentLiveData: LiveData<ApiResult<PunchResponse>> = _markAbsentLiveData
 
     private val _attendanceLiveData = MutableLiveData<ApiResult<AttendanceListResponse>>()
     val attendanceLiveData: LiveData<ApiResult<AttendanceListResponse>> = _attendanceLiveData
@@ -109,6 +113,14 @@ class EmployeeAttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             employeeAttendanceRepository.punchOut(PunchRequest(latitude, longitude, accuracy))
                 .collectLatest { _punchOutLiveData.postValue(it) }
+        }
+    }
+
+    fun markAbsent(reason: String?) {
+        _markAbsentLiveData.value = ApiResult.Loading()
+        viewModelScope.launch {
+            employeeAttendanceRepository.markAbsent(MarkAbsentRequest(reason))
+                .collectLatest { _markAbsentLiveData.postValue(it) }
         }
     }
 

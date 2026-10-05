@@ -50,6 +50,7 @@ class NetworkConstants {
         const val EMPLOYEE_DASHBOARD = "employee/dashboard"
         const val EMPLOYEE_PUNCH_IN = "employee/attendance/punch-in"
         const val EMPLOYEE_PUNCH_OUT = "employee/attendance/punch-out"
+        const val EMPLOYEE_MARK_ABSENT = "employee/attendance/mark-absent"
         const val EMPLOYEE_ATTENDANCE = "employee/attendance"
         const val EMPLOYEE_MONTHLY_SUMMARY = "employee/attendance/monthly-summary"
         const val EMPLOYEE_PAYMENTS = "employee/payments"
