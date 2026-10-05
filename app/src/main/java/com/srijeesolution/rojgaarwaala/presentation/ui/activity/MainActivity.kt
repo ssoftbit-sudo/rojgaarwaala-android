@@ -2,7 +2,9 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -17,15 +19,22 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.R
+import com.srijeesolution.rojgaarwaala.data.remote.model.AndroidUpdateConfig
+import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls
+import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiService
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
+import com.srijeesolution.rojgaarwaala.utils.AppUpdatePolicy
 import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import com.srijeesolution.rojgaarwaala.utils.InAppNotification
 import com.srijeesolution.rojgaarwaala.utils.InAppNotificationInbox
@@ -38,6 +47,11 @@ import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -90,6 +104,9 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
     private var currentTabIndex = MainTabs.HOME
     private var notificationProcessed = false
+
+    private var updateCheckJob: Job? = null
+    private var updateDialog: AlertDialog? = null
 
     private val pickLocationLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -492,6 +509,111 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     override fun onStart() {
         super.onStart()
         checkForBackgroundNotification()
+        checkForAppUpdate()
+    }
+
+    override fun onDestroy() {
+        updateDialog?.dismiss()
+        updateDialog = null
+        super.onDestroy()
+    }
+
+    /**
+     * Silent version check against /api/app-config. Runs on every return to the
+     * home screen, not only cold start, so an app left in the background still
+     * learns about a release once admin raises the latest version code.
+     */
+    private fun checkForAppUpdate() {
+        if (updateDialog?.isShowing == true || updateCheckJob?.isActive == true) return
+        val sinceLastCheck = SystemClock.elapsedRealtime() - lastUpdateCheckAt
+        if (lastUpdateCheckAt > 0 && sinceLastCheck < UPDATE_CHECK_INTERVAL_MS) return
+
+        updateCheckJob = lifecycleScope.launch {
+            val config = try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitApiService.create(NetworkBaseUrls.BASE_URL)
+                        .getAppConfig(BuildConfig.VERSION_CODE)
+                }
+                if (response.isSuccessful) response.body()?.data?.android else null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (t: Throwable) {
+                Log.w("MainActivity", "app-config check failed; continuing", t)
+                null
+            } ?: return@launch
+
+            lastUpdateCheckAt = SystemClock.elapsedRealtime()
+            if (isFinishing || isDestroyed) return@launch
+
+            val prompt = AppUpdatePolicy.decide(
+                installedVersionCode = BuildConfig.VERSION_CODE,
+                minVersionCode = config.minVersionCode,
+                latestVersionCode = config.latestVersionCode,
+                forceUpdate = config.forceUpdate,
+            )
+            when (prompt) {
+                AppUpdatePolicy.Prompt.NONE -> Unit
+                AppUpdatePolicy.Prompt.REQUIRED -> showUpdateDialog(config, required = true)
+                AppUpdatePolicy.Prompt.OPTIONAL -> {
+                    // "Later" hides the prompt for this release until the app is reopened.
+                    if (snoozedLatestVersionCode != config.latestVersionCode) {
+                        showUpdateDialog(config, required = false)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showUpdateDialog(config: AndroidUpdateConfig, required: Boolean) {
+        val title = if (required) {
+            config.title?.takeIf { it.isNotBlank() } ?: "Update required"
+        } else {
+            "Update available"
+        }
+        val message = config.message?.takeIf { it.isNotBlank() }
+            ?: "A new version of Rojgaarwaala is available. Please update from Play Store."
+        val storeUrl = config.storeUrl?.takeIf { it.isNotBlank() }
+            ?: "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+
+        val dialog = AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(!required)
+            .setPositiveButton("Update", null)
+            .setNegativeButton(if (required) "Exit" else "Later") { _, _ ->
+                if (required) {
+                    finishAffinity()
+                } else {
+                    snoozedLatestVersionCode = config.latestVersionCode
+                }
+            }
+            .create()
+        dialog.setOnCancelListener { snoozedLatestVersionCode = config.latestVersionCode }
+        dialog.show()
+        // Set after show() so a required dialog stays up when the user comes
+        // back from Play Store without updating.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            openPlayStore(storeUrl)
+            if (!required) dialog.dismiss()
+        }
+        updateDialog = dialog
+    }
+
+    private fun openPlayStore(storeUrl: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl)))
+        } catch (_: Exception) {
+            try {
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("market://details?id=${BuildConfig.APPLICATION_ID}"),
+                    ),
+                )
+            } catch (_: Exception) {
+                Toast.makeText(this, "Play Store could not be opened.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onBackPressed() {
@@ -694,5 +816,11 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         private const val MENU_PAID_APPLICATIONS = 5
         private const val MENU_LOCATION = 2
         private const val MENU_CLEAR_LOCATION = 3
+
+        private const val UPDATE_CHECK_INTERVAL_MS = 15 * 60 * 1000L
+
+        // Process-wide, so rotating the screen does not re-ask or re-fetch.
+        private var lastUpdateCheckAt = 0L
+        private var snoozedLatestVersionCode: Int? = null
     }
 }
