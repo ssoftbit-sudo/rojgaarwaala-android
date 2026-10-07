@@ -100,18 +100,18 @@ class EmployeeAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun punchIn(latitude: Double, longitude: Double, accuracy: Double) {
+    fun punchIn(latitude: Double, longitude: Double, accuracy: Double, isMock: Boolean = false) {
         _punchInLiveData.value = ApiResult.Loading()
         viewModelScope.launch {
-            employeeAttendanceRepository.punchIn(PunchRequest(latitude, longitude, accuracy))
+            employeeAttendanceRepository.punchIn(PunchRequest(latitude, longitude, accuracy, isMock))
                 .collectLatest { _punchInLiveData.postValue(it) }
         }
     }
 
-    fun punchOut(latitude: Double, longitude: Double, accuracy: Double) {
+    fun punchOut(latitude: Double, longitude: Double, accuracy: Double, isMock: Boolean = false) {
         _punchOutLiveData.value = ApiResult.Loading()
         viewModelScope.launch {
-            employeeAttendanceRepository.punchOut(PunchRequest(latitude, longitude, accuracy))
+            employeeAttendanceRepository.punchOut(PunchRequest(latitude, longitude, accuracy, isMock))
                 .collectLatest { _punchOutLiveData.postValue(it) }
         }
     }
@@ -176,11 +176,17 @@ class EmployeeAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun bulkPunchIn(employeeIds: List<Int>, latitude: Double, longitude: Double, accuracy: Double) {
+    fun bulkPunchIn(
+        employeeIds: List<Int>,
+        latitude: Double,
+        longitude: Double,
+        accuracy: Double,
+        isMock: Boolean = false,
+    ) {
         _bulkPunchLiveData.value = ApiResult.Loading()
         viewModelScope.launch {
             employeeAttendanceRepository.bulkPunchIn(
-                BulkPunchRequest(employeeIds, latitude, longitude, accuracy),
+                BulkPunchRequest(employeeIds, latitude, longitude, accuracy, isMock),
             ).collectLatest { _bulkPunchLiveData.postValue(it) }
         }
     }

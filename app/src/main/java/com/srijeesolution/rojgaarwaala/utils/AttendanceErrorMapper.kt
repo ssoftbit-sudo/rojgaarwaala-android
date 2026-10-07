@@ -20,6 +20,7 @@ object AttendanceErrorMapper {
     const val FACTORY_LOCATION_MISSING = "factory_location_missing"
     const val STAFF_DOES_NOT_PUNCH = "staff_does_not_punch"
     const val ABSENT_NOT_ALLOWED = "absent_not_allowed"
+    const val MOCK_LOCATION = "mock_location"
 
     const val UNAUTHENTICATED_MESSAGE = "आपका सेशन खत्म हो गया है। फिर से लॉगिन करें।"
     const val GENERIC_MESSAGE = "कुछ गड़बड़ हो गई। फिर कोशिश करें।"
@@ -46,6 +47,8 @@ object AttendanceErrorMapper {
                 fallback ?: "फैक्ट्री की लोकेशन सेट नहीं है। सुपरवाइज़र से बात करें।"
             STAFF_DOES_NOT_PUNCH ->
                 "आप हाजिरी नहीं लगाते। वर्कर की हाजिरी और OT अप्रूव करें।"
+            MOCK_LOCATION ->
+                "फोन में नकली GPS (Fake GPS) ऐप चालू है। उसे बंद करें और फिर कोशिश करें।"
             ABSENT_NOT_ALLOWED -> "आज की हाजिरी पहले ही लग चुकी है, इसलिए गैरहाजिर नहीं लगा सकते।"
             else -> fallback ?: GENERIC_MESSAGE
         }

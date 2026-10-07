@@ -109,6 +109,18 @@ class AttendanceErrorMapperTest {
     }
 
     @Test
+    fun `fake GPS is explained in Hindi and does not lock the punch buttons`() {
+        assertEquals(
+            "फोन में नकली GPS (Fake GPS) ऐप चालू है। उसे बंद करें और फिर कोशिश करें।",
+            AttendanceErrorMapper.message(
+                AttendanceErrorMapper.MOCK_LOCATION,
+                "A fake GPS app is active on this phone. Turn it off and try again.",
+            ),
+        )
+        assertFalse(AttendanceErrorMapper.disablesPunchUi(AttendanceErrorMapper.MOCK_LOCATION))
+    }
+
+    @Test
     fun `poor accuracy ignores the server message and gives guidance`() {
         assertEquals(
             "सही लोकेशन नहीं मिल रही। खुली जगह पर जाकर फिर कोशिश करें।",

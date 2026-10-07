@@ -84,6 +84,8 @@ data class PunchRequest(
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("accuracy") val accuracy: Double,
+    /** Reported honestly so the server can refuse a fake-GPS punch. */
+    @SerializedName("is_mock") val isMock: Boolean = false,
 )
 
 data class MarkAbsentRequest(
@@ -286,6 +288,7 @@ data class BulkPunchRequest(
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("accuracy") val accuracy: Double,
+    @SerializedName("is_mock") val isMock: Boolean = false,
 )
 
 data class BulkPunchResponse(

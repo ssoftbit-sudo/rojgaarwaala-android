@@ -231,6 +231,15 @@ class EmployeeAttendanceViewModelTest {
         assertEquals(21.2514, repository.punchInRequest?.latitude!!, 0.0)
         assertEquals(81.6296, repository.punchInRequest?.longitude!!, 0.0)
         assertEquals(12.5, repository.punchInRequest?.accuracy!!, 0.0)
+        assertEquals(false, repository.punchInRequest?.isMock)
+    }
+
+    @Test
+    fun `punch in tells the server when the fix came from a fake GPS app`() = runTest(dispatcher) {
+        viewModel.punchIn(latitude = 21.2514, longitude = 81.6296, accuracy = 12.5, isMock = true)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(true, repository.punchInRequest?.isMock)
     }
 
     @Test

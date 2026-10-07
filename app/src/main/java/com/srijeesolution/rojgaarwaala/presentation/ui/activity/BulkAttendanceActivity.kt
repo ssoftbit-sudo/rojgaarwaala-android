@@ -220,6 +220,7 @@ class BulkAttendanceActivity : AppCompatActivity() {
                     result.latitude,
                     result.longitude,
                     result.accuracy,
+                    result.isMock,
                 )
                 is LocationHelper.Result.Error -> Toast.makeText(
                     this,

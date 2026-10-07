@@ -693,9 +693,9 @@ class AttendanceDashboardActivity : AppCompatActivity() {
                         if (isPunchIn) "आपकी हाजिरी लग रही है..." else "पंच आउट लग रहा है...",
                     )
                     if (isPunchIn) {
-                        viewModel.punchIn(result.latitude, result.longitude, result.accuracy)
+                        viewModel.punchIn(result.latitude, result.longitude, result.accuracy, result.isMock)
                     } else {
-                        viewModel.punchOut(result.latitude, result.longitude, result.accuracy)
+                        viewModel.punchOut(result.latitude, result.longitude, result.accuracy, result.isMock)
                     }
                 }
                 is LocationHelper.Result.Error -> onLocationFailed(result)

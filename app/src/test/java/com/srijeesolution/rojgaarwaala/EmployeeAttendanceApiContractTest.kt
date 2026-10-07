@@ -298,6 +298,7 @@ class EmployeeAttendanceApiContractTest {
         assertEquals(21.2514, sent.getDouble("latitude"), 0.0)
         assertEquals(81.6296, sent.getDouble("longitude"), 0.0)
         assertEquals(12.5, sent.getDouble("accuracy"), 0.0)
+        assertEquals(false, sent.getBoolean("is_mock"))
 
         val attendance = response.body()?.data?.attendance
         assertEquals(201, response.code())

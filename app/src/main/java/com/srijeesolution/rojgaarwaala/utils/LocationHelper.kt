@@ -6,8 +6,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -47,11 +49,21 @@ class LocationHelper(private val activity: ComponentActivity) {
         UNAVAILABLE,
     }
 
+    private fun isMockLocation(location: Location): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            location.isMock
+        } else {
+            @Suppress("DEPRECATION")
+            location.isFromMockProvider
+        }
+
     sealed class Result {
         data class Success(
             val latitude: Double,
             val longitude: Double,
             val accuracy: Double,
+            /** Android says this fix came from a mock-location app, not a real sensor. */
+            val isMock: Boolean = false,
         ) : Result()
 
         data class Error(val failure: Failure, val message: String) : Result()
@@ -172,6 +184,7 @@ class LocationHelper(private val activity: ComponentActivity) {
                         latitude = location.latitude,
                         longitude = location.longitude,
                         accuracy = location.accuracy.toDouble(),
+                        isMock = isMockLocation(location),
                     ),
                 )
             }
@@ -317,6 +330,7 @@ class LocationHelper(private val activity: ComponentActivity) {
                             latitude = location.latitude,
                             longitude = location.longitude,
                             accuracy = location.accuracy.toDouble(),
+                            isMock = isMockLocation(location),
                         ),
                     )
                 }
