@@ -23,6 +23,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.AuthNavigation
 import com.srijeesolution.rojgaarwaala.utils.ProfileGate
+import com.srijeesolution.rojgaarwaala.utils.SessionExpiry
 import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.PunchReminderSync
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
@@ -558,10 +559,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun logoutUser() {
-        PunchReminderSync.clear(requireContext(), sharedPrefs)
-        sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
-        sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_LOGGED_IN_STATUS)
-        ProfileGate.clear(sharedPrefs)
+        SessionExpiry.clearSession(requireContext(), sharedPrefs)
         Toast.makeText(requireContext(), getString(R.string.profile_logged_out), Toast.LENGTH_SHORT).show()
         val intent = Intent(requireContext(), LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

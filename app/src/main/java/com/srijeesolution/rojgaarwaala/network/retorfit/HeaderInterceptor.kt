@@ -1,59 +1,71 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
-import android.util.Log
 import com.srijeesolution.rojgaarwaala.BuildConfig
+import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
+import com.srijeesolution.rojgaarwaala.utils.RojgaarwalaApplication
+import com.srijeesolution.rojgaarwaala.utils.SessionExpiry
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
-import com.srijeesolution.rojgaarwaala.utils.DeviceKeyUtils
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 
-class HeaderInterceptor @Inject constructor(private val sharedPrefs: SharedPrefs) : Interceptor {
-    var appVersion: String = ""
-    var isRetryOn = false
-    var retryCount = 0
-    var maxRetryCount = 3
-    private val TAG = HeaderInterceptor::class.java.simpleName
-    
+/**
+ * Adds the session and device headers to every API call, and ends the session when
+ * the server rejects the token.
+ *
+ * A failed call is never sent again from here: the old retry re-sent the request
+ * without its headers, so a timeout came back to the screen as a 401.
+ */
+class HeaderInterceptor internal constructor(
+    private val sessionHeaders: () -> Map<String, String>,
+    private val onSessionExpired: () -> Unit,
+) : Interceptor {
+
+    @Inject
+    constructor(sharedPrefs: SharedPrefs) : this(
+        sessionHeaders = { headersFrom(sharedPrefs) },
+        onSessionExpired = { SessionExpiry.handle(RojgaarwalaApplication.getAppContext(), sharedPrefs) },
+    )
+
     override fun intercept(chain: Interceptor.Chain): Response {
-        try {
-            val response: Response
-            val original = chain.request()
-            var requestBuilder: Request.Builder? = null
-            requestBuilder = original.newBuilder()
-                .header("Accept", "application/json")
+        val headers = sessionHeaders()
+        val builder = chain.request().newBuilder()
+            .header("Accept", "application/json")
+            .header("X-App-Version-Code", BuildConfig.VERSION_CODE.toString())
+            .header("X-App-Version-Name", BuildConfig.VERSION_NAME)
+        headers.forEach { (name, value) -> builder.header(name, value) }
+        val request = builder.build()
+
+        val response = chain.proceed(request)
+
+        if (SessionExpiry.shouldLogout(
+                code = response.code,
+                sentAuthHeader = headers.containsKey(AUTHORIZATION),
+                path = request.url.encodedPath,
+            )
+        ) {
+            onSessionExpired()
+        }
+
+        return response
+    }
+
+    companion object {
+        const val AUTHORIZATION = "Authorization"
+
+        private fun headersFrom(sharedPrefs: SharedPrefs): Map<String, String> {
+            val headers = LinkedHashMap<String, String>()
             val authToken = sharedPrefs.getPrefs(SharedPrefsConstant.USER_AUTH_TOKEN, "").orEmpty().trim()
             if (authToken.isNotEmpty()) {
-                requestBuilder.header("Authorization", "Bearer $authToken")
+                headers[AUTHORIZATION] = "Bearer $authToken"
             }
             val fcmToken = sharedPrefs.getPrefs(SharedPrefsConstant.FCM_TOKEN, "").orEmpty().trim()
             if (fcmToken.isNotEmpty()) {
-                requestBuilder.header("fcm_token", fcmToken)
+                headers["fcm_token"] = fcmToken
             }
-            val deviceKey = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
-            requestBuilder.header("X-Device-Key", deviceKey)
-            requestBuilder.header("X-App-Version-Code", BuildConfig.VERSION_CODE.toString())
-            requestBuilder.header("X-App-Version-Name", BuildConfig.VERSION_NAME)
-            requestBuilder.method(original.method, original.body)
-            response = chain.proceed(requestBuilder.build())
-            return response
-        } catch (e: Exception) {
-            Log.d(TAG, "Exception-" + e.message)
-            Log.d(TAG, "Exception-tryCount-" + retryCount)
-            Log.d(TAG, "Exception-isRetryOn-" + isRetryOn)
-            if (isRetryOn) {
-                if (e is SocketTimeoutException && retryCount < maxRetryCount) {
-                    retryCount++
-                    // retry the request
-                    return chain.call().clone().execute()
-                } else {
-                    chain.call().cancel()
-                }
-            }
+            headers["X-Device-Key"] = DeviceKeyUtils.getOrCreateDeviceKey(sharedPrefs)
+            return headers
         }
-        return chain.proceed(chain.request())
     }
 }

@@ -710,14 +710,8 @@ class VideoPlayerActivity : AppCompatActivity(),
     }
 
     private fun handleReactionError(result: ApiResult.Error<*>) {
+        // A rejected token is handled once for every screen by SessionExpiry.
         rollbackReaction()
-        if (result.message?.statusCode == 401) {
-            sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.USER_LOGGED_IN_STATUS, false))
-            sharedPrefs.removeSharedPrefs(SharedPrefsConstant.USER_AUTH_TOKEN)
-            ProfileGate.clear(sharedPrefs)
-            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, LoginActivity::class.java))
-        }
     }
 
     private fun applyReactionFromApi(data: com.srijeesolution.rojgaarwaala.data.remote.model.VideoReactionData?) {
