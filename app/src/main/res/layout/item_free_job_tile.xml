@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Same card as item_top_video (Home > Top Videos), with the title strip and a map button. -->
+<!-- Same card as item_top_video (Home > Top Videos): the picture only, with a map button under it. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -27,34 +27,6 @@
                 android:background="@color/black"
                 android:contentDescription="@null"
                 android:scaleType="centerCrop" />
-
-            <LinearLayout
-                android:id="@+id/freeJobTileCaption"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:background="#99000000"
-                android:orientation="vertical"
-                android:padding="8dp">
-
-                <TextView
-                    android:id="@+id/freeJobTileTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/freeJobTileMeta"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/white"
-                    android:textSize="11sp" />
-            </LinearLayout>
         </FrameLayout>
     </androidx.cardview.widget.CardView>
 

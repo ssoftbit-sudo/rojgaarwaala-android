@@ -306,9 +306,10 @@ class HomePageViewModel @Inject constructor(private val homePageRepository: Home
         perPage: Int? = null,
         sort: String? = null,
         title: String? = null,
+        perCategory: Int? = null,
     ) {
         viewModelScope.launch {
-            homePageRepository.getScheduledImages(lat, lng, radiusKm, page, perPage, sort, title).collectLatest {
+            homePageRepository.getScheduledImages(lat, lng, radiusKm, page, perPage, sort, title, perCategory).collectLatest {
                 _imageListLiveData.postValue(it)
             }
         }

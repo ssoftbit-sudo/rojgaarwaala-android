@@ -75,6 +75,7 @@ interface HomePageRepository {
         perPage: Int? = null,
         sort: String? = null,
         title: String? = null,
+        perCategory: Int? = null,
     ): Flow<ApiResult<ImageListResponse>>
     fun getNearbyScheduledImages(
         lat: Double? = null,

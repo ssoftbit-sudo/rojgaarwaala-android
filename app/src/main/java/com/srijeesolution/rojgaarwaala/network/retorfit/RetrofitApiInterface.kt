@@ -188,6 +188,7 @@ interface RetrofitApiInterface {
         @Query("per_page") perPage: Int? = null,
         @Query("sort") sort: String? = null,
         @Query("title") title: String? = null,
+        @Query("per_category") perCategory: Int? = null,
     ): Response<ImageListResponse>
 
     @GET(NetworkConstants.SCHEDULED_IMAGES_NEARBY)

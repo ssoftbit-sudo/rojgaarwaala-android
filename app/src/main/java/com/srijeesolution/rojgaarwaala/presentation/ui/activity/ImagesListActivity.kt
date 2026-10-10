@@ -11,6 +11,7 @@ import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.adaptor.ImagesGridAdapter
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
+import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.ImageLocationFilter
 import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
@@ -119,10 +120,8 @@ class ImagesListActivity : AppCompatActivity() {
             allImages.filter { ImageLocationFilter.matches(it, locationQuery) }
         }
 
-        allImagesList = locationFiltered.sortedWith(
-            compareBy<ImageData> { it.sortOrder ?: Int.MAX_VALUE }
-                .thenByDescending { it.publishDate.orEmpty() }
-        )
+        // Newest first by when the job was created, the same order as the Free Job tab.
+        allImagesList = locationFiltered.sortedByDescending { FreeJobFeed.postedKey(it) }
         
         if (allImagesList.isNotEmpty()) {
             imagesAdapter?.submitList(allImagesList)

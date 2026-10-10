@@ -172,6 +172,10 @@ class ImagesFragment : Fragment() {
             perPage = PAGE_SIZE,
             sort = if (sort == FreeJobFeed.Sort.NEWEST) "newest" else "oldest",
             title = binding.searchBar.text?.toString()?.trim()?.takeIf { it.isNotEmpty() },
+            // Asks for each category's own newest jobs. Without it one newest-first page
+            // of all jobs left most categories with a single card. A backend that does
+            // not know the parameter ignores it and pages as before.
+            perCategory = PER_CATEGORY,
         )
     }
 
@@ -376,5 +380,6 @@ class ImagesFragment : Fragment() {
 
     companion object {
         private const val PAGE_SIZE = 20
+        private const val PER_CATEGORY = 10
     }
 }

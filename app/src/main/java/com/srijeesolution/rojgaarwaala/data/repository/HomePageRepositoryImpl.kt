@@ -290,6 +290,7 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
         perPage: Int?,
         sort: String?,
         title: String?,
+        perCategory: Int?,
     ) = flow {
         emit(safeApiCall {
             RetrofitApiService.create(BASE_URL).getScheduledImages(
@@ -300,6 +301,7 @@ class HomePageRepositoryImpl @Inject constructor() : HomePageRepository, BaseApi
                 perPage,
                 sort,
                 title,
+                perCategory,
             )
         })
     }.flowOn(Dispatchers.IO)
