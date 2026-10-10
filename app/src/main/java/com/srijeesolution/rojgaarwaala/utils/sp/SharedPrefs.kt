@@ -12,7 +12,6 @@ class SharedPrefs @Inject constructor(context: Context) {
     fun setPrefsData(pair: Pair<String, Any>){
         val key = pair.first
         val value = pair.second
-        Log.d("SharedPref", "setPrefsData key ${pair.first} value= ${pair.second}")
         val edit = preferences.edit()
         when (value) {
             is String -> edit.putString(key, value)

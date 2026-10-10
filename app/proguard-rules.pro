@@ -139,3 +139,10 @@
 
 # androidx.browser ships its own consumer rules, and payment DTOs are already
 # covered by the Gson keeps above, so the gateway needs no extra entries.
+
+# Debug and verbose logs never ship: they have printed tokens and full API
+# responses before. Warnings and errors stay for Crashlytics.
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}

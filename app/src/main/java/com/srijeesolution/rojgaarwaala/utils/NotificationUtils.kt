@@ -59,7 +59,6 @@ object NotificationUtils {
 
             // Get new FCM registration token
             val token = task.result
-            Log.d(TAG, "FCM Token: $token")
             onTokenReceived(token ?: "")
         }
     }

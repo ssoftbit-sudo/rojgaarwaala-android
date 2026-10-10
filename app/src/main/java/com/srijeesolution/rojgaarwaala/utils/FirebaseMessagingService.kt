@@ -21,12 +21,10 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "Refreshed token: $token")
         
         // Save FCM token to SharedPreferences
         val sharedPrefs = SharedPrefs(this)
         sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.FCM_TOKEN, token))
-        Log.d(TAG, "FCM Token saved to SharedPreferences: $token")
         
         // Here you can send the token to your server
         sendRegistrationToServer(token)
@@ -98,7 +96,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     private fun sendRegistrationToServer(token: String) {
         // TODO: Implement this method to send token to your app server.
-        Log.d(TAG, "sendRegistrationTokenToServer($token)")
     }
 
     private fun sendNotification(

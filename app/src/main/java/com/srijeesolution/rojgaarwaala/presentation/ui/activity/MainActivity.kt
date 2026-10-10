@@ -139,7 +139,6 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
         NotificationUtils.requestNotificationPermission(this)
         NotificationUtils.getFirebaseToken { token ->
-            Log.d("MainActivity", "Firebase Token: $token")
             if (token.isNotEmpty()) {
                 sharedPrefs.setPrefsData(Pair(SharedPrefsConstant.FCM_TOKEN, token))
             }
