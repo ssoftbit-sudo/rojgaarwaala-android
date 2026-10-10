@@ -95,21 +95,6 @@
             android:textColor="@color/search_hint"
             android:textSize="12sp"
             app:drawableTint="@color/search_hint" />
-
-        <TextView
-            android:id="@+id/freeJobDistanceChip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_free_job_distance_chip"
-            android:paddingStart="8dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="3dp"
-            android:textColor="@color/white"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
     </LinearLayout>
 
     <TextView
@@ -125,52 +110,64 @@
         android:textStyle="bold"
         app:drawableTint="@color/brand_color_yellow" />
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/freeJobPlace"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:drawablePadding="4dp"
+        android:drawableStart="@drawable/ic_free_job_map"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/search_hint"
+        android:textSize="12sp"
+        app:drawableTint="@color/search_hint" />
 
-        <TextView
-            android:id="@+id/freeJobPlace"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawablePadding="4dp"
-            android:drawableStart="@drawable/ic_free_job_map"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/search_hint"
-            android:textSize="12sp"
-            app:drawableTint="@color/search_hint" />
-
-        <TextView
-            android:id="@+id/freeJobLocationChip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_free_job_location_chip"
-            android:paddingStart="8dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="3dp"
-            android:text="@string/free_job_location_available"
-            android:textColor="@color/color_green"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <TextView
+    <!-- The whole block is the button: icon and label, with the distance under them. -->
+    <LinearLayout
         android:id="@+id/freeJobViewMap"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:background="@drawable/bg_free_job_map_button"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
-        android:text="@string/free_job_view_on_map"
-        android:textColor="@color/white"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:minHeight="40dp"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_free_job_map"
+                app:tint="@color/brand_color_yellow" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="@string/free_job_view_on_map"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/freeJobMapDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/search_hint"
+            android:textSize="11sp"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>

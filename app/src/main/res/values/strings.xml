@@ -46,8 +46,7 @@
     <string name="stories_count_label">%1$d Stories</string>
     <string name="stories_view_list">List view</string>
     <string name="stories_view_tile">Tile view</string>
-    <string name="free_job_location_available">Location Available</string>
-    <string name="free_job_view_on_map">View on map</string>
+    <string name="free_job_view_on_map">मैप पर देखें</string>
     <string name="free_job_empty">No free jobs right now</string>
     <string name="free_job_list_tab">Job list</string>
     <string name="free_job_near_me_tab">Near me</string>

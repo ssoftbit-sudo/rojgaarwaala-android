@@ -15,6 +15,11 @@ object FreeJobFeed {
     enum class ViewMode { LIST, TILE }
     enum class Sort { NEWEST, OLDEST }
 
+    /** Tile view shows a short strip per category; View All has the rest. */
+    const val TILE_PREVIEW = 5
+
+    fun tilePreview(jobs: List<ImageData>): List<ImageData> = jobs.take(TILE_PREVIEW)
+
     fun hasCoordinates(job: ImageData): Boolean =
         job.latitude != null && job.longitude != null
 

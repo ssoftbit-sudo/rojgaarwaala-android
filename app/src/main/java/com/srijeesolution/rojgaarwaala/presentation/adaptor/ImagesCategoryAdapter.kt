@@ -3,14 +3,12 @@ package com.srijeesolution.rojgaarwaala.presentation.adaptor
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.data.remote.model.ImageSubItem
 import com.srijeesolution.rojgaarwaala.databinding.ItemImageCategoryBinding
 import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
 import com.srijeesolution.rojgaarwaala.utils.FreeJobItem
-import com.srijeesolution.rojgaarwaala.utils.SpaceItemDecoration
 
 class ImagesCategoryAdapter(
     private val viewMode: FreeJobFeed.ViewMode,
@@ -38,7 +36,7 @@ class ImagesCategoryAdapter(
 
                 val allImages = category.images.orEmpty()
                 val displayImages = if (viewMode == FreeJobFeed.ViewMode.TILE) {
-                    allImages.take(TILE_PREVIEW)
+                    FreeJobFeed.tilePreview(allImages)
                 } else {
                     allImages
                 }
@@ -59,13 +57,14 @@ class ImagesCategoryAdapter(
                     cards.submit(displayImages.map { FreeJobItem(job = it, categoryTitle = category.title) })
                     imagesRecyclerView.adapter = cards
                 } else {
-                    imagesRecyclerView.layoutManager = GridLayoutManager(itemView.context, 2)
-                    imagesRecyclerView.addItemDecoration(SpaceItemDecoration(8, 8))
-                    val imagesAdapter = ImagesGridAdapter { _, imageIndex ->
-                        onImageClick(category, imageIndex)
-                    }
-                    imagesAdapter.submitList(displayImages)
-                    imagesRecyclerView.adapter = imagesAdapter
+                    // One sideways strip per category, like Top Videos on Home.
+                    imagesRecyclerView.layoutManager =
+                        LinearLayoutManager(itemView.context, LinearLayoutManager.HORIZONTAL, false)
+                    imagesRecyclerView.adapter = FreeJobTilesAdapter(
+                        items = displayImages.map { FreeJobItem(job = it, categoryTitle = category.title) },
+                        onClick = { _, imageIndex -> onImageClick(category, imageIndex) },
+                        onViewMap = onViewMap,
+                    )
                 }
 
                 imagesRecyclerView.setHasFixedSize(false)
@@ -84,8 +83,4 @@ class ImagesCategoryAdapter(
     }
 
     override fun getItemCount(): Int = categories.size
-
-    companion object {
-        private const val TILE_PREVIEW = 6
-    }
 }

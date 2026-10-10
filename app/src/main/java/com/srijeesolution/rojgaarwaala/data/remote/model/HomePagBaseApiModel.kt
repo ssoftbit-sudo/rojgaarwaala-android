@@ -370,6 +370,9 @@ data class ImageData(
     val longitude: Double? = null,
     @SerializedName("distance_km")
     val distanceKm: Double? = null,
+    /** Districts the admin filed this job under; what the toolbar district filter matches. */
+    @SerializedName("districts")
+    val districts: List<String>? = null,
 )
 
 data class NearbyJobsResponse(
