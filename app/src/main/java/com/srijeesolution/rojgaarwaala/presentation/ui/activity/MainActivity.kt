@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -31,6 +32,7 @@ import com.srijeesolution.rojgaarwaala.BuildConfig
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.AndroidUpdateConfig
 import com.srijeesolution.rojgaarwaala.network.constant.NetworkBaseUrls
+import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.network.retorfit.RetrofitApiService
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.MainToolbarViewModel
@@ -40,6 +42,7 @@ import com.srijeesolution.rojgaarwaala.utils.InAppNotification
 import com.srijeesolution.rojgaarwaala.utils.InAppNotificationInbox
 import com.srijeesolution.rojgaarwaala.utils.InAppNotificationStore
 import com.srijeesolution.rojgaarwaala.utils.JobAlertNavigation
+import com.srijeesolution.rojgaarwaala.utils.JobPreferenceGate
 import com.srijeesolution.rojgaarwaala.utils.MainTabs
 import com.srijeesolution.rojgaarwaala.utils.NotificationUtils
 import com.srijeesolution.rojgaarwaala.utils.HomeLocationDefaults
@@ -105,6 +108,11 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
     private var currentTabIndex = MainTabs.HOME
     private var notificationProcessed = false
 
+    private var jobPreferenceState = JobPreferenceGate.State.UNKNOWN
+    private var missingJobPreferences: List<JobPreferenceGate.Field> = emptyList()
+    private var jobPreferenceDialog: AlertDialog? = null
+    private var swallowingGesture = false
+
     private var updateCheckJob: Job? = null
     private var updateDialog: AlertDialog? = null
 
@@ -150,6 +158,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         setupToolbarChrome()
         setupBottomNav()
         setupStoriesNavBadgeObserver()
+        observeJobPreference()
         preloadStories()
 
         if (savedInstanceState == null) {
@@ -409,6 +418,11 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
 
     private fun selectTab(index: Int) {
         currentTabIndex = index
+        // Coming back from Profile, the preference may just have been saved. Ask again
+        // rather than block on the old answer while the fresh one is on its way.
+        if (JobPreferenceGate.blocks(jobPreferenceState, index)) {
+            refreshJobPreference()
+        }
         val selectedTextColor = ContextCompat.getColor(this, R.color.tab_selected)
         val unselectedColor = ContextCompat.getColor(this, R.color.tab_unselected)
         val selectedIconColor = ContextCompat.getColor(this, R.color.app_background)
@@ -509,11 +523,82 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         super.onStart()
         checkForBackgroundNotification()
         checkForAppUpdate()
+        refreshJobPreference()
+    }
+
+    private fun observeJobPreference() {
+        homePageViewModel.profileUpdateLiveData.observe(this) { result ->
+            // A failed load leaves the last known answer alone: no network must not lock anyone out.
+            val profile = (result as? ApiResult.Success)?.data?.dataObj?.userDetails ?: return@observe
+            missingJobPreferences = JobPreferenceGate.missingFields(
+                categories = profile.preferredJobCategories,
+                legacyCategory = profile.preferredJobCategory,
+                address = profile.address,
+                latitude = profile.latitude,
+                longitude = profile.longitude,
+                district = profile.district,
+            )
+            jobPreferenceState = JobPreferenceGate.stateFor(missingJobPreferences)
+            if (jobPreferenceState == JobPreferenceGate.State.PRESENT) {
+                jobPreferenceDialog?.dismiss()
+            }
+        }
+    }
+
+    private fun refreshJobPreference() {
+        if (jobPreferenceState == JobPreferenceGate.State.PRESENT) return
+        jobPreferenceState = JobPreferenceGate.State.UNKNOWN
+        homePageViewModel.getProfileData()
+    }
+
+    /**
+     * Any touch on the Home or Free Job content is stopped here while the profile is
+     * missing preferred work, the current address or the district. The toolbar and bottom bar stay live so Profile is reachable.
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                swallowingGesture = JobPreferenceGate.blocks(jobPreferenceState, currentTabIndex) &&
+                    isInsideTabContent(ev)
+                if (swallowingGesture) {
+                    showJobPreferenceDialog()
+                    return true
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (swallowingGesture) {
+                    swallowingGesture = false
+                    return true
+                }
+            }
+            else -> if (swallowingGesture) return true
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun isInsideTabContent(ev: MotionEvent): Boolean {
+        val content = findViewById<View>(R.id.fragment_container) ?: return false
+        val location = IntArray(2)
+        content.getLocationOnScreen(location)
+        return ev.rawX >= location[0] && ev.rawX <= location[0] + content.width &&
+            ev.rawY >= location[1] && ev.rawY <= location[1] + content.height
+    }
+
+    private fun showJobPreferenceDialog() {
+        if (jobPreferenceDialog?.isShowing == true || isFinishing || isDestroyed) return
+        jobPreferenceDialog = AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("पहले नौकरी की पसंद पूरी करें")
+            .setMessage(JobPreferenceGate.message(missingJobPreferences))
+            .setPositiveButton("प्रोफ़ाइल खोलें") { _, _ -> selectTab(MainTabs.PROFILE) }
+            .setNegativeButton("रद्द करें", null)
+            .show()
     }
 
     override fun onDestroy() {
         updateDialog?.dismiss()
         updateDialog = null
+        jobPreferenceDialog?.dismiss()
+        jobPreferenceDialog = null
         super.onDestroy()
     }
 

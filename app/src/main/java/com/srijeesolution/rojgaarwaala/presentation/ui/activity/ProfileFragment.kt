@@ -174,6 +174,7 @@ class ProfileFragment : Fragment() {
     private fun populateProfile(userProfile: UserData) {
         binding.firstNameEditText.setText(userProfile.name)
         binding.mobileEditText.setText(userProfile.mobile)
+        lockMobileIfVerified(userProfile.mobile)
         binding.emailEditText.setText(userProfile.email)
         cityValue = userProfile.city.orEmpty()
         stateValue = userProfile.state.orEmpty()
@@ -374,6 +375,34 @@ class ProfileFragment : Fragment() {
     private fun openCategoryPicker() {
         categoryPickerRequested = true
         homePageViewModel.getCategoriesData()
+    }
+
+    /**
+     * The number is the login identity, proven by OTP, so it is shown but not edited.
+     * Left editable only for an account that has no number yet.
+     */
+    private fun lockMobileIfVerified(mobile: String?) {
+        val hasNumber = mobile.orEmpty().count { it.isDigit() } >= 10
+        binding.mobileEditText.apply {
+            isFocusable = !hasNumber
+            isFocusableInTouchMode = !hasNumber
+            isCursorVisible = !hasNumber
+            isLongClickable = !hasNumber
+            alpha = if (hasNumber) 0.7f else 1f
+            setOnClickListener(
+                if (hasNumber) {
+                    View.OnClickListener {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.profile_mobile_locked),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                } else {
+                    null
+                },
+            )
+        }
     }
 
     private fun preferredCategoriesFromProfile(userProfile: UserData): List<String> {

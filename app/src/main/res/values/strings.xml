@@ -92,9 +92,9 @@
     <string name="profile_colony_hint">कॉलोनी या इलाका लिखें</string>
     <string name="profile_preferred_job">पसंदीदा काम (2–3)</string>
     <string name="profile_preferred_job_hint">2 या 3 काम चुनने के लिए टैप करें</string>
-    <string name="profile_district">जिला</string>
+    <string name="profile_district">किस जिले में काम ढूँढ रहे हैं?</string>
     <string name="profile_district_hint">जिला चुनने के लिए टैप करें</string>
-    <string name="profile_address">पूरा पता</string>
+    <string name="profile_address">आपका अभी का पता</string>
     <string name="profile_address_placeholder">मैप पर पिन रखकर पता सेट करें</string>
     <string name="profile_set_map_address">मैप पर पता सेट करें</string>
     <string name="profile_map_address_required">मैप पर अपना पता सेट करें</string>
@@ -106,6 +106,7 @@
     <string name="profile_saving">सेव हो रहा है...</string>
     <string name="profile_logout">लॉग आउट</string>
     <string name="profile_name_required">नाम ज़रूरी है</string>
+    <string name="profile_mobile_locked">मोबाइल नंबर बदला नहीं जा सकता</string>
     <string name="profile_mobile_invalid">सही 10 अंकों का मोबाइल नंबर लिखें</string>
     <string name="profile_email_invalid">सही ईमेल लिखें</string>
     <string name="profile_category_required">पसंदीदा काम चुनें</string>
