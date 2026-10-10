@@ -3,10 +3,11 @@
     <!-- Android 12+ Splash Screen Theme -->
     <style name="Theme.Rojgaarwaala.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/app_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/rojgaarwaala_logo_new_v</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/app_background</item>
-        <item name="windowSplashScreenAnimationDuration">1000</item>
-        <item name="postSplashScreenTheme">@style/Theme.Rojgaarwaala</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <!-- No action bar: the branded splash layout fills the screen. -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoSplash</item>
     </style>
 
     <style name="AppTheme.NoSplash" parent="Theme.MaterialComponents.DayNight.NoActionBar">

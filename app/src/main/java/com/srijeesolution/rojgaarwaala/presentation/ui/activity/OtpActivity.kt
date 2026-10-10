@@ -3,12 +3,15 @@ package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.text.Editable
 import android.text.TextUtils
+import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityOtpBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -37,14 +40,15 @@ class OtpActivity : AppCompatActivity() {
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
         mobile = intent.getStringExtra("mobile")
-        binding.otpSubtitleText.text = "Enter the OTP sent to +91 ${mobile.orEmpty()}"
+        binding.otpSubtitleText.text = getString(R.string.otp_sent_to, mobile.orEmpty())
 
         intent.getStringExtra("fallback_otp")?.takeIf { it.isNotBlank() }?.let { otp ->
             binding.fallbackOtpText.visibility = View.VISIBLE
-            binding.fallbackOtpText.text = "SMS not received? Use OTP: $otp"
+            binding.fallbackOtpText.text = getString(R.string.otp_fallback, otp)
             binding.otpEditText.setText(otp)
         }
 
+        bindOtpBoxes()
         observeVerifyOtp()
         observeResendOtp()
         binding.submitOtpButton.setOnClickListener { verifyOtp() }
@@ -57,6 +61,35 @@ class OtpActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+    /**
+     * The six boxes only mirror the one real field. Typing, paste and SMS autofill all
+     * land in that field, so none of them needs handling per box.
+     */
+    private fun bindOtpBoxes() {
+        val boxes = listOf(
+            binding.otpBox1, binding.otpBox2, binding.otpBox3,
+            binding.otpBox4, binding.otpBox5, binding.otpBox6,
+        )
+        fun render(code: String) {
+            boxes.forEachIndexed { index, box ->
+                box.text = code.getOrNull(index)?.toString().orEmpty()
+                box.setBackgroundResource(
+                    if (index < code.length) R.drawable.bg_otp_box_filled else R.drawable.bg_otp_box,
+                )
+            }
+        }
+        binding.otpEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                render(s?.toString().orEmpty())
+                binding.otpErrorText.visibility = View.GONE
+            }
+        })
+        render(binding.otpEditText.text?.toString().orEmpty())
+        binding.otpEditText.requestFocus()
+    }
+
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         currentFocus?.let { view ->
@@ -66,18 +99,15 @@ class OtpActivity : AppCompatActivity() {
 
     private fun verifyOtp() {
         val otp = binding.otpEditText.text.toString().trim()
-        if (TextUtils.isEmpty(otp)) {
-            binding.otpEditText.error = "OTP is required"
-            return
-        }
-        if (otp.length < 6) {
-            binding.otpEditText.error = "Enter the 6-digit OTP"
+        if (TextUtils.isEmpty(otp) || otp.length < 6) {
+            binding.otpErrorText.text = getString(R.string.otp_required)
+            binding.otpErrorText.visibility = View.VISIBLE
             return
         }
 
         hideKeyboard()
         binding.submitOtpButton.isEnabled = false
-        binding.submitOtpButton.text = "Verifying..."
+        binding.submitOtpButton.text = getString(R.string.otp_verifying)
         binding.progressBar.visibility = View.VISIBLE
 
         val requestBody = HashMap<String, String>()
@@ -89,7 +119,7 @@ class OtpActivity : AppCompatActivity() {
     private fun resendOtp() {
         val phone = mobile?.takeIf { it.isNotBlank() } ?: return
         binding.resendOtpButton.isEnabled = false
-        binding.resendOtpButton.text = "Sending..."
+        binding.resendOtpButton.text = getString(R.string.login_sending)
         val requestBody = hashMapOf("mobile" to phone)
         homePageViewModel.sendOtp(requestBody)
     }
@@ -99,12 +129,12 @@ class OtpActivity : AppCompatActivity() {
         binding.resendOtpButton.isEnabled = false
         resendTimer = object : CountDownTimer(seconds * 1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                binding.resendOtpButton.text = "Resend OTP in ${millisUntilFinished / 1000}s"
+                binding.resendOtpButton.text = getString(R.string.otp_resend_in, (millisUntilFinished / 1000).toInt())
             }
 
             override fun onFinish() {
                 binding.resendOtpButton.isEnabled = true
-                binding.resendOtpButton.text = "Resend OTP"
+                binding.resendOtpButton.text = getString(R.string.otp_resend)
             }
         }.start()
     }
@@ -118,7 +148,7 @@ class OtpActivity : AppCompatActivity() {
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
                     binding.submitOtpButton.isEnabled = true
-                    binding.submitOtpButton.text = "Verify OTP"
+                    binding.submitOtpButton.text = getString(R.string.otp_verify)
 
                     if (apiResponse.data?.status == true) {
                         apiResponse.data.dataObj?.let { dataObj ->
@@ -149,7 +179,7 @@ class OtpActivity : AppCompatActivity() {
                 is ApiResult.Error -> {
                     binding.progressBar.visibility = View.GONE
                     binding.submitOtpButton.isEnabled = true
-                    binding.submitOtpButton.text = "Verify OTP"
+                    binding.submitOtpButton.text = getString(R.string.otp_verify)
                     Toast.makeText(
                         this,
                         parseApiErrorMessage(apiResponse.message),
@@ -168,14 +198,14 @@ class OtpActivity : AppCompatActivity() {
                     if (apiResponse.data?.status == true) {
                         apiResponse.data.dataObj?.otp?.takeIf { it.isNotBlank() }?.let { otp ->
                             binding.fallbackOtpText.visibility = View.VISIBLE
-                            binding.fallbackOtpText.text = "SMS not received? Use OTP: $otp"
+                            binding.fallbackOtpText.text = getString(R.string.otp_fallback, otp)
                             binding.otpEditText.setText(otp)
                         }
                         Toast.makeText(this, "OTP sent again", Toast.LENGTH_SHORT).show()
                         startResendCooldown(60)
                     } else {
                         binding.resendOtpButton.isEnabled = true
-                        binding.resendOtpButton.text = "Resend OTP"
+                        binding.resendOtpButton.text = getString(R.string.otp_resend)
                         Toast.makeText(
                             this,
                             apiResponse.data?.message ?: "Failed to resend OTP",
@@ -185,7 +215,7 @@ class OtpActivity : AppCompatActivity() {
                 }
                 is ApiResult.Error -> {
                     binding.resendOtpButton.isEnabled = true
-                    binding.resendOtpButton.text = "Resend OTP"
+                    binding.resendOtpButton.text = getString(R.string.otp_resend)
                     Toast.makeText(
                         this,
                         parseApiErrorMessage(apiResponse.message),

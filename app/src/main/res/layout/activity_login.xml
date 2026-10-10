@@ -1,148 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/black"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp">
+    android:background="@color/app_background"
+    android:fitsSystemWindows="true">
 
-    <!-- Logo Section -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginBottom="48dp">
+        android:paddingStart="28dp"
+        android:paddingTop="72dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="24dp">
 
         <androidx.cardview.widget.CardView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            app:cardCornerRadius="6dp"
-            android:layout_marginBottom="10dp">
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            app:cardBackgroundColor="@color/brand_color_yellow"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+
             <ImageView
                 android:id="@+id/logoImageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/app_name"
+                android:scaleType="centerCrop"
                 android:src="@drawable/rojgaarwaala_logo_new_v" />
         </androidx.cardview.widget.CardView>
 
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to Rojgaarwaala"
+            android:layout_marginTop="24dp"
+            android:text="@string/login_title"
             android:textColor="@color/white"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter your mobile number to continue"
-            android:textColor="@color/gray_light_3"
-            android:textSize="16sp"
-            android:gravity="center" />
-    </LinearLayout>
+            android:layout_marginTop="6dp"
+            android:text="@string/login_subtitle"
+            android:textColor="@color/search_hint"
+            android:textSize="14sp" />
 
-    <!-- Input Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="32dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mobile Number"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <EditText
-            android:id="@+id/mobileEditText"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="32dp"
             android:background="@drawable/modern_edit_text_background"
-            android:hint="Enter your mobile number"
-            android:inputType="phone"
-            android:maxLength="10"
-            android:textColorHint="@color/gray_light_3"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:drawableStart="@drawable/ic_phone"
-            android:drawablePadding="12dp"
-            android:drawableTint="@color/gray_light_3" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp">
 
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+91"
+                android:textColor="@color/brand_color_yellow"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-    <!-- Button Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="24dp">
+            <View
+                android:layout_width="1dp"
+                android:layout_height="22dp"
+                android:layout_marginStart="12dp"
+                android:background="#333333" />
 
-        <Button
+            <EditText
+                android:id="@+id/mobileEditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:autofillHints="phoneNational"
+                android:background="@null"
+                android:digits="0123456789"
+                android:hint="@string/login_mobile_hint"
+                android:imeOptions="actionDone"
+                android:inputType="phone"
+                android:maxLength="10"
+                android:paddingStart="12dp"
+                android:paddingEnd="8dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/search_hint"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/submitButton"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Send OTP"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:background="@drawable/modern_button_background"
+            android:layout_height="54dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_brand_button"
             android:stateListAnimator="@null"
-            android:elevation="8dp" />
+            android:text="@string/login_send_otp"
+            android:textAllCaps="false"
+            android:textColor="@color/on_brand"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-    </LinearLayout>
-
-    <!-- Additional Options -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/signUpButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Don't have an account? Sign Up"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:background="?android:attr/selectableItemBackground"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp" />
+            android:text="@string/login_sms_note"
+            android:textColor="@color/search_hint"
+            android:textSize="12sp" />
+
+        <!-- An account is made by verifying the number, so there is no separate sign-up or skip. -->
+        <TextView
+            android:id="@+id/signUpButton"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/skipButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Skip for now"
-            android:visibility="gone"
-            android:textColor="@color/gray_light_3"
-            android:textSize="14sp"
-            android:background="?android:attr/selectableItemBackground"
-            android:padding="8dp" />
-
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone"
-        android:theme="@style/ThemeOverlay.App.ProgressBarWhite" />
-
-</LinearLayout>
+        android:indeterminateTint="@color/brand_color_yellow"
+        android:visibility="gone" />
+</FrameLayout>

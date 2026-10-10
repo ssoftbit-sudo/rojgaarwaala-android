@@ -41,7 +41,7 @@
                 android:elevation="4dp"
                 android:text="NEW"
                 android:textAllCaps="true"
-                android:textColor="@color/white"
+                android:textColor="@color/on_brand"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:visibility="gone" />

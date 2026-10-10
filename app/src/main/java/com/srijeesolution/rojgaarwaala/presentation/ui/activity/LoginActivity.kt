@@ -7,6 +7,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityLoginBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
@@ -34,11 +35,6 @@ class LoginActivity : AppCompatActivity() {
         binding.submitButton.setOnClickListener {
             requestOtp()
         }
-        binding.signUpButton.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-        }
         binding.skipButton.visibility = View.GONE
     }
 
@@ -62,13 +58,13 @@ class LoginActivity : AppCompatActivity() {
     private fun requestOtp() {
         val mobile = normalizeMobile(binding.mobileEditText.text.toString().trim())
         if (mobile.isNullOrEmpty()) {
-            binding.mobileEditText.error = "Enter a valid 10-digit mobile number"
+            binding.mobileEditText.error = getString(R.string.login_invalid_mobile)
             return
         }
 
         hideKeyboard()
         binding.submitButton.isEnabled = false
-        binding.submitButton.text = "Sending..."
+        binding.submitButton.text = getString(R.string.login_sending)
         binding.progressBar.visibility = View.VISIBLE
 
         val requestBody = HashMap<String, String>()
@@ -85,7 +81,7 @@ class LoginActivity : AppCompatActivity() {
                 is ApiResult.Success -> {
                     binding.progressBar.visibility = View.GONE
                     binding.submitButton.isEnabled = true
-                    binding.submitButton.text = "Send OTP"
+                    binding.submitButton.text = getString(R.string.login_send_otp)
 
                     if (apiResponse.data?.status == true) {
                         val mobile = normalizeMobile(binding.mobileEditText.text.toString().trim()).orEmpty()
@@ -107,7 +103,7 @@ class LoginActivity : AppCompatActivity() {
                 is ApiResult.Error -> {
                     binding.progressBar.visibility = View.GONE
                     binding.submitButton.isEnabled = true
-                    binding.submitButton.text = "Send OTP"
+                    binding.submitButton.text = getString(R.string.login_send_otp)
                     Toast.makeText(
                         this,
                         parseApiErrorMessage(apiResponse.message),

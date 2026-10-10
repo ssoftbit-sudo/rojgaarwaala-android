@@ -13,13 +13,16 @@
     <color name="gray_light_1">#C9DAD8D8</color>
     <color name="gray_light_2">#111111</color>
     <color name="gray_light_3">#CCCCCC</color>
-    <color name="brand_color_yellow">#fe662d</color>
+    <!-- The amber of the Rojgaar Wala logo. One accent for the whole app. -->
+    <color name="brand_color_yellow">#FFBB02</color>
+    <!-- Text and icons that sit on the amber. White on it is too faint to read. -->
+    <color name="on_brand">#1A1A1A</color>
     <color name="brand_color_red">#fc0004</color>
     <color name="colorLightGrey">#E6E6E6</color>
     <color name="primary">#121212</color>
     <color name="primary_variant">#222222</color>
     <color name="secondary">#1F1F1F</color>
-    <color name="accent">#FFD600</color>
+    <color name="accent">#FFBB02</color>
     <color name="new_tag_red">#E53935</color>
     <color name="card_bg">#181818</color>
     <color name="icon_tint">#FFFFFF</color>

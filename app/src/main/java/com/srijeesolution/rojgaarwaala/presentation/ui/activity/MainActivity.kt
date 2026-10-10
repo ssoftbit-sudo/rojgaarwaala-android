@@ -256,6 +256,9 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         }
 
         toolbarOverflow.setOnClickListener { showOverflowMenu() }
+        toolbarLocationLabel.setOnClickListener {
+            pickLocationLauncher.launch(Intent(this, LocationPickerActivity::class.java))
+        }
 
         refreshNotificationUi()
     }
@@ -423,12 +426,10 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         if (JobPreferenceGate.blocks(jobPreferenceState, index)) {
             refreshJobPreference()
         }
-        val selectedTextColor = ContextCompat.getColor(this, R.color.tab_selected)
+        val selectedColor = ContextCompat.getColor(this, R.color.brand_color_yellow)
         val unselectedColor = ContextCompat.getColor(this, R.color.tab_unselected)
-        val selectedIconColor = ContextCompat.getColor(this, R.color.app_background)
 
         iconProfile.setColorFilter(unselectedColor)
-        iconHome.setColorFilter(unselectedColor)
         iconCategories.setColorFilter(unselectedColor)
         iconImages.setColorFilter(unselectedColor)
         iconStories.setColorFilter(unselectedColor)
@@ -439,44 +440,40 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
         textImages.setTextColor(unselectedColor)
         textStories.setTextColor(unselectedColor)
 
-        pillProfile.background = null
-        pillHome.background = null
-        pillCategories.background = null
-        pillImages.background = null
-        pillStories.background = null
+        // Home is the raised button: filled when it is the current tab, a quiet
+        // disc with an orange icon otherwise so it still reads as the way back.
+        val onHome = index == MainTabs.HOME
+        pillHome.setBackgroundResource(
+            if (onHome) R.drawable.bg_bottom_nav_home_selected else R.drawable.bg_bottom_nav_home_idle,
+        )
+        iconHome.setColorFilter(if (onHome) ContextCompat.getColor(this, R.color.on_brand) else selectedColor)
 
         when (index) {
             MainTabs.HOME -> {
-                iconHome.setColorFilter(selectedIconColor)
-                textHome.setTextColor(selectedTextColor)
-                pillHome.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                textHome.setTextColor(selectedColor)
                 showFragment(HomeFragment())
             }
             MainTabs.PROFILE -> {
-                iconProfile.setColorFilter(selectedIconColor)
-                textProfile.setTextColor(selectedTextColor)
-                pillProfile.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                iconProfile.setColorFilter(selectedColor)
+                textProfile.setTextColor(selectedColor)
                 showFragment(ProfileFragment.newInstance())
             }
             MainTabs.ADD_JOB -> {
                 showFragment(AddJobFragment())
             }
             MainTabs.CATEGORIES -> {
-                iconCategories.setColorFilter(selectedIconColor)
-                textCategories.setTextColor(selectedTextColor)
-                pillCategories.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                iconCategories.setColorFilter(selectedColor)
+                textCategories.setTextColor(selectedColor)
                 showFragment(CategoriesFragment())
             }
             MainTabs.FREE_JOB -> {
-                iconImages.setColorFilter(selectedIconColor)
-                textImages.setTextColor(selectedTextColor)
-                pillImages.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                iconImages.setColorFilter(selectedColor)
+                textImages.setTextColor(selectedColor)
                 showFragment(ImagesFragment())
             }
             MainTabs.STORIES -> {
-                iconStories.setColorFilter(selectedIconColor)
-                textStories.setTextColor(selectedTextColor)
-                pillStories.setBackgroundResource(R.drawable.bg_bottom_nav_selected)
+                iconStories.setColorFilter(selectedColor)
+                textStories.setTextColor(selectedColor)
                 homePageViewModel.dismissStoriesNavBadge()
                 showFragment(StoriesFragment())
             }
