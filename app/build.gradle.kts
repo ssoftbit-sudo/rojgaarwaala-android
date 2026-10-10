@@ -25,6 +25,10 @@ val mapsApiKey: String = run {
         ?: ""
 }
 
+// Internal Play-store screenshots only: ./gradlew assembleRelease -PALLOW_SCREEN_CAPTURE=true
+val allowScreenCaptureForScreenshots =
+    project.findProperty("ALLOW_SCREEN_CAPTURE")?.toString() == "true"
+
 android {
     compileSdk = 36
     namespace = "com.srijeesolution.rojgaarwaala"
@@ -33,12 +37,13 @@ android {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 23
         targetSdk = 36
-        versionCode = 46
-        versionName = "2.0.28"
+        versionCode = if (allowScreenCaptureForScreenshots) 48 else 47
+        versionName = if (allowScreenCaptureForScreenshots) "2.0.30-screenshots" else "2.0.29"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndkVersion = "28.2.13676358"
         manifestPlaceholders["mapsApiKey"] = mapsApiKey
         buildConfigField("boolean", "HAS_MAPS_KEY", (mapsApiKey.isNotBlank()).toString())
+        buildConfigField("boolean", "ALLOW_SCREEN_CAPTURE", allowScreenCaptureForScreenshots.toString())
     }
 
     signingConfigs {

@@ -5,6 +5,7 @@ import android.app.Application
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
+import com.srijeesolution.rojgaarwaala.BuildConfig
 
 /**
  * Marks every activity window as secure so the system refuses screenshots, screen
@@ -37,6 +38,9 @@ class SecureWindowLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
     override fun onActivityDestroyed(activity: Activity) = Unit
 
     private fun lock(activity: Activity) {
+        if (BuildConfig.ALLOW_SCREEN_CAPTURE) {
+            return
+        }
         activity.window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE,
