@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId = "com.srijeesolution.rojgaarwaala"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = if (allowScreenCaptureForScreenshots) 49 else 48
         versionName = if (allowScreenCaptureForScreenshots) "2.0.31-screenshots" else "2.0.30"

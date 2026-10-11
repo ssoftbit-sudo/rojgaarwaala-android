@@ -61,9 +61,22 @@
 -keepattributes Signature
 -keepattributes *Annotation*
 -keepattributes EnclosingMethod
--keep class * {
-    @androidx.annotation.Keep *;
-}
+# "-keep class * { @Keep *; }" used to sit here. It kept EVERY class in the app and
+# its libraries unrenamed (only 2% of classes were obfuscated), which is what Play's
+# "DEX code optimization below threshold" warning was about. androidx.annotation ships
+# its own rule for @Keep, so nothing needs to be said here.
+
+# Retrofit 2.9 has no rules for R8 full mode. Without these, the generic types of
+# suspend API methods are stripped and every call fails at runtime.
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-keep,allowobfuscation,allowshrinking class io.reactivex.rxjava3.core.Observable
+-keep,allowobfuscation,allowshrinking class io.reactivex.rxjava3.core.Single
+-keep,allowobfuscation,allowshrinking class io.reactivex.rxjava3.core.Flowable
+-keep,allowobfuscation,allowshrinking class io.reactivex.rxjava3.core.Maybe
+-keep,allowobfuscation,allowshrinking class io.reactivex.rxjava3.core.Completable
+-keep,allowobfuscation,allowshrinking class kotlinx.coroutines.flow.Flow
 
 # Firebase
 -keep class com.google.firebase.** { *; }
