@@ -67,15 +67,17 @@ object FreeJobFeed {
             ?: ""
     }
 
-    fun mapGeoUri(job: ImageData): String? {
-        val place = placeLine(job)
+    fun mapGeoUri(job: ImageData): String? =
+        mapGeoUri(placeLine(job), job.latitude, job.longitude)
+
+    /** A maps link for a pin, a place name, or both. Null when the job has neither. */
+    fun mapGeoUri(place: String?, lat: Double?, lng: Double?): String? {
+        val place = place?.trim().orEmpty()
         val query = if (place.isNotBlank()) {
             URLEncoder.encode(place, StandardCharsets.UTF_8.name()).replace("+", "%20")
         } else {
             null
         }
-        val lat = job.latitude
-        val lng = job.longitude
         if (lat != null && lng != null) {
             return if (query != null) "geo:$lat,$lng?q=$query" else "geo:$lat,$lng?q=$lat,$lng"
         }

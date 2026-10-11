@@ -1,49 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!-- The logo sits dead centre at 121dp to line up with the system splash icon (see splash_icon). -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_background"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@color/app_background">
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="112dp"
-        android:layout_height="112dp"
-        app:cardBackgroundColor="@color/brand_color_yellow"
-        app:cardCornerRadius="26dp"
-        app:cardElevation="0dp">
+    <ImageView
+        android:id="@+id/splashLogo"
+        android:layout_width="121dp"
+        android:layout_height="121dp"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/rojgaarwaala_logo_rounded" />
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/app_name"
-            android:scaleType="centerCrop"
-            android:src="@drawable/rojgaarwaala_logo_new_v" />
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/splashCaption"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/splashLogo"
         android:layout_marginTop="20dp"
-        android:text="@string/app_name"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:alpha="0"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:gravity="center"
-        android:text="@string/splash_tagline"
-        android:textColor="@color/search_hint"
-        android:textSize="14sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    <ProgressBar
-        android:layout_width="26dp"
-        android:layout_height="26dp"
-        android:layout_marginTop="28dp"
-        android:indeterminateTint="@color/brand_color_yellow" />
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="@string/splash_tagline"
+            android:textColor="@color/search_hint"
+            android:textSize="14sp" />
+
+        <ProgressBar
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginTop="28dp"
+            android:indeterminateTint="@color/brand_color_yellow" />
+    </LinearLayout>
+</RelativeLayout>

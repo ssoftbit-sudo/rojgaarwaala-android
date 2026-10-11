@@ -20,6 +20,7 @@ import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.ScheduledImage
 import com.srijeesolution.rojgaarwaala.databinding.ActivityImageViewerBinding
 import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
+import com.srijeesolution.rojgaarwaala.utils.ProfileLocationStore
 import com.srijeesolution.rojgaarwaala.utils.JobMapPins
 import com.srijeesolution.rojgaarwaala.utils.JobTitleCopy
 import com.srijeesolution.rojgaarwaala.utils.LocationDisplayUtils
@@ -140,6 +141,45 @@ class ImageViewerActivity : AppCompatActivity(),
         return "image_$currentIndex".hashCode()
     }
 
+    /**
+     * Shown only for a job that has somewhere to point at: a map pin, or a place the
+     * admin entered. A district guessed from the description is not enough.
+     */
+    private fun bindMapButton(image: ScheduledImage) {
+        val place = image.areaName?.trim()?.takeIf { it.isNotEmpty() }
+            ?: image.location?.trim()?.takeIf { it.isNotEmpty() }
+        val geo = FreeJobFeed.mapGeoUri(place, image.latitude, image.longitude)
+        if (geo == null) {
+            binding.viewOnMapButton.visibility = View.GONE
+            return
+        }
+
+        // Lists opened without a distance still get one here, from the saved profile pin.
+        val km = image.distanceKm ?: run {
+            val userLat = ProfileLocationStore.latitude(sharedPrefs)
+            val userLng = ProfileLocationStore.longitude(sharedPrefs)
+            val lat = image.latitude
+            val lng = image.longitude
+            if (userLat != null && userLng != null && lat != null && lng != null) {
+                JobMapPins.kmBetween(userLat, userLng, lat, lng)
+            } else {
+                null
+            }
+        }
+        val distance = JobMapPins.distanceChipLabel(km)
+        binding.viewOnMapDistance.text = distance
+        binding.viewOnMapDistance.visibility = if (distance.isBlank()) View.GONE else View.VISIBLE
+
+        binding.viewOnMapButton.visibility = View.VISIBLE
+        binding.viewOnMapButton.setOnClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(geo)))
+            } catch (_: android.content.ActivityNotFoundException) {
+                Toast.makeText(this, getString(R.string.free_job_map_unavailable), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun resolveImageLocation(image: ScheduledImage): String {
         image.location?.trim()?.takeIf { it.isNotEmpty() }?.let {
             return LocationDisplayUtils.formatForDisplay(it)
@@ -191,14 +231,13 @@ class ImageViewerActivity : AppCompatActivity(),
             binding.uploadTimeLabel.text = publishMeta.ifEmpty { "Recently posted" }
 
             val location = resolveImageLocation(image)
-            val distance = JobMapPins.distanceLabel(image.distanceKm)
-            val locationLine = listOf(location, distance).filter { it.isNotBlank() }.joinToString(" · ")
-            if (locationLine.isNotEmpty()) {
+            if (location.isNotEmpty()) {
                 binding.videoLocationLabel.visibility = View.VISIBLE
-                binding.videoLocationLabel.text = locationLine
+                binding.videoLocationLabel.text = location
             } else {
                 binding.videoLocationLabel.visibility = View.GONE
             }
+            bindMapButton(image)
 
             loadReactionCountsFromPrefs()
             refreshLikeDislikeUi()

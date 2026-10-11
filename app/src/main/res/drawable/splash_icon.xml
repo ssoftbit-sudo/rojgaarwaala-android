@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The system splash draws its icon in a 288dp box. Inset 29% leaves the logo at 121dp,
+    which is exactly the size and place activity_splash draws it, so the hand-over
+    between the two is invisible.
+-->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/rojgaarwaala_logo_new_v"
+    android:drawable="@drawable/rojgaarwaala_logo_rounded"
     android:inset="29%" />

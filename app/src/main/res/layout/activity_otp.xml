@@ -127,14 +127,21 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!--
+                Width is spelled out (6 boxes of 44dp + 5 gaps of 8dp). As the only
+                match_parent child of a wrap_content FrameLayout it was measured to the
+                width of its own empty text, which is nothing, so it could not be tapped.
+            -->
             <EditText
                 android:id="@+id/otpEditText"
-                android:layout_width="match_parent"
+                android:layout_width="304dp"
                 android:layout_height="52dp"
                 android:autofillHints="smsOTPCode"
                 android:background="@null"
                 android:cursorVisible="false"
                 android:digits="0123456789"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:imeOptions="actionDone"
                 android:inputType="number"
                 android:maxLength="6"

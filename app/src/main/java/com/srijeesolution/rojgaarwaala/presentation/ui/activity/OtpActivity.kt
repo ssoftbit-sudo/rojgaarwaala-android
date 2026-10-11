@@ -7,6 +7,7 @@ import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +38,11 @@ class OtpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityOtpBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // The manifest hides the keyboard on entry; this screen exists to be typed into.
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+        )
         homePageViewModel = ViewModelProvider(this)[HomePageViewModel::class.java]
 
         mobile = intent.getStringExtra("mobile")
@@ -73,8 +79,10 @@ class OtpActivity : AppCompatActivity() {
         fun render(code: String) {
             boxes.forEachIndexed { index, box ->
                 box.text = code.getOrNull(index)?.toString().orEmpty()
+                // Filled boxes and the one being typed into are lit, so it is clear
+                // where the next digit goes even without a blinking cursor.
                 box.setBackgroundResource(
-                    if (index < code.length) R.drawable.bg_otp_box_filled else R.drawable.bg_otp_box,
+                    if (index <= code.length) R.drawable.bg_otp_box_filled else R.drawable.bg_otp_box,
                 )
             }
         }
@@ -87,7 +95,20 @@ class OtpActivity : AppCompatActivity() {
             }
         })
         render(binding.otpEditText.text?.toString().orEmpty())
-        binding.otpEditText.requestFocus()
+
+        // Typing by hand must always be possible: open the keyboard on arrival, and
+        // again on any tap on the boxes in case it was closed.
+        binding.otpEditText.setOnClickListener { showOtpKeyboard() }
+        binding.otpEditText.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) showOtpKeyboard() }
+        binding.otpEditText.post { showOtpKeyboard() }
+    }
+
+    private fun showOtpKeyboard() {
+        val field = binding.otpEditText
+        field.requestFocus()
+        field.setSelection(field.text?.length ?: 0)
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(field, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun hideKeyboard() {

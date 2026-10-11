@@ -149,7 +149,13 @@ class ImagesListActivity : AppCompatActivity() {
                     status = null,
                     createdAt = imageData.createdAt,
                     updatedAt = null,
-                    phoneNumber = imageData.phoneNumber
+                    phoneNumber = imageData.phoneNumber,
+                    areaName = imageData.areaName,
+                    salaryText = imageData.salaryText,
+                    shiftText = imageData.shiftText,
+                    latitude = imageData.latitude,
+                    longitude = imageData.longitude,
+                    distanceKm = imageData.distanceKm,
                 )
             }
             

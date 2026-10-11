@@ -43,6 +43,9 @@ class SplashActivity : AppCompatActivity(),
             androidx.appcompat.R.id.action_bar_container,
             resources.getIdentifier("action_bar_container", "id", "android"),
         ).forEach { id -> if (id != 0) findViewById<View>(id)?.visibility = View.GONE }
+        // The logo is already on screen from the system splash; only the name and
+        // tagline arrive, so it reads as one splash rather than two.
+        findViewById<View>(R.id.splashCaption)?.animate()?.alpha(1f)?.setDuration(250)?.start()
         keepSplash = false
         Handler(Looper.getMainLooper()).postDelayed({
             if (!isFinishing && !isDestroyed) navigateNext()
@@ -74,6 +77,6 @@ class SplashActivity : AppCompatActivity(),
     }
 
     companion object {
-        private const val BRAND_HOLD_MS = 700L
+        private const val BRAND_HOLD_MS = 900L
     }
 }
