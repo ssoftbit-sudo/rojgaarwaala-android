@@ -334,10 +334,7 @@ class ProfileFragment : Fragment() {
             Toast.makeText(requireContext(), getString(R.string.profile_map_address_required), Toast.LENGTH_SHORT).show()
             return
         }
-        if (resumeFile == null && existingResumeUrl.isNullOrBlank()) {
-            Toast.makeText(requireContext(), getString(R.string.profile_resume_required), Toast.LENGTH_SHORT).show()
-            return
-        }
+        // No resume check: it is optional on the profile and asked for with each application.
 
         hideKeyboard()
         isProfileUpdateCalled = true

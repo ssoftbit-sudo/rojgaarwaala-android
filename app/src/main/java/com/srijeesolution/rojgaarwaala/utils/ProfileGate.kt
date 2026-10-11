@@ -9,7 +9,7 @@ import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
 
 /**
  * An active user must finish candidate profile (name, mobile, category, district,
- * map pin, resume) before Home / Free Job / Apply are available.
+ * map pin) before Home / Free Job / Apply are available. A resume is optional.
  */
 object ProfileGate {
     fun isComplete(sharedPrefs: SharedPrefs): Boolean {
