@@ -96,6 +96,17 @@ class ProfileFragment : Fragment() {
         uri?.let { handleResumeSelection(it) }
     }
 
+    private val resumeBuilderLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val path = result.data?.getStringExtra(ResumeBuilderActivity.EXTRA_PDF_PATH) ?: return@registerForActivityResult
+        val file = File(path).takeIf { it.exists() } ?: return@registerForActivityResult
+        resumeFile = file
+        binding.profileResumeFileName.text = getString(R.string.profile_resume_selected, file.name)
+        binding.profileResumeFileName.visibility = View.VISIBLE
+        Toast.makeText(requireContext(), "प्रोफ़ाइल सेव करें, तब रिज्यूमे जुड़ जाएगा", Toast.LENGTH_LONG).show()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -120,6 +131,9 @@ class ProfileFragment : Fragment() {
         }
         binding.setMapAddressButton.setOnClickListener { openMapPin() }
         binding.profileAddressText.setOnClickListener { openMapPin() }
+        binding.buildProfileResumeBtn.setOnClickListener {
+            resumeBuilderLauncher.launch(ResumeBuilderActivity.intent(requireContext()))
+        }
         binding.uploadProfileResumeBtn.setOnClickListener {
             resumeLauncher.launch(arrayOf("image/*", "application/pdf"))
         }

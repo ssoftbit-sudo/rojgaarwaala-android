@@ -271,6 +271,21 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/buildResumeButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_brand_button"
+                        android:gravity="center"
+                        android:minHeight="44dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="रिज्यूमे नहीं है? यहाँ बनाएँ"
+                        android:textColor="@color/on_brand"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
                         android:id="@+id/submitButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

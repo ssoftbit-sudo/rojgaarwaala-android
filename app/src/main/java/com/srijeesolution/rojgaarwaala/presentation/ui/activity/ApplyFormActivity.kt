@@ -32,6 +32,13 @@ class ApplyFormActivity : AppCompatActivity() {
   @Inject
   lateinit var sharedPrefs: SharedPrefs
 
+  private val resumeBuilder = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    val path = result.data?.getStringExtra(ResumeBuilderActivity.EXTRA_PDF_PATH) ?: return@registerForActivityResult
+    val file = java.io.File(path).takeIf { it.exists() } ?: return@registerForActivityResult
+    selectedResumeUri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+    binding.resumeFileName.text = file.name
+  }
+
   private val resumePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     uri?.let {
       selectedResumeUri = it
@@ -69,6 +76,9 @@ class ApplyFormActivity : AppCompatActivity() {
   private fun setupClickListeners() {
     binding.backButton.setOnClickListener { finish() }
 
+    binding.buildResumeButton.setOnClickListener {
+      resumeBuilder.launch(ResumeBuilderActivity.intent(this))
+    }
     binding.selectResumeButton.setOnClickListener {
       resumePicker.launch("*/*")
     }
