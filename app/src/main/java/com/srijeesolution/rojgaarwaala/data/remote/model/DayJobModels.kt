@@ -25,12 +25,16 @@ data class DayJobCompany(
     @SerializedName("longitude") val longitude: Double? = null,
     @SerializedName("status") val status: String? = null,
     @SerializedName("admin_note") val adminNote: String? = null,
+    @SerializedName("paid_rate") val paidRate: Int? = null,
 )
 
 data class DayJobWorker(
     @SerializedName("trades") val trades: List<String> = emptyList(),
     @SerializedName("is_available") val isAvailable: Boolean = false,
     @SerializedName("registered") val registered: Boolean = false,
+    @SerializedName("alert_from") val alertFrom: String? = null,
+    @SerializedName("alert_to") val alertTo: String? = null,
+    @SerializedName("held_back_until") val heldBackUntil: String? = null,
 )
 
 data class DayJobMeta(
@@ -58,12 +62,18 @@ data class DayJobBooking(
     @SerializedName("name") val name: String? = null,
     @SerializedName("mobile") val mobile: String? = null,
     @SerializedName("accepted_at") val acceptedAt: String? = null,
+    @SerializedName("confirmed") val confirmed: Boolean = false,
+    @SerializedName("confirm_asked") val confirmAsked: Boolean = false,
+    @SerializedName("paid_answer") val paidAnswer: String? = null,
+    @SerializedName("can_answer_payment") val canAnswerPayment: Boolean = false,
+    @SerializedName("can_mark_no_show") val canMarkNoShow: Boolean = false,
 )
 
 data class DayJobCompanyRef(
     @SerializedName("id") val id: Int = 0,
     @SerializedName("name") val name: String = "",
     @SerializedName("phone") val phone: String? = null,
+    @SerializedName("paid_rate") val paidRate: Int? = null,
 )
 
 data class DayJob(
@@ -121,7 +131,12 @@ data class DayJobCompanyRequest(
 data class DayJobWorkerRequest(
     @SerializedName("trades") val trades: List<String>,
     @SerializedName("is_available") val isAvailable: Boolean,
+    @SerializedName("alert_from") val alertFrom: String? = null,
+    @SerializedName("alert_to") val alertTo: String? = null,
 )
+
+data class DayJobConfirmRequest(@SerializedName("coming") val coming: Boolean)
+data class DayJobPaidRequest(@SerializedName("paid") val paid: Boolean)
 
 data class DayJobAcceptRequest(@SerializedName("trade") val trade: String)
 

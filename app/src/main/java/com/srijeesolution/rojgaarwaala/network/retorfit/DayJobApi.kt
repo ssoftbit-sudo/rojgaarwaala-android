@@ -1,6 +1,8 @@
 package com.srijeesolution.rojgaarwaala.network.retorfit
 
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobAcceptRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobConfirmRequest
+import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobPaidRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompanyData
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompanyRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobData
@@ -63,6 +65,15 @@ interface DayJobApi {
 
     @POST("day-jobs/{id}/repost")
     suspend fun repost(@Path("id") id: Int, @Body body: DayJobRepostRequest): Response<DayJobEnvelope<DayJobData>>
+
+    @POST("day-jobs/bookings/{id}/confirm")
+    suspend fun confirm(@Path("id") id: Int, @Body body: DayJobConfirmRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/paid")
+    suspend fun paid(@Path("id") id: Int, @Body body: DayJobPaidRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/no-show")
+    suspend fun noShow(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
 
     @POST("day-jobs/bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") id: Int): Response<DayJobEnvelope<Any>>

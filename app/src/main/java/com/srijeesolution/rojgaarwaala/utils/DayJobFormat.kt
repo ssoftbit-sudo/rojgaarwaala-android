@@ -26,6 +26,17 @@ object DayJobFormat {
         return if (time == null) day else "$day, ${time.format(timeFormat).uppercase(Locale.ENGLISH)}"
     }
 
+    /** "Any time" or "6:00 AM – 8:00 PM". */
+    fun alertHoursText(from: String?, to: String?): String {
+        if (from.isNullOrBlank() || to.isNullOrBlank()) return "Any time"
+        fun t(v: String) = runCatching { LocalTime.parse(v.take(5)).format(timeFormat).uppercase(Locale.ENGLISH) }.getOrDefault(v)
+        return "${t(from)} – ${t(to)}"
+    }
+
+    /** "2 Nov" from an ISO date-time, or the text as is. */
+    fun dayText(iso: String?): String =
+        iso?.let { runCatching { OffsetDateTime.parse(it).format(dayFormat) }.getOrNull() ?: it }.orEmpty()
+
     fun wageText(wage: Int): String = "₹$wage/day"
 
     fun distanceText(km: Double?): String = when {

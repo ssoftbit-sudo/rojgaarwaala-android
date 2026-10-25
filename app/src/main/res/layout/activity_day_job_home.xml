@@ -175,6 +175,16 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/search_hint"
                                 android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/dayJobAlertHours"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:paddingVertical="4dp"
+                                android:textColor="@color/brand_color_yellow"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
@@ -192,6 +202,17 @@
                             android:minHeight="38dp"
                             android:text="My Jobs" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/dayJobHeldBack"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_day_job_card"
+                        android:padding="12dp"
+                        android:textColor="@color/new_tag_red"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/dayJobSetLocation"

@@ -41,4 +41,10 @@ class DayJobFormatTest {
         assertEquals(listOf("Write what the work is", "Add at least one worker", "Wage must be at least ₹100 a day", "Choose the start time", "Pin the work site on the map"), errors)
         assertTrue(DayJobFormat.postErrors("Slab", mapOf("helper" to 2), 600, true, true, true).isEmpty())
     }
+
+    @Test fun alertHoursAndDays() {
+        assertEquals("Any time", DayJobFormat.alertHoursText(null, "20:00"))
+        assertEquals("6:00 AM – 8:00 PM", DayJobFormat.alertHoursText("06:00", "20:00"))
+        assertEquals("2 Nov", DayJobFormat.dayText("2026-11-02T09:00:00+05:30"))
+    }
 }

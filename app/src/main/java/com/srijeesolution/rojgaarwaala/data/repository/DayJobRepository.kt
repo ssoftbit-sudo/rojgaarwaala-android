@@ -57,8 +57,21 @@ class DayJobRepository @Inject constructor() {
     suspend fun saveCompany(request: DayJobCompanyRequest): DayJobOutcome<DayJobCompany?> =
         call { api.saveCompany(request) }.mapData { it.company }
 
-    suspend fun saveWorker(trades: List<String>, available: Boolean): DayJobOutcome<DayJobWorker?> =
-        call { api.saveWorker(DayJobWorkerRequest(trades, available)) }.mapData { it.worker }
+    suspend fun saveWorker(
+        trades: List<String>,
+        available: Boolean,
+        alertFrom: String? = null,
+        alertTo: String? = null,
+    ): DayJobOutcome<DayJobWorker?> =
+        call { api.saveWorker(DayJobWorkerRequest(trades, available, alertFrom, alertTo)) }.mapData { it.worker }
+
+    suspend fun confirm(bookingId: Int, coming: Boolean): DayJobOutcome<Any?> =
+        call { api.confirm(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobConfirmRequest(coming)) }
+
+    suspend fun answerPaid(bookingId: Int, paid: Boolean): DayJobOutcome<Any?> =
+        call { api.paid(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobPaidRequest(paid)) }
+
+    suspend fun markNoShow(bookingId: Int): DayJobOutcome<Any?> = call { api.noShow(bookingId) }
 
     suspend fun nearby(latitude: Double?, longitude: Double?): DayJobOutcome<DayJobListData> =
         call { api.nearby(latitude, longitude) }

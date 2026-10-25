@@ -51,6 +51,8 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDayJobDetailBinding
     private var job: DayJob? = null
+    /** Work the viewer chose as a worker; seats for other work are shown but not offered. */
+    private var myTrades: List<String> = emptyList()
     private var mapReady: SupportMapFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +71,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         val id = intent.getIntExtra(EXTRA_ID, 0)
         binding.detailLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
+            (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades }
             val result = repository.show(id)
             binding.detailLoading.visibility = View.GONE
             when (result) {
@@ -94,7 +97,10 @@ class DayJobDetailActivity : AppCompatActivity() {
         val booked = job.myBooking?.status == "accepted"
 
         binding.detailTitle.text = job.title
-        binding.detailCompany.text = job.company.name
+        binding.detailCompany.text = listOfNotNull(
+            job.company.name,
+            job.company.paidRate?.let { "$it% workers paid on time" },
+        ).joinToString(" · ")
         binding.detailWage.text = DayJobFormat.wageText(job.wagePerDay)
         binding.detailWhen.text = "${DayJobFormat.whenText(job.workDate, job.startTime)} · ${job.hours} hours"
         binding.detailPlace.text = listOfNotNull(job.place.ifBlank { null }, job.district).joinToString(" · ")
@@ -190,7 +196,11 @@ class DayJobDetailActivity : AppCompatActivity() {
             actions.addView(note("This job is not taking workers now."))
         } else {
             job.slots.filter { it.left > 0 }.forEach { slot ->
-                actions.addView(button("Accept as ${slot.label}", 0) { confirmAccept(job, slot.trade, slot.label) })
+                if (slot.trade in myTrades) {
+                    actions.addView(button("Accept as ${slot.label}", 0) { confirmAccept(job, slot.trade, slot.label) })
+                } else {
+                    actions.addView(note("${slot.label}: add it to your work (Edit on Find Work) to take this seat."))
+                }
             }
             if (job.slots.none { it.left > 0 }) actions.addView(note("All seats are taken."))
         }
@@ -200,10 +210,30 @@ class DayJobDetailActivity : AppCompatActivity() {
     private fun renderBooked(job: DayJob) {
         val actions = binding.detailActions
         val trade = job.slots.firstOrNull { it.trade == job.myBooking?.trade }?.label ?: ""
-        actions.addView(note("You're going as $trade. Reach on time and call the company if anything changes.", R.color.day_job_green))
+        val booking = job.myBooking!!
+        when {
+            booking.canAnswerPayment -> {
+                actions.addView(note("Did you get full payment for this job?", R.color.white))
+                actions.addView(button("Yes, I got full payment", 2) { act { repository.answerPaid(booking.id, true) } })
+                actions.addView(button("No, not paid fully", 1) { act { repository.answerPaid(booking.id, false) } })
+            }
+            booking.paidAnswer != null -> actions.addView(note("Thanks for telling us about the payment.", R.color.day_job_green))
+            booking.confirmAsked && !booking.confirmed && job.isAccepting -> {
+                actions.addView(note("Are you coming for this job?", R.color.white))
+                actions.addView(button("Yes, I am coming", 2) { act { repository.confirm(booking.id, true) } })
+                actions.addView(button("No, give my seat to someone", 1) { act { repository.confirm(booking.id, false) } })
+            }
+            else -> actions.addView(note(
+                (if (booking.confirmed) "✓ You confirmed. " else "") +
+                    "You're going as $trade. Reach on time and call the company if anything changes.",
+                R.color.day_job_green,
+            ))
+        }
         actions.addView(button("Call company", 2) { DayJobUi.call(this, job.company.phone) })
         actions.addView(button("Directions", 1) { DayJobUi.directions(this, job) })
-        if (job.isAccepting) {
+        // While "Are you coming?" is shown, its No already gives the seat back.
+        val asking = booking.confirmAsked && !booking.confirmed
+        if (job.isAccepting && !asking) {
             actions.addView(button("Cancel my seat", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                     .setTitle("Cancel your seat?")
@@ -236,9 +266,9 @@ class DayJobDetailActivity : AppCompatActivity() {
 
         val list = binding.detailWorkers
         list.removeAllViews()
-        val coming = job.bookings.orEmpty().filter { it.status == "accepted" }
+        val coming = job.bookings.orEmpty().filter { it.status == "accepted" || it.status == "no_show" }
         binding.detailWorkersTitle.visibility = View.VISIBLE
-        binding.detailWorkersTitle.text = "Who is coming (${coming.size}/${job.neededTotal})"
+        binding.detailWorkersTitle.text = "Who is coming (${job.filledTotal}/${job.neededTotal})"
         if (coming.isEmpty()) list.addView(note("No one yet. You will get a notification when someone accepts."))
         coming.forEach { b ->
             list.addView(LinearLayout(this).apply {
@@ -249,10 +279,28 @@ class DayJobDetailActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     .apply { bottomMargin = DayJobUi.dp(context, 8) }
                 addView(TextView(context).apply {
-                    text = "${b.name ?: "Worker"}\n${b.tradeLabel.orEmpty()}"
+                    val state = when {
+                        b.status == "no_show" -> " · Did not come"
+                        b.confirmed -> " · ✓ Confirmed"
+                        else -> ""
+                    }
+                    text = "${b.name ?: "Worker"}\n${b.tradeLabel.orEmpty()}$state"
                     setTextColor(ContextCompat.getColor(context, R.color.white))
                     textSize = 14f
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                if (b.canMarkNoShow) addView(TextView(context).apply {
+                    text = "Didn't come"
+                    setTextColor(ContextCompat.getColor(context, R.color.new_tag_red))
+                    setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
+                    setOnClickListener {
+                        AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
+                            .setTitle("${b.name ?: "Worker"} did not come?")
+                            .setMessage("Only mark this if they did not come at all. Workers who miss jobs get fewer alerts.")
+                            .setPositiveButton("Yes, did not come") { _, _ -> act { repository.markNoShow(b.id) } }
+                            .setNegativeButton("Cancel", null)
+                            .show()
+                    }
                 })
                 addView(TextView(context).apply {
                     text = "Call"

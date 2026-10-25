@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -71,6 +72,12 @@ class DayJobHomeActivity : AppCompatActivity() {
         loadNearby()
     }
 
+    /** Asked once; with it, alerts follow the worker to the chowk instead of the home pin. */
+    private val askLocation = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        prefs.edit().putBoolean("location_asked", true).apply()
+        loadNearby()
+    }
+
     private val returnRefresh = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,6 +105,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobMyJobs.setOnClickListener {
             startActivity(Intent(this, DayJobMyJobsActivity::class.java))
         }
+        binding.dayJobAlertHours.setOnClickListener { chooseAlertHours() }
         binding.dayJobSetLocation.setOnClickListener { pickLocation.launch(Intent(this, MapPinActivity::class.java)) }
         binding.dayJobRegisterCompany.setOnClickListener { openCompanyForm() }
         binding.dayJobCompanyEdit.setOnClickListener { openCompanyForm() }
@@ -164,6 +172,11 @@ class DayJobHomeActivity : AppCompatActivity() {
             binding.dayJobMyTrades.text = "Your work: " + meta.worker.trades.joinToString(", ") { key ->
                 meta.trades.firstOrNull { it.key == key }?.label ?: key
             }
+            binding.dayJobAlertHours.text = "Alerts: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
+            val heldUntil = meta.worker.heldBackUntil
+            binding.dayJobHeldBack.visibility = if (registered && heldUntil != null) View.VISIBLE else View.GONE
+            binding.dayJobHeldBack.text = "You missed jobs you accepted, so new job alerts are paused till " +
+                DayJobFormat.dayText(heldUntil) + ". You can still open jobs here."
             loadNearby()
         } else {
             val company = meta.company
@@ -240,11 +253,37 @@ class DayJobHomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun hasLocation(): Boolean =
+        ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /** Where the worker is now if the phone can tell us, else the pin they set here. */
     private fun loadNearby() {
-        val savedLat = prefs.getFloat("lat", Float.NaN)
-        val savedLng = prefs.getFloat("lng", Float.NaN)
-        val lat = savedLat.takeUnless { it.isNaN() }?.toDouble()
-        val lng = savedLng.takeUnless { it.isNaN() }?.toDouble()
+        if (!hasLocation() && !prefs.getBoolean("location_asked", false)) {
+            askLocation.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
+            return
+        }
+        if (hasLocation()) {
+            try {
+                com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this)
+                    .getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                    .addOnCompleteListener { task ->
+                        val here = task.result
+                        if (here != null) loadNearbyAt(here.latitude, here.longitude) else loadNearbyAt(null, null)
+                    }
+                return
+            } catch (_: SecurityException) {
+                // fall through to the saved pin
+            }
+        }
+        loadNearbyAt(null, null)
+    }
+
+    private fun loadNearbyAt(currentLat: Double?, currentLng: Double?) {
+        val savedLat = prefs.getFloat("lat", Float.NaN).takeUnless { it.isNaN() }?.toDouble()
+        val savedLng = prefs.getFloat("lng", Float.NaN).takeUnless { it.isNaN() }?.toDouble()
+        val lat = currentLat ?: savedLat
+        val lng = currentLng ?: savedLng
         lifecycleScope.launch {
             when (val result = repository.nearby(lat, lng)) {
                 is DayJobOutcome.Ok -> {
@@ -263,6 +302,42 @@ class DayJobHomeActivity : AppCompatActivity() {
                     binding.dayJobWorkerEmpty.text = result.message
                     binding.dayJobSetLocation.visibility = View.VISIBLE
                 }
+            }
+        }
+    }
+
+    private fun chooseAlertHours() {
+        val meta = meta ?: return
+        val options = arrayOf("Any time", "6 AM – 8 PM", "5 AM – 11 AM (morning only)", "Choose times…")
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("When should we alert you?")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> saveAlertHours(null, null)
+                    1 -> saveAlertHours("06:00", "20:00")
+                    2 -> saveAlertHours("05:00", "11:00")
+                    else -> pickTime("From", meta.worker.alertFrom ?: "06:00") { from ->
+                        pickTime("Till", meta.worker.alertTo ?: "20:00") { to -> saveAlertHours(from, to) }
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun pickTime(title: String, current: String, then: (String) -> Unit) {
+        val (h, m) = current.split(":").map { it.toIntOrNull() ?: 0 }.let { it[0] to it.getOrElse(1) { 0 } }
+        android.app.TimePickerDialog(this, { _, hour, minute -> then("%02d:%02d".format(hour, minute)) }, h, m, false)
+            .apply { setTitle(title) }
+            .show()
+    }
+
+    private fun saveAlertHours(from: String?, to: String?) {
+        val meta = meta ?: return
+        lifecycleScope.launch {
+            // Empty strings clear the hours on the server ("any time").
+            when (val result = repository.saveWorker(meta.worker.trades, meta.worker.isAvailable, from ?: "", to ?: "")) {
+                is DayJobOutcome.Ok -> { DayJobUi.toast(this@DayJobHomeActivity, "Alert time saved"); refresh() }
+                is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobHomeActivity, result.message)
             }
         }
     }
