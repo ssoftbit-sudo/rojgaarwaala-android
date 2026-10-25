@@ -89,6 +89,8 @@ android {
     }
 
     compileOptions {
+        // java.time on Android 7 (minSdk 24) for 1 Day Job dates and TimeUtils.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -107,6 +109,8 @@ android {
 
 dependencies {
 
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation(libs.androidx.core.ktx)
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation(libs.androidx.appcompat)

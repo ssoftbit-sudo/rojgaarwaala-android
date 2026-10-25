@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <ImageButton
+            android:id="@+id/postBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_arrow_back_white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Add Job"
+            android:textColor="@color/white"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="20dp">
+
+            <TextView style="@style/ResumeLabel" android:layout_marginTop="4dp" android:text="What is the work? *" />
+            <EditText
+                android:id="@+id/postTitle"
+                style="@style/ResumeField"
+                android:hint="Example: Slab casting, Loading trucks"
+                android:inputType="textCapSentences"
+                android:textColorHint="@color/search_hint" />
+
+            <TextView style="@style/ResumeLabel" android:text="Workers needed *" />
+            <LinearLayout
+                android:id="@+id/postSlots"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_day_job_card"
+                android:orientation="vertical"
+                android:padding="6dp" />
+
+            <TextView style="@style/ResumeLabel" android:text="Wage per day (₹) *" />
+            <EditText
+                android:id="@+id/postWage"
+                style="@style/ResumeField"
+                android:hint="600"
+                android:inputType="number"
+                android:maxLength="4"
+                android:textColorHint="@color/search_hint" />
+
+            <TextView style="@style/ResumeLabel" android:text="Date *" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/postDateChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:selectionRequired="false"
+                app:singleSelection="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView style="@style/ResumeLabel" android:text="Start time *" />
+                    <TextView
+                        android:id="@+id/postTime"
+                        style="@style/ResumeField"
+                        android:hint="Choose"
+                        android:textColorHint="@color/search_hint" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView style="@style/ResumeLabel" android:text="Hours" />
+                    <Spinner
+                        android:id="@+id/postHours"
+                        style="@style/ResumeField"
+                        android:popupBackground="@color/dialog_surface" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView style="@style/ResumeLabel" android:text="Work site *" />
+            <TextView
+                android:id="@+id/postSite"
+                style="@style/ResumeField"
+                android:drawableStart="@drawable/ic_free_job_map"
+                android:drawablePadding="10dp"
+                android:drawableTint="@color/brand_color_yellow"
+                android:hint="Pin the site on map"
+                android:minHeight="56dp"
+                android:textColorHint="@color/search_hint" />
+
+            <TextView style="@style/ResumeLabel" android:text="Site photos (up to 4)" />
+            <LinearLayout
+                android:id="@+id/postPhotos"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:orientation="horizontal" />
+
+            <TextView style="@style/ResumeLabel" android:text="More details" />
+            <EditText
+                android:id="@+id/postDescription"
+                style="@style/ResumeField"
+                android:gravity="top"
+                android:hint="Food, tools, what to bring…"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="90dp"
+                android:paddingTop="12dp"
+                android:textColorHint="@color/search_hint" />
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/postSubmit"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_brand_button"
+        android:gravity="center"
+        android:text="Preview"
+        android:textColor="@color/on_brand"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+</LinearLayout>

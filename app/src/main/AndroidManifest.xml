@@ -172,6 +172,28 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobHomeActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"/>
+        <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobCompanyActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustResize|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobPostActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustResize|stateHidden"/>
+        <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobDetailActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"/>
+        <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobMyJobsActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"/>
+        <activity
             android:name=".presentation.ui.activity.ResumeBuilderActivity"
             android:exported="false"
             android:theme="@style/AppTheme.NoSplash"

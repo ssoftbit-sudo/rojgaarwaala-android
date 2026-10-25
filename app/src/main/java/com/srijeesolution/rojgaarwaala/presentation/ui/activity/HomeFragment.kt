@@ -1,5 +1,6 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobHomeActivity
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -103,6 +104,12 @@ class HomeFragment : Fragment() {
         
         // Set up View All click listeners
         setupViewAllClickListeners()
+        binding.homeDayJobFindWork.setOnClickListener {
+            startActivity(DayJobHomeActivity.intent(requireContext(), DayJobHomeActivity.MODE_WORK))
+        }
+        binding.homeDayJobHire.setOnClickListener {
+            startActivity(DayJobHomeActivity.intent(requireContext(), DayJobHomeActivity.MODE_HIRE))
+        }
         
         observeHomePageData()
         observeNearbyJobs()

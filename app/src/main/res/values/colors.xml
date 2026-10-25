@@ -40,4 +40,9 @@
 
     <!-- Dialog surface, kept dark in both light and dark mode -->
     <color name="dialog_surface">#2A2A2A</color>
+    <!-- 1 Day Job -->
+    <color name="day_job_green">#3FBF6A</color>
+    <color name="day_job_on_green">#06210F</color>
+    <color name="day_job_card">#1C1B19</color>
+    <color name="day_job_card_2">#25231F</color>
 </resources>

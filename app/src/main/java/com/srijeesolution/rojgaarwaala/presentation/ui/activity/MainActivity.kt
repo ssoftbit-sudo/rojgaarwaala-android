@@ -768,6 +768,12 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                         openJobStatusScreen()
                     }
                 }
+                "day_job_new", "day_job_accepted", "day_job_full", "day_job_live",
+                "day_job_cancelled", "day_job_booking_cancelled", "day_job_expired" -> {
+                    notificationId?.toIntOrNull()?.let {
+                        startActivity(com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobDetailActivity.intent(this, it))
+                    }
+                }
                 "ot_request" -> startActivity(Intent(this, OtReviewActivity::class.java))
                 "missed_punch_request" -> startActivity(Intent(this, BulkAttendanceActivity::class.java))
                 "missed_punch_submitted" -> startActivity(

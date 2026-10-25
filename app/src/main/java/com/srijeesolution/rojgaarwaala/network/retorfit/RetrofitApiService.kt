@@ -41,6 +41,17 @@ object RetrofitApiService {
     fun create(baseUrl: String): RetrofitApiInterface =
         apis.getOrPut(baseUrl) { build(baseUrl, httpClient) }
 
+    private val dayJobApis = ConcurrentHashMap<String, DayJobApi>()
+
+    fun dayJobs(baseUrl: String): DayJobApi = dayJobApis.getOrPut(baseUrl) {
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(httpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(DayJobApi::class.java)
+    }
+
     internal fun build(baseUrl: String, client: OkHttpClient): RetrofitApiInterface =
         Retrofit.Builder()
             .baseUrl(baseUrl)

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <ImageButton
+            android:id="@+id/companyBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_arrow_back_white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Register company"
+            android:textColor="@color/white"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="20dp">
+
+            <TextView style="@style/ResumeLabel" android:text="Company / business name *" />
+            <EditText android:id="@+id/companyName" style="@style/ResumeField" android:inputType="textCapWords" />
+
+            <TextView style="@style/ResumeLabel" android:text="Owner name" />
+            <EditText android:id="@+id/companyOwner" style="@style/ResumeField" android:inputType="textPersonName|textCapWords" />
+
+            <TextView style="@style/ResumeLabel" android:text="Phone for workers to call *" />
+            <EditText android:id="@+id/companyPhone" style="@style/ResumeField" android:inputType="phone" android:maxLength="10" />
+
+            <TextView style="@style/ResumeLabel" android:text="Office / site address" />
+            <TextView
+                android:id="@+id/companyAddress"
+                style="@style/ResumeField"
+                android:hint="Pick on map"
+                android:textColorHint="@color/search_hint" />
+
+            <TextView style="@style/ResumeLabel" android:text="District" />
+            <Spinner
+                android:id="@+id/companyDistrict"
+                style="@style/ResumeField"
+                android:popupBackground="@color/dialog_surface" />
+
+            <TextView
+                style="@style/ResumeStepTitle"
+                android:layout_marginTop="24dp"
+                android:text="Rules for companies" />
+
+            <TextView
+                android:id="@+id/companyTerms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_day_job_card"
+                android:lineSpacingExtra="4dp"
+                android:padding="14dp"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+            <CheckBox
+                android:id="@+id/companyAccept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:buttonTint="@color/brand_color_yellow"
+                android:text="I agree to these rules"
+                android:textColor="@color/white" />
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/companySave"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_brand_button"
+        android:gravity="center"
+        android:text="Register"
+        android:textColor="@color/on_brand"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+</LinearLayout>
