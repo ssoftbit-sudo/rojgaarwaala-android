@@ -91,9 +91,15 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/resumeSelfieButton"
+                            style="@style/ResumeOutlineButton"
+                            android:text="सेल्फी लें" />
+
+                        <TextView
                             android:id="@+id/resumePhotoButton"
                             style="@style/ResumeOutlineButton"
-                            android:text="फोटो लगाएँ" />
+                            android:layout_marginTop="8dp"
+                            android:text="गैलरी से फोटो" />
 
                         <TextView
                             android:layout_width="wrap_content"

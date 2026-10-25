@@ -46,8 +46,8 @@ object ResumePdfWriter {
     private val SOFT_TEXT = Color.parseColor("#5A4300")
     private val PHOTO_EMPTY = Color.parseColor("#E3E3E3")
 
-    /** Writes the PDF to [out]. Always one page. */
-    fun write(data: ResumeData, photo: Bitmap?, out: File) {
+    /** Writes the PDF to [out]. Always one page, signed off with the Rojgaar WALA [logo]. */
+    fun write(data: ResumeData, photo: Bitmap?, out: File, logo: Bitmap? = null) {
         val footerTop = PAGE_H - MARGIN - footerHeight(data)
         val scale = SCALES.firstOrNull { k ->
             val picture = Picture()
@@ -67,6 +67,7 @@ object ResumePdfWriter {
             body(canvas, data, photo, scale)
             canvas.restore()
             footer(canvas, data, footerTop)
+            brand(canvas, data.language, logo)
             doc.finishPage(page)
             out.parentFile?.mkdirs()
             out.outputStream().use { doc.writeTo(it) }
@@ -165,7 +166,7 @@ object ResumePdfWriter {
 
     private fun footerHeight(d: ResumeData): Float {
         val body = layout(Text.DECLARATION.of(d.language), paint(10f, MUTED), (PAGE_W - 2 * MARGIN).toInt())
-        return 22f + body.height + 50f
+        return 22f + body.height + 50f + BRAND_H
     }
 
     /** Declaration, date, place and signature, always at the foot of the page. */
@@ -188,6 +189,25 @@ object ResumePdfWriter {
         val name = paint(10.5f, DARK, bold = true)
         val nameText = TextUtils.ellipsize(d.name, name, signW, TextUtils.TruncateAt.END).toString()
         c.drawText(nameText, signX + (signW - name.measureText(nameText)) / 2, line2, name)
+    }
+
+    private const val BRAND_H = 26f
+
+    /** A thin strip along the foot of the page: logo and where the resume was made. */
+    private fun brand(c: Canvas, lang: ResumeLanguage, logo: Bitmap?) {
+        val bottom = PAGE_H - 14f
+        val size = 18f
+        val label = if (lang == ResumeLanguage.HINDI) "रोजगार WALA ऐप से बनाया गया" else "Made with the Rojgaar WALA app"
+        val p = paint(8.5f, MUTED)
+        val textW = p.measureText(label)
+        val total = (if (logo != null) size + 6 else 0f) + textW
+        var x = (PAGE_W - total) / 2
+        c.drawRect(MARGIN, bottom - size - 6, PAGE_W - MARGIN, bottom - size - 5.4f, fill(HAIRLINE))
+        if (logo != null) {
+            c.drawBitmap(logo, null, RectF(x, bottom - size, x + size, bottom), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+            x += size + 6
+        }
+        c.drawText(label, x, bottom - size / 2 - (p.ascent() + p.descent()) / 2, p)
     }
 
     // ---------------------------------------------------------------- pieces

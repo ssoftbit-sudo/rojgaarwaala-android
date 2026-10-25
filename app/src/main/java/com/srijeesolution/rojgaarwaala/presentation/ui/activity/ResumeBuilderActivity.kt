@@ -79,6 +79,37 @@ class ResumeBuilderActivity : AppCompatActivity() {
         uri?.let { savePhoto(it) }
     }
 
+    private var selfieUri: Uri? = null
+
+    /** The camera app, asked to open on the front lens where it supports that. */
+    private val selfieTaker = registerForActivityResult(object : ActivityResultContracts.TakePicture() {
+        override fun createIntent(context: Context, input: Uri): Intent = super.createIntent(context, input).apply {
+            putExtra("android.intent.extras.CAMERA_FACING", 1)
+            putExtra("android.intent.extras.LENS_FACING_FRONT", 1)
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", true)
+        }
+    }) { taken ->
+        val uri = selfieUri
+        if (taken && uri != null) savePhoto(uri)
+    }
+
+    private var pendingDownload: File? = null
+
+    private val downloader = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { target ->
+        val source = pendingDownload
+        pendingDownload = null
+        if (target == null || source == null) return@registerForActivityResult
+        val saved = runCatching {
+            contentResolver.openOutputStream(target)?.use { out -> source.inputStream().use { it.copyTo(out) } } != null
+        }.getOrDefault(false)
+        Toast.makeText(
+            this,
+            if (saved) "रिज्यूमे डाउनलोड हो गया" else "डाउनलोड नहीं हो पाया, दोबारा कोशिश करें",
+            Toast.LENGTH_SHORT,
+        ).show()
+        finishWith(source)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityResumeBuilderBinding.inflate(layoutInflater)
@@ -157,6 +188,7 @@ class ResumeBuilderActivity : AppCompatActivity() {
         showPhoto()
         binding.resumePhotoButton.setOnClickListener { photoPicker.launch("image/*") }
         binding.resumePhoto.setOnClickListener { photoPicker.launch("image/*") }
+        binding.resumeSelfieButton.setOnClickListener { takeSelfie() }
         binding.resumeDob.setOnClickListener { pickDob() }
     }
 
@@ -213,6 +245,15 @@ class ResumeBuilderActivity : AppCompatActivity() {
         }
     }
 
+    private fun takeSelfie() {
+        val file = File(cacheDir, "resume_selfie.jpg")
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+        selfieUri = uri
+        runCatching { selfieTaker.launch(uri) }.onFailure {
+            Toast.makeText(this, "कैमरा नहीं खुल पाया, गैलरी से फोटो चुनें", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** Decodes at most [maxSide] pixels on the long side, turned the way the camera held it. */
     private fun decodeUpright(uri: Uri, maxSide: Int): Bitmap? {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -238,14 +279,19 @@ class ResumeBuilderActivity : AppCompatActivity() {
     private fun loadPhoto(): Bitmap? =
         data.photoPath?.takeIf { File(it).exists() }?.let { BitmapFactory.decodeFile(it) }
 
+    private fun loadLogo(): Bitmap? =
+        runCatching { BitmapFactory.decodeResource(resources, R.drawable.rojgaarwaala_logo_rounded) }.getOrNull()
+
     private fun showPhoto() {
         val photo = loadPhoto()
         if (photo != null) {
             binding.resumePhoto.setImageBitmap(photo)
-            binding.resumePhotoButton.text = "फोटो बदलें"
+            binding.resumePhotoButton.text = "गैलरी से बदलें"
+            binding.resumeSelfieButton.text = "नई सेल्फी लें"
         } else {
             binding.resumePhoto.setImageResource(R.drawable.ic_nav_profile)
-            binding.resumePhotoButton.text = "फोटो लगाएँ"
+            binding.resumePhotoButton.text = "गैलरी से फोटो"
+            binding.resumeSelfieButton.text = "सेल्फी लें"
         }
     }
 
@@ -491,7 +537,7 @@ class ResumeBuilderActivity : AppCompatActivity() {
             val pages = withContext(Dispatchers.IO) {
                 runCatching {
                     val file = File(cacheDir, "resume_preview.pdf")
-                    ResumePdfWriter.write(snapshot, loadPhoto(), file)
+                    ResumePdfWriter.write(snapshot, loadPhoto(), file, loadLogo())
                     renderPages(file, width)
                 }.getOrDefault(emptyList())
             }
@@ -539,7 +585,7 @@ class ResumeBuilderActivity : AppCompatActivity() {
                 runCatching {
                     ResumeStore.save(this@ResumeBuilderActivity, snapshot)
                     ResumeStore.pdfFile(this@ResumeBuilderActivity, snapshot).also {
-                        ResumePdfWriter.write(snapshot, loadPhoto(), it)
+                        ResumePdfWriter.write(snapshot, loadPhoto(), it, loadLogo())
                     }
                 }.getOrNull()
             }
@@ -551,8 +597,12 @@ class ResumeBuilderActivity : AppCompatActivity() {
             }
             AlertDialog.Builder(this@ResumeBuilderActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
                 .setTitle("रिज्यूमे तैयार है")
-                .setMessage("आप इसे WhatsApp पर भी भेज सकते हैं।")
+                .setMessage("फोन में डाउनलोड करके कहीं भी भेज सकते हैं, या सीधे WhatsApp पर शेयर करें।")
                 .setPositiveButton("ठीक है") { _, _ -> finishWith(file) }
+                .setNegativeButton("डाउनलोड करें") { _, _ ->
+                    pendingDownload = file
+                    downloader.launch(file.name)
+                }
                 .setNeutralButton("शेयर करें") { _, _ ->
                     share(file)
                     finishWith(file)
