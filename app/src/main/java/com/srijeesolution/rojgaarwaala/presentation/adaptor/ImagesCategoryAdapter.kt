@@ -54,14 +54,14 @@ class ImagesCategoryAdapter(
                         onClick = onListClick,
                         onViewMap = onViewMap,
                     )
-                    cards.submit(displayImages.map { FreeJobItem(job = it, categoryTitle = category.title) })
+                    cards.submit(displayImages.map { FreeJobItem(job = it, categoryTitle = category.title, categoryIcon = category.iconFile) })
                     imagesRecyclerView.adapter = cards
                 } else {
                     // One sideways strip per category, like Top Videos on Home.
                     imagesRecyclerView.layoutManager =
                         LinearLayoutManager(itemView.context, LinearLayoutManager.HORIZONTAL, false)
                     imagesRecyclerView.adapter = FreeJobTilesAdapter(
-                        items = displayImages.map { FreeJobItem(job = it, categoryTitle = category.title) },
+                        items = displayImages.map { FreeJobItem(job = it, categoryTitle = category.title, categoryIcon = category.iconFile) },
                         onClick = { _, imageIndex -> onImageClick(category, imageIndex) },
                         onViewMap = onViewMap,
                     )

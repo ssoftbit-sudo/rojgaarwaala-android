@@ -153,4 +153,12 @@ class FreeJobFeedTest {
         val oldest = FreeJobFeed.sortedCategories(listOf(hospital, driver), FreeJobFeed.Sort.OLDEST)
         assertEquals(listOf(1, 2), oldest.map { it.id })
     }
+
+    @Test
+    fun districtLabelPrefersPickedDistrictsThenPlaceText() {
+        assertEquals("Raipur, Durg", FreeJobFeed.districtLabel(ImageData(districts = listOf("Raipur", "Durg"), location = "Bilaspur")))
+        assertEquals("Bilaspur", FreeJobFeed.districtLabel(ImageData(location = "Vyapar Vihar, Bilaspur, Chhattisgarh")))
+        assertEquals("Janjgir-Champa", FreeJobFeed.districtLabel(ImageData(areaName = "Janjgir")))
+        assertEquals("", FreeJobFeed.districtLabel(ImageData(location = "Somewhere else")))
+    }
 }

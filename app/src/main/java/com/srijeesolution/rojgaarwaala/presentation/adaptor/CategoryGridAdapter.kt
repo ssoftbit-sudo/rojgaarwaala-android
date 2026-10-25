@@ -37,7 +37,10 @@ class CategoryGridAdapter(
         }else{
             holder.title.visibility=View.GONE
         }
-        if (cat.iconFile != null) {
+        if (cat.id == -1) {
+            Glide.with(holder.icon.context).clear(holder.icon)
+            holder.icon.setImageResource(R.drawable.ic_category_view_all)
+        } else if (cat.iconFile != null) {
             Glide.with(holder.icon.context).load(cat.iconFile).placeholder(R.drawable.circle_image_placeholder).into(holder.icon)
         } else {
             holder.icon.setImageResource(R.drawable.ic_category_placeholder)

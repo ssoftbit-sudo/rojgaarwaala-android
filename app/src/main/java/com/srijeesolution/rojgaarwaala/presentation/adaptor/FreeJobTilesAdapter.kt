@@ -36,6 +36,9 @@ class FreeJobTilesAdapter(
             binding.freeJobTileMap.visibility =
                 if (FreeJobFeed.mapGeoUri(job) != null) View.VISIBLE else View.INVISIBLE
             binding.freeJobTileMap.setOnClickListener { onViewMap(item) }
+            val district = FreeJobFeed.districtLabel(job).substringBefore(",")
+            binding.freeJobTileDistrict.text = district
+            binding.freeJobTileDistrict.visibility = if (district.isBlank()) View.GONE else View.VISIBLE
 
             binding.freeJobTileCard.setOnClickListener {
                 val position = bindingAdapterPosition

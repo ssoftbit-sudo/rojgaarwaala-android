@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "View All" tile on Home: amber disc with a 2x2 grid, in the logo colours. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="112dp"
+    android:height="112dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+    <path
+        android:fillColor="#FFBB02"
+        android:pathData="M28,0a28,28 0,1 1,0 56a28,28 0,1 1,0 -56z" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M17,17h9v9h-9z M30,17h9v9h-9z M17,30h9v9h-9z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="2.2"
+        android:pathData="M31,31h7v7h-7z" />
+</vector>

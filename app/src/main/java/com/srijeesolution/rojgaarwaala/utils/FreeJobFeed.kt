@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets
 data class FreeJobItem(
     val job: ImageData,
     val categoryTitle: String?,
+    /** The category's icon URL, shown in the card's round badge. */
+    val categoryIcon: String? = null,
 )
 
 object FreeJobFeed {
@@ -31,7 +33,7 @@ object FreeJobFeed {
     fun flatten(categories: List<ImageSubItem>): List<FreeJobItem> {
         return categories.flatMap { category ->
             category.images.orEmpty().map { job ->
-                FreeJobItem(job = job, categoryTitle = category.title)
+                FreeJobItem(job = job, categoryTitle = category.title, categoryIcon = category.iconFile)
             }
         }
     }
@@ -65,6 +67,20 @@ object FreeJobFeed {
         return job.areaName?.trim()?.takeIf { it.isNotEmpty() }
             ?: job.location?.trim()?.takeIf { it.isNotEmpty() }
             ?: ""
+    }
+
+    /**
+     * The district(s) a job is in, for the label on the map button: what the admin
+     * picked, else a district named in the place text.
+     */
+    fun districtLabel(job: ImageData): String {
+        val picked = job.districts.orEmpty().map { it.trim() }.filter { it.isNotEmpty() }
+        if (picked.isNotEmpty()) return picked.joinToString(", ")
+        val text = listOfNotNull(job.areaName, job.location).joinToString(" ").lowercase()
+        if (text.isBlank()) return ""
+        return ChhattisgarhDistricts.list.firstOrNull { district ->
+            text.contains(district.lowercase()) || text.contains(district.substringBefore('-').lowercase())
+        }.orEmpty()
     }
 
     fun mapGeoUri(job: ImageData): String? =

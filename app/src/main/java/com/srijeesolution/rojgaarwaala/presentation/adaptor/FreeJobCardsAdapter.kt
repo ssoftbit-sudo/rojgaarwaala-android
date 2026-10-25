@@ -3,7 +3,9 @@ package com.srijeesolution.rojgaarwaala.presentation.adaptor
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import androidx.recyclerview.widget.RecyclerView
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.utils.FreeJobFeed
@@ -37,6 +39,13 @@ class FreeJobCardsAdapter(
         val category = item.categoryTitle?.trim().orEmpty()
         val company = category.ifBlank { FreeJobFeed.companyName(item) }
         holder.avatar.text = company.firstOrNull()?.uppercaseChar()?.toString() ?: "R"
+        val icon = item.categoryIcon?.takeIf { it.isNotBlank() }
+        holder.avatarIcon.visibility = if (icon != null) View.VISIBLE else View.GONE
+        if (icon != null) {
+            Glide.with(holder.avatarIcon).load(icon).circleCrop().into(holder.avatarIcon)
+        } else {
+            Glide.with(holder.avatarIcon).clear(holder.avatarIcon)
+        }
         holder.company.text = company
         holder.title.text = JobTitleCopy.display(job.title, holder.itemView.context.getString(R.string.free_job))
         val shift = job.shiftText?.trim().orEmpty()
@@ -48,6 +57,10 @@ class FreeJobCardsAdapter(
         val distance = JobMapPins.distanceChipLabel(job.distanceKm)
         holder.mapDistance.text = distance
         holder.mapDistance.visibility = if (distance.isBlank()) View.GONE else View.VISIBLE
+        // The district on the button tells a scrolling seeker where the job is at a glance.
+        val district = FreeJobFeed.districtLabel(job)
+        holder.mapDistrict.text = district
+        holder.mapDistrict.visibility = if (district.isBlank()) View.GONE else View.VISIBLE
         val salary = FreeJobFeed.salaryLine(job)
         holder.salary.text = salary
         holder.salary.visibility = if (salary.isBlank()) View.GONE else View.VISIBLE
@@ -64,6 +77,8 @@ class FreeJobCardsAdapter(
 
     class Holder(view: View) : RecyclerView.ViewHolder(view) {
         val avatar: TextView = view.findViewById(R.id.freeJobAvatar)
+        val avatarIcon: ImageView = view.findViewById(R.id.freeJobAvatarIcon)
+        val mapDistrict: TextView = view.findViewById(R.id.freeJobMapDistrict)
         val company: TextView = view.findViewById(R.id.freeJobCompany)
         val title: TextView = view.findViewById(R.id.freeJobTitle)
         val metaRow: View = view.findViewById(R.id.freeJobMetaRow)
