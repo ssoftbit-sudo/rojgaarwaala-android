@@ -6,6 +6,7 @@ import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompanyRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobMeta
 import com.srijeesolution.rojgaarwaala.data.repository.DayJobOutcome
@@ -59,7 +60,7 @@ class DayJobCompanyActivity : AppCompatActivity() {
         this.meta = meta
         binding.companyTerms.text = meta.terms.joinToString("\n") { "• $it" }
         val districts = listOf("Choose district") + meta.districts
-        binding.companyDistrict.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, districts)
+        binding.companyDistrict.adapter = ArrayAdapter(this, R.layout.item_day_job_spinner, districts)
         val company = meta.company ?: return
         binding.companyName.setText(company.name)
         binding.companyOwner.setText(company.ownerName.orEmpty())

@@ -29,6 +29,10 @@ val mapsApiKey: String = run {
 val allowScreenCaptureForScreenshots =
     project.findProperty("ALLOW_SCREEN_CAPTURE")?.toString() == "true"
 
+// Local testing only: ./gradlew assembleDebug -PAPI_BASE_URL=http://10.0.2.2:8000/api/
+// Release builds always use the live server.
+val apiBaseUrlOverride = project.findProperty("API_BASE_URL")?.toString().orEmpty()
+
 android {
     compileSdk = 36
     namespace = "com.srijeesolution.rojgaarwaala"
@@ -44,6 +48,7 @@ android {
         manifestPlaceholders["mapsApiKey"] = mapsApiKey
         buildConfigField("boolean", "HAS_MAPS_KEY", (mapsApiKey.isNotBlank()).toString())
         buildConfigField("boolean", "ALLOW_SCREEN_CAPTURE", allowScreenCaptureForScreenshots.toString())
+        buildConfigField("String", "API_BASE_URL", "\"https://www.rojgaarwaala.com/api/\"")
     }
 
     signingConfigs {
@@ -64,6 +69,11 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+        }
+        getByName("debug") {
+            if (apiBaseUrlOverride.isNotBlank()) {
+                buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrlOverride\"")
+            }
         }
     }
 

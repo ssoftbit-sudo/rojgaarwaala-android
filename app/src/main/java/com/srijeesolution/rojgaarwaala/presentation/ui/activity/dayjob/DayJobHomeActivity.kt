@@ -249,11 +249,12 @@ class DayJobHomeActivity : AppCompatActivity() {
             when (val result = repository.nearby(lat, lng)) {
                 is DayJobOutcome.Ok -> {
                     binding.dayJobSetLocation.visibility = View.GONE
-                    if (lat != null && lng != null) center = LatLng(lat, lng)
-                    val jobs = result.data
+                    val from = result.data
+                    center = if (from.latitude != null && from.longitude != null) LatLng(from.latitude, from.longitude) else null
+                    val jobs = from.jobs
                     workerAdapter.submit(jobs)
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
-                    binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● ${jobs.size} jobs within 10 km"
+                    binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● ${jobs.size} ${if (jobs.size == 1) "job" else "jobs"} within 10 km"
                     showOnMap(jobs)
                 }
                 is DayJobOutcome.Fail -> {

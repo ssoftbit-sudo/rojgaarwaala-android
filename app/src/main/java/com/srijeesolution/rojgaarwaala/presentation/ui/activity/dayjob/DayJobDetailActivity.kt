@@ -98,7 +98,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailWage.text = DayJobFormat.wageText(job.wagePerDay)
         binding.detailWhen.text = "${DayJobFormat.whenText(job.workDate, job.startTime)} · ${job.hours} hours"
         binding.detailPlace.text = listOfNotNull(job.place.ifBlank { null }, job.district).joinToString(" · ")
-        binding.detailDistance.text = DayJobFormat.distanceText(job.distanceKm)
+        binding.detailDistance.text = if (isOwner) "" else DayJobFormat.distanceText(job.distanceKm)
         binding.detailCloses.text = if (job.isAccepting) DayJobFormat.closesInText(job.acceptClosesAt) else DayJobFormat.statusText(job.status)
         DayJobUi.styleStatus(binding.detailStatus, job.status)
         binding.detailStatus.text = if (isOwner) "${DayJobFormat.statusText(job.status)} · ${DayJobFormat.comingText(job)}" else DayJobFormat.statusText(job.status)
@@ -220,7 +220,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         if (job.status == "in_review") {
             actions.addView(note("This job goes live once your company is verified."))
         } else if (job.notifiedCount > 0) {
-            actions.addView(note("Sent to ${job.notifiedCount} workers within ${job.radiusKm} km."))
+            actions.addView(note("Sent to ${job.notifiedCount} ${if (job.notifiedCount == 1) "worker" else "workers"} within ${job.radiusKm} km."))
         }
         actions.addView(button("Post again", 0) { askRepost(job) })
         if (job.status in listOf("in_review", "open", "full", "closed")) {

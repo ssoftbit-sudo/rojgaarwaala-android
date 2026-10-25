@@ -83,7 +83,7 @@ class DayJobPostActivity : AppCompatActivity() {
         }
         binding.postTime.setOnClickListener { pickTime() }
         binding.postSubmit.setOnClickListener { preview() }
-        binding.postHours.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, (1..12).map { "$it hours" })
+        binding.postHours.adapter = ArrayAdapter(this, R.layout.item_day_job_spinner, (1..12).map { "$it hours" })
         binding.postHours.setSelection(7)
         setupDates()
         renderPhotos()

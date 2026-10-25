@@ -97,7 +97,12 @@ data class DayJob(
     val place: String get() = areaName?.takeIf { it.isNotBlank() } ?: location.orEmpty()
 }
 
-data class DayJobListData(@SerializedName("jobs") val jobs: List<DayJob> = emptyList())
+data class DayJobListData(
+    @SerializedName("jobs") val jobs: List<DayJob> = emptyList(),
+    /** For nearby: the point the search was made from (the worker). */
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
+)
 data class DayJobData(@SerializedName("job") val job: DayJob? = null)
 data class DayJobCompanyData(@SerializedName("company") val company: DayJobCompany? = null)
 data class DayJobWorkerData(@SerializedName("worker") val worker: DayJobWorker? = null)

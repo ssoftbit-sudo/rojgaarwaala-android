@@ -5,6 +5,7 @@ import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobAcceptRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompany
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompanyRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobEnvelope
+import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobListData
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobMeta
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRepostRequest
 import com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWorker
@@ -59,8 +60,8 @@ class DayJobRepository @Inject constructor() {
     suspend fun saveWorker(trades: List<String>, available: Boolean): DayJobOutcome<DayJobWorker?> =
         call { api.saveWorker(DayJobWorkerRequest(trades, available)) }.mapData { it.worker }
 
-    suspend fun nearby(latitude: Double?, longitude: Double?): DayJobOutcome<List<DayJob>> =
-        call { api.nearby(latitude, longitude) }.mapData { it.jobs }
+    suspend fun nearby(latitude: Double?, longitude: Double?): DayJobOutcome<DayJobListData> =
+        call { api.nearby(latitude, longitude) }
 
     suspend fun mine(history: Boolean): DayJobOutcome<List<DayJob>> =
         call { api.mine(if (history) "history" else "active") }.mapData { it.jobs }
