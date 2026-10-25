@@ -52,7 +52,7 @@ internal object DayJobUi {
     fun call(context: Context, phone: String?) {
         val number = phone?.filter { it.isDigit() || it == '+' }.orEmpty()
         if (number.isBlank()) {
-            Toast.makeText(context, "No phone number", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "फ़ोन नंबर नहीं है", Toast.LENGTH_SHORT).show()
             return
         }
         context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
@@ -103,7 +103,7 @@ internal class DayJobAdapter(
         val booked = job.myBooking?.status == "accepted"
         when {
             !forCompany && booked -> {
-                holder.badge.text = "You're going"
+                holder.badge.text = "आप जा रहे हैं"
                 holder.badge.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.day_job_green))
             }
             else -> DayJobUi.styleStatus(holder.badge, job.status)

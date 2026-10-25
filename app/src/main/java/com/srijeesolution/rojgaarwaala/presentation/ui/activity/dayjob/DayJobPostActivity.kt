@@ -58,7 +58,7 @@ class DayJobPostActivity : AppCompatActivity() {
         lat = data.getDoubleExtra(MapPinActivity.EXTRA_LAT, MapPinActivity.DEFAULT_LAT)
         lng = data.getDoubleExtra(MapPinActivity.EXTRA_LNG, MapPinActivity.DEFAULT_LNG)
         siteName = data.getStringExtra(MapPinActivity.EXTRA_ADDRESS).orEmpty()
-        binding.postSite.text = siteName.ifBlank { "Pinned on map" }
+        binding.postSite.text = siteName.ifBlank { "नक्शे पर लगा दी" }
     }
 
     private val pickPhotos = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -85,7 +85,7 @@ class DayJobPostActivity : AppCompatActivity() {
         }
         binding.postTime.setOnClickListener { pickTime() }
         binding.postSubmit.setOnClickListener { preview() }
-        binding.postHours.adapter = ArrayAdapter(this, R.layout.item_day_job_spinner, (1..12).map { "$it hours" })
+        binding.postHours.adapter = ArrayAdapter(this, R.layout.item_day_job_spinner, (1..12).map { "$it घंटे" })
         binding.postHours.setSelection(7)
         setupDates()
         renderPhotos()
@@ -98,7 +98,7 @@ class DayJobPostActivity : AppCompatActivity() {
                     result.data.company?.let { c ->
                         if (lat == null && c.latitude != null && c.longitude != null) {
                             lat = c.latitude; lng = c.longitude; siteName = c.address.orEmpty()
-                            binding.postSite.text = siteName.ifBlank { "Pinned on map" }
+                            binding.postSite.text = siteName.ifBlank { "नक्शे पर लगा दी" }
                         }
                     }
                     renderSlots()
@@ -111,12 +111,12 @@ class DayJobPostActivity : AppCompatActivity() {
     private fun setupDates() {
         val group = binding.postDateChips
         val today = LocalDate.now()
-        listOf("Today" to today, "Tomorrow" to today.plusDays(1)).forEach { (label, date) ->
+        listOf("आज" to today, "कल" to today.plusDays(1)).forEach { (label, date) ->
             group.addView(DayJobUi.chip(this, label, false).apply {
                 setOnClickListener { workDate = date }
             })
         }
-        group.addView(DayJobUi.chip(this, "Pick date", false).apply {
+        group.addView(DayJobUi.chip(this, "तारीख़ चुनें", false).apply {
             setOnClickListener {
                 val base = workDate ?: today.plusDays(2)
                 DatePickerDialog(this@DayJobPostActivity, { _, y, m, d ->
@@ -228,7 +228,7 @@ class DayJobPostActivity : AppCompatActivity() {
         }
         if (photos.size < 4) {
             box.addView(TextView(this).apply {
-                text = "+\nPhoto"
+                text = "+\nफ़ोटो"
                 gravity = Gravity.CENTER
                 setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
                 setBackgroundResource(R.drawable.bg_free_job_map_button)
@@ -259,9 +259,9 @@ class DayJobPostActivity : AppCompatActivity() {
         val errors = DayJobFormat.postErrors(title, slots, wage, workDate != null, startTime != null, lat != null)
         if (errors.isNotEmpty()) {
             AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-                .setTitle("Fill these first")
+                .setTitle("पहले यह भरें")
                 .setMessage(errors.joinToString("\n") { "• $it" })
-                .setPositiveButton("OK", null)
+                .setPositiveButton("ठीक है", null)
                 .show()
             return null
         }
@@ -285,27 +285,27 @@ class DayJobPostActivity : AppCompatActivity() {
         val who = draft.slots.entries.joinToString(", ") { (key, n) -> "$n ${trades.firstOrNull { it.key == key }?.label ?: key}" }
         val summary = listOf(
             draft.title,
-            "Workers: $who",
-            "Wage: ${DayJobFormat.wageText(draft.wagePerDay)}",
-            "When: ${DayJobFormat.whenText(draft.workDate, draft.startTime)} · ${draft.hours} hours",
-            "Where: ${draft.areaName.ifBlank { "Pinned on map" }}",
-            "Photos: ${draft.photos.size}",
+            "मज़दूर: $who",
+            "मज़दूरी: ${DayJobFormat.wageText(draft.wagePerDay)}",
+            "कब: ${DayJobFormat.whenText(draft.workDate, draft.startTime)} · ${draft.hours} घंटे",
+            "कहाँ: ${draft.areaName.ifBlank { "नक्शे पर लगा दी" }}",
+            "फ़ोटो: ${draft.photos.size}",
         ).joinToString("\n")
         AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-            .setTitle("Publish this job?")
-            .setMessage(summary + "\n\nWorkers within 5 km will get a notification.")
-            .setPositiveButton("Publish Job") { _, _ -> publish(draft) }
-            .setNegativeButton("Edit", null)
+            .setTitle("यह काम डालें?")
+            .setMessage(summary + "\n\n5 km के मज़दूरों को ख़बर जाएगी।")
+            .setPositiveButton("काम डालें") { _, _ -> publish(draft) }
+            .setNegativeButton("बदलें", null)
             .show()
     }
 
     private fun publish(draft: DayJobDraft) {
         binding.postSubmit.isEnabled = false
-        binding.postSubmit.text = "Publishing…"
+        binding.postSubmit.text = "डाल रहे हैं…"
         lifecycleScope.launch {
             val result = repository.create(draft)
             binding.postSubmit.isEnabled = true
-            binding.postSubmit.text = "Preview"
+            binding.postSubmit.text = "देखें और डालें"
             when (result) {
                 is DayJobOutcome.Ok -> {
                     DayJobUi.toast(this@DayJobPostActivity, result.message)

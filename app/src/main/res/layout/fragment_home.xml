@@ -239,7 +239,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="1 Day Job"
+                        android:text="1 दिन का काम"
                         android:textColor="@color/white"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -247,7 +247,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Daily wage work near you"
+                        android:text="पास में रोज़ की मज़दूरी"
                         android:textColor="@color/search_hint"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -266,7 +266,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_brand_button"
                         android:gravity="center"
-                        android:text="Find Work"
+                        android:text="काम ढूँढें"
                         android:textColor="@color/on_brand"
                         android:textSize="15sp"
                         android:textStyle="bold" />
@@ -279,7 +279,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_free_job_map_button"
                         android:gravity="center"
-                        android:text="Hire Workers"
+                        android:text="मज़दूर चाहिए"
                         android:textColor="@color/brand_color_yellow"
                         android:textSize="15sp"
                         android:textStyle="bold" />

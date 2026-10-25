@@ -59,7 +59,7 @@ class DayJobCompanyActivity : AppCompatActivity() {
     private fun fill(meta: DayJobMeta) {
         this.meta = meta
         binding.companyTerms.text = meta.terms.joinToString("\n") { "• $it" }
-        val districts = listOf("Choose district") + meta.districts
+        val districts = listOf("ज़िला चुनें") + meta.districts
         binding.companyDistrict.adapter = ArrayAdapter(this, R.layout.item_day_job_spinner, districts)
         val company = meta.company ?: return
         binding.companyName.setText(company.name)
@@ -70,16 +70,16 @@ class DayJobCompanyActivity : AppCompatActivity() {
         lng = company.longitude
         binding.companyDistrict.setSelection(districts.indexOf(company.district).coerceAtLeast(0))
         binding.companyAccept.isChecked = true
-        binding.companySave.text = "Save"
+        binding.companySave.text = "सेव करें"
     }
 
     private fun save() {
         val name = binding.companyName.text.toString().trim()
         val phone = binding.companyPhone.text.toString().filter { it.isDigit() }
         when {
-            name.isEmpty() -> return DayJobUi.toast(this, "Write the company name")
-            phone.length != 10 -> return DayJobUi.toast(this, "Enter a 10 digit mobile number")
-            !binding.companyAccept.isChecked -> return DayJobUi.toast(this, "Please accept the rules to continue")
+            name.isEmpty() -> return DayJobUi.toast(this, "कंपनी का नाम लिखें")
+            phone.length != 10 -> return DayJobUi.toast(this, "10 अंकों का मोबाइल नंबर लिखें")
+            !binding.companyAccept.isChecked -> return DayJobUi.toast(this, "आगे बढ़ने के लिए नियम मानें")
         }
         val district = binding.companyDistrict.selectedItemPosition.takeIf { it > 0 }
             ?.let { meta?.districts?.getOrNull(it - 1) }

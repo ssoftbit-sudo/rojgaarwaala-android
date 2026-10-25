@@ -127,7 +127,7 @@
 
                 <TextView
                     style="@style/ResumeLabel"
-                    android:text="Workers needed" />
+                    android:text="कितने मज़दूर चाहिए" />
 
                 <LinearLayout
                     android:id="@+id/detailSlots"
@@ -171,7 +171,7 @@
                     android:id="@+id/detailWorkersTitle"
                     style="@style/ResumeStepTitle"
                     android:layout_marginTop="20dp"
-                    android:text="Who is coming"
+                    android:text="कौन आ रहा है"
                     android:visibility="gone" />
 
                 <LinearLayout

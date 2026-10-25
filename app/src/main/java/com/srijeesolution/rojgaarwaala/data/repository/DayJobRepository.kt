@@ -134,13 +134,13 @@ class DayJobRepository @Inject constructor() {
                     DayJobOutcome.Fail(errorMessage(response.errorBody()?.string(), body?.message))
                 }
             } catch (e: Exception) {
-                DayJobOutcome.Fail("No internet. Please try again.")
+                DayJobOutcome.Fail("इंटरनेट नहीं है। फिर कोशिश करें।")
             }
         }
 
     private fun errorMessage(errorBody: String?, fallback: String?): String {
         val fromBody = runCatching { JSONObject(errorBody.orEmpty()).optString("message") }.getOrNull()
-        return fromBody?.takeIf { it.isNotBlank() } ?: fallback?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again."
+        return fromBody?.takeIf { it.isNotBlank() } ?: fallback?.takeIf { it.isNotBlank() } ?: "कुछ गड़बड़ हुई। फिर कोशिश करें।"
     }
 
     private inline fun <T, R> DayJobOutcome<T>.mapData(transform: (T) -> R): DayJobOutcome<R> = when (this) {

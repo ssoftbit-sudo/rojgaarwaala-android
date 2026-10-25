@@ -99,10 +99,10 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailTitle.text = job.title
         binding.detailCompany.text = listOfNotNull(
             job.company.name,
-            job.company.paidRate?.let { "$it% workers paid on time" },
+            job.company.paidRate?.let { "$it% मज़दूरों को समय पर पैसा मिला" },
         ).joinToString(" · ")
         binding.detailWage.text = DayJobFormat.wageText(job.wagePerDay)
-        binding.detailWhen.text = "${DayJobFormat.whenText(job.workDate, job.startTime)} · ${job.hours} hours"
+        binding.detailWhen.text = "${DayJobFormat.whenText(job.workDate, job.startTime)} · ${job.hours} घंटे"
         binding.detailPlace.text = listOfNotNull(job.place.ifBlank { null }, job.district).joinToString(" · ")
         binding.detailDistance.text = if (isOwner) "" else DayJobFormat.distanceText(job.distanceKm)
         binding.detailCloses.text = if (job.isAccepting) DayJobFormat.closesInText(job.acceptClosesAt) else DayJobFormat.statusText(job.status)
@@ -136,7 +136,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
                 addView(TextView(context).apply {
-                    text = if (slot.left == 0) "${slot.needed} · full" else "${slot.filled}/${slot.needed} · ${slot.left} left"
+                    text = if (slot.left == 0) "${slot.needed} · भर गईं" else "${slot.filled}/${slot.needed} · ${slot.left} खाली"
                     setTextColor(ContextCompat.getColor(context, if (slot.left == 0) R.color.day_job_green else R.color.search_hint))
                     textSize = 14f
                 })
@@ -193,18 +193,18 @@ class DayJobDetailActivity : AppCompatActivity() {
     private fun renderWorker(job: DayJob) {
         val actions = binding.detailActions
         if (!job.isAccepting) {
-            actions.addView(note("This job is not taking workers now."))
+            actions.addView(note("इस काम के लिए अब मज़दूर नहीं लिए जा रहे।"))
         } else {
             job.slots.filter { it.left > 0 }.forEach { slot ->
                 if (slot.trade in myTrades) {
-                    actions.addView(button("Accept as ${slot.label}", 0) { confirmAccept(job, slot.trade, slot.label) })
+                    actions.addView(button("हाँ, ${slot.label} बनकर आऊँगा", 0) { confirmAccept(job, slot.trade, slot.label) })
                 } else {
-                    actions.addView(note("${slot.label}: add it to your work (Edit on Find Work) to take this seat."))
+                    actions.addView(note("${slot.label}: यह जगह लेने के लिए 'काम ढूँढें' में 'बदलें' से इसे अपने काम में जोड़ें।"))
                 }
             }
-            if (job.slots.none { it.left > 0 }) actions.addView(note("All seats are taken."))
+            if (job.slots.none { it.left > 0 }) actions.addView(note("सारी जगह भर गई हैं।"))
         }
-        actions.addView(button("Directions", 1) { DayJobUi.directions(this, job) })
+        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
     }
 
     private fun renderBooked(job: DayJob) {
@@ -213,33 +213,33 @@ class DayJobDetailActivity : AppCompatActivity() {
         val booking = job.myBooking!!
         when {
             booking.canAnswerPayment -> {
-                actions.addView(note("Did you get full payment for this job?", R.color.white))
-                actions.addView(button("Yes, I got full payment", 2) { act { repository.answerPaid(booking.id, true) } })
-                actions.addView(button("No, not paid fully", 1) { act { repository.answerPaid(booking.id, false) } })
+                actions.addView(note("क्या इस काम का पूरा पैसा मिला?", R.color.white))
+                actions.addView(button("हाँ, पूरा पैसा मिला", 2) { act { repository.answerPaid(booking.id, true) } })
+                actions.addView(button("नहीं, पूरा पैसा नहीं मिला", 1) { act { repository.answerPaid(booking.id, false) } })
             }
-            booking.paidAnswer != null -> actions.addView(note("Thanks for telling us about the payment.", R.color.day_job_green))
+            booking.paidAnswer != null -> actions.addView(note("पैसे के बारे में बताने के लिए धन्यवाद।", R.color.day_job_green))
             booking.confirmAsked && !booking.confirmed && job.isAccepting -> {
-                actions.addView(note("Are you coming for this job?", R.color.white))
-                actions.addView(button("Yes, I am coming", 2) { act { repository.confirm(booking.id, true) } })
-                actions.addView(button("No, give my seat to someone", 1) { act { repository.confirm(booking.id, false) } })
+                actions.addView(note("क्या आप इस काम पर आ रहे हैं?", R.color.white))
+                actions.addView(button("हाँ, मैं आ रहा हूँ", 2) { act { repository.confirm(booking.id, true) } })
+                actions.addView(button("नहीं, मेरी जगह किसी और को दें", 1) { act { repository.confirm(booking.id, false) } })
             }
             else -> actions.addView(note(
-                (if (booking.confirmed) "✓ You confirmed. " else "") +
-                    "You're going as $trade. Reach on time and call the company if anything changes.",
+                (if (booking.confirmed) "✓ आपने पक्का किया। " else "") +
+                    "आप $trade बनकर जा रहे हैं। समय पर पहुँचें, कुछ बदले तो कंपनी को Call करें।",
                 R.color.day_job_green,
             ))
         }
-        actions.addView(button("Call company", 2) { DayJobUi.call(this, job.company.phone) })
-        actions.addView(button("Directions", 1) { DayJobUi.directions(this, job) })
+        actions.addView(button("कंपनी को Call करें", 2) { DayJobUi.call(this, job.company.phone) })
+        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
         // While "Are you coming?" is shown, its No already gives the seat back.
         val asking = booking.confirmAsked && !booking.confirmed
         if (job.isAccepting && !asking) {
-            actions.addView(button("Cancel my seat", 1) {
+            actions.addView(button("मेरी जगह छोड़ें", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-                    .setTitle("Cancel your seat?")
-                    .setMessage("The company will be told and someone else can take it.")
-                    .setPositiveButton("Yes, cancel") { _, _ -> act { repository.cancelBooking(job.myBooking!!.id) } }
-                    .setNegativeButton("No", null)
+                    .setTitle("अपनी जगह छोड़ें?")
+                    .setMessage("कंपनी को ख़बर जाएगी और कोई और यह जगह ले सकेगा।")
+                    .setPositiveButton("हाँ, छोड़ दें") { _, _ -> act { repository.cancelBooking(job.myBooking!!.id) } }
+                    .setNegativeButton("नहीं", null)
                     .show()
             })
         }
@@ -248,18 +248,18 @@ class DayJobDetailActivity : AppCompatActivity() {
     private fun renderOwner(job: DayJob) {
         val actions = binding.detailActions
         if (job.status == "in_review") {
-            actions.addView(note("This job goes live once your company is verified."))
+            actions.addView(note("कंपनी की जाँच पूरी होते ही यह काम सबको दिखेगा।"))
         } else if (job.notifiedCount > 0) {
-            actions.addView(note("Sent to ${job.notifiedCount} ${if (job.notifiedCount == 1) "worker" else "workers"} within ${job.radiusKm} km."))
+            actions.addView(note("${job.radiusKm} km के ${job.notifiedCount} ${if (job.notifiedCount == 1) "मज़दूर" else "मज़दूरों"} को ख़बर भेजी गई।"))
         }
-        actions.addView(button("Post again", 0) { askRepost(job) })
+        actions.addView(button("यही काम दोबारा डालें", 0) { askRepost(job) })
         if (job.status in listOf("in_review", "open", "full", "closed")) {
-            actions.addView(button("Cancel job", 1) {
+            actions.addView(button("काम रद्द करें", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-                    .setTitle("Cancel this job?")
-                    .setMessage("Everyone who accepted will get a notification.")
-                    .setPositiveButton("Cancel job") { _, _ -> act { repository.cancelJob(job.id) } }
-                    .setNegativeButton("Keep", null)
+                    .setTitle("यह काम रद्द करें?")
+                    .setMessage("जिसने भी हाँ कहा है, सबको ख़बर जाएगी।")
+                    .setPositiveButton("काम रद्द करें") { _, _ -> act { repository.cancelJob(job.id) } }
+                    .setNegativeButton("नहीं", null)
                     .show()
             })
         }
@@ -268,8 +268,8 @@ class DayJobDetailActivity : AppCompatActivity() {
         list.removeAllViews()
         val coming = job.bookings.orEmpty().filter { it.status == "accepted" || it.status == "no_show" }
         binding.detailWorkersTitle.visibility = View.VISIBLE
-        binding.detailWorkersTitle.text = "Who is coming (${job.filledTotal}/${job.neededTotal})"
-        if (coming.isEmpty()) list.addView(note("No one yet. You will get a notification when someone accepts."))
+        binding.detailWorkersTitle.text = "कौन आ रहा है (${job.filledTotal}/${job.neededTotal})"
+        if (coming.isEmpty()) list.addView(note("अभी कोई नहीं। कोई हाँ करेगा तो आपको ख़बर आएगी।"))
         coming.forEach { b ->
             list.addView(LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -280,11 +280,11 @@ class DayJobDetailActivity : AppCompatActivity() {
                     .apply { bottomMargin = DayJobUi.dp(context, 8) }
                 addView(TextView(context).apply {
                     val state = when {
-                        b.status == "no_show" -> " · Did not come"
-                        b.confirmed -> " · ✓ Confirmed"
+                        b.status == "no_show" -> " · नहीं आया"
+                        b.confirmed -> " · ✓ पक्का आएगा"
                         else -> ""
                     }
-                    text = "${b.name ?: "Worker"}\n${b.tradeLabel.orEmpty()}$state"
+                    text = "${b.name ?: "मज़दूर"}\n${b.tradeLabel.orEmpty()}$state"
                     setTextColor(ContextCompat.getColor(context, R.color.white))
                     textSize = 14f
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -292,21 +292,21 @@ class DayJobDetailActivity : AppCompatActivity() {
                 if (b.status == "accepted" && b.workerId > 0) addView(TextView(context).apply {
                     text = if (b.favourite) "★" else "☆"
                     textSize = 22f
-                    contentDescription = if (b.favourite) "Remove from favourites" else "Add to favourites"
+                    contentDescription = if (b.favourite) "पसंदीदा से हटाएँ" else "पसंदीदा में जोड़ें"
                     setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
                     setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
                     setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
                 })
                 if (b.canMarkNoShow) addView(TextView(context).apply {
-                    text = "Didn't come"
+                    text = "नहीं आया"
                     setTextColor(ContextCompat.getColor(context, R.color.new_tag_red))
                     setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
                     setOnClickListener {
                         AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
-                            .setTitle("${b.name ?: "Worker"} did not come?")
-                            .setMessage("Only mark this if they did not come at all. Workers who miss jobs get fewer alerts.")
-                            .setPositiveButton("Yes, did not come") { _, _ -> act { repository.markNoShow(b.id) } }
-                            .setNegativeButton("Cancel", null)
+                            .setTitle("${b.name ?: "मज़दूर"} नहीं आया?")
+                            .setMessage("तभी दबाएँ जब वह बिल्कुल नहीं आया। काम छोड़ने वालों को कम काम की ख़बर जाती है।")
+                            .setPositiveButton("हाँ, नहीं आया") { _, _ -> act { repository.markNoShow(b.id) } }
+                            .setNegativeButton("रहने दें", null)
                             .show()
                     }
                 })
@@ -331,10 +331,10 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private fun confirmAccept(job: DayJob, trade: String, label: String) {
         AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-            .setTitle("Accept this job?")
-            .setMessage("$label · ${DayJobFormat.wageText(job.wagePerDay)}\n${DayJobFormat.whenText(job.workDate, job.startTime)}\n${job.place}\n\nOnly accept if you will surely come.")
-            .setPositiveButton("Yes, I will come") { _, _ -> act { repository.accept(job.id, trade) } }
-            .setNegativeButton("No", null)
+            .setTitle("यह काम लेना है?")
+            .setMessage("$label · ${DayJobFormat.wageText(job.wagePerDay)}\n${DayJobFormat.whenText(job.workDate, job.startTime)}\n${job.place}\n\nपक्का आना हो तभी हाँ करें।")
+            .setPositiveButton("हाँ, मैं आऊँगा") { _, _ -> act { repository.accept(job.id, trade) } }
+            .setNegativeButton("नहीं", null)
             .show()
     }
 
@@ -344,7 +344,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             val date = LocalDate.of(y, m + 1, d).toString()
             act { repository.repost(job.id, date, null, null) }
         }, tomorrow.year, tomorrow.monthValue - 1, tomorrow.dayOfMonth).apply {
-            setTitle("Post again for which date?")
+            setTitle("किस तारीख़ के लिए दोबारा डालें?")
             datePicker.minDate = System.currentTimeMillis() - 1000
             datePicker.maxDate = System.currentTimeMillis() + 14L * 24 * 3600 * 1000
         }.show()

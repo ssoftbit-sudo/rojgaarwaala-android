@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:text="My Jobs"
+            android:text="मेरे काम"
             android:textColor="@color/white"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -48,7 +48,7 @@
             android:layout_marginTop="80dp"
             android:gravity="center"
             android:padding="24dp"
-            android:text="Jobs you accept show here."
+            android:text="जिन कामों पर आपने हाँ कहा, वे यहाँ दिखेंगे।"
             android:textColor="@color/search_hint"
             android:visibility="gone" />
 

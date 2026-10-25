@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:text="Add Job"
+            android:text="काम डालें"
             android:textColor="@color/white"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -43,15 +43,15 @@
             android:paddingHorizontal="20dp"
             android:paddingBottom="20dp">
 
-            <TextView style="@style/ResumeLabel" android:layout_marginTop="4dp" android:text="What is the work? *" />
+            <TextView style="@style/ResumeLabel" android:layout_marginTop="4dp" android:text="क्या काम है? *" />
             <EditText
                 android:id="@+id/postTitle"
                 style="@style/ResumeField"
-                android:hint="Example: Slab casting, Loading trucks"
+                android:hint="जैसे: छत ढलाई, ट्रक से माल उतारना"
                 android:inputType="textCapSentences"
                 android:textColorHint="@color/search_hint" />
 
-            <TextView style="@style/ResumeLabel" android:text="Workers needed *" />
+            <TextView style="@style/ResumeLabel" android:text="कितने मज़दूर चाहिए *" />
             <LinearLayout
                 android:id="@+id/postSlots"
                 android:layout_width="match_parent"
@@ -60,7 +60,7 @@
                 android:orientation="vertical"
                 android:padding="6dp" />
 
-            <TextView style="@style/ResumeLabel" android:text="Wage per day (₹) *" />
+            <TextView style="@style/ResumeLabel" android:text="एक दिन की मज़दूरी (₹) *" />
             <EditText
                 android:id="@+id/postWage"
                 style="@style/ResumeField"
@@ -78,7 +78,7 @@
                 android:textSize="13sp"
                 android:visibility="gone" />
 
-            <TextView style="@style/ResumeLabel" android:text="Date *" />
+            <TextView style="@style/ResumeLabel" android:text="तारीख़ *" />
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/postDateChips"
                 android:layout_width="match_parent"
@@ -98,11 +98,11 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView style="@style/ResumeLabel" android:text="Start time *" />
+                    <TextView style="@style/ResumeLabel" android:text="काम शुरू होने का समय *" />
                     <TextView
                         android:id="@+id/postTime"
                         style="@style/ResumeField"
-                        android:hint="Choose"
+                        android:hint="चुनें"
                         android:textColorHint="@color/search_hint" />
                 </LinearLayout>
 
@@ -113,7 +113,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView style="@style/ResumeLabel" android:text="Hours" />
+                    <TextView style="@style/ResumeLabel" android:text="कितने घंटे" />
                     <Spinner
                         android:id="@+id/postHours"
                         style="@style/ResumeField"
@@ -121,30 +121,30 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView style="@style/ResumeLabel" android:text="Work site *" />
+            <TextView style="@style/ResumeLabel" android:text="काम की जगह *" />
             <TextView
                 android:id="@+id/postSite"
                 style="@style/ResumeField"
                 android:drawableStart="@drawable/ic_free_job_map"
                 android:drawablePadding="10dp"
                 android:drawableTint="@color/brand_color_yellow"
-                android:hint="Pin the site on map"
+                android:hint="नक्शे पर जगह लगाएँ"
                 android:minHeight="56dp"
                 android:textColorHint="@color/search_hint" />
 
-            <TextView style="@style/ResumeLabel" android:text="Site photos (up to 4)" />
+            <TextView style="@style/ResumeLabel" android:text="साइट की फ़ोटो (4 तक)" />
             <LinearLayout
                 android:id="@+id/postPhotos"
                 android:layout_width="match_parent"
                 android:layout_height="72dp"
                 android:orientation="horizontal" />
 
-            <TextView style="@style/ResumeLabel" android:text="More details" />
+            <TextView style="@style/ResumeLabel" android:text="और जानकारी" />
             <EditText
                 android:id="@+id/postDescription"
                 style="@style/ResumeField"
                 android:gravity="top"
-                android:hint="Food, tools, what to bring…"
+                android:hint="खाना, औज़ार, क्या लेकर आना है…"
                 android:inputType="textMultiLine|textCapSentences"
                 android:minHeight="90dp"
                 android:paddingTop="12dp"
@@ -159,7 +159,7 @@
         android:layout_margin="16dp"
         android:background="@drawable/bg_brand_button"
         android:gravity="center"
-        android:text="Preview"
+        android:text="देखें और डालें"
         android:textColor="@color/on_brand"
         android:textSize="16sp"
         android:textStyle="bold" />

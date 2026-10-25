@@ -109,7 +109,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobSpeak.isChecked = com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.isOn(this)
         binding.dayJobSpeak.setOnCheckedChangeListener { _, on ->
             com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.setOn(this, on)
-            if (on) com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this, "Naye kaam ki khabar ab bolkar sunayi jayegi.")
+            if (on) com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this, "नए काम की ख़बर अब बोलकर सुनाई जाएगी।")
         }
         binding.dayJobSetLocation.setOnClickListener { pickLocation.launch(Intent(this, MapPinActivity::class.java)) }
         binding.dayJobRegisterCompany.setOnClickListener { openCompanyForm() }
@@ -174,14 +174,14 @@ class DayJobHomeActivity : AppCompatActivity() {
             showWorkerSetup(!registered)
             binding.dayJobWorkerStatus.visibility = if (registered) View.VISIBLE else View.GONE
             binding.dayJobAvailable.isChecked = meta.worker.isAvailable
-            binding.dayJobMyTrades.text = "Your work: " + meta.worker.trades.joinToString(", ") { key ->
+            binding.dayJobMyTrades.text = "आपका काम: " + meta.worker.trades.joinToString(", ") { key ->
                 meta.trades.firstOrNull { it.key == key }?.label ?: key
             }
-            binding.dayJobAlertHours.text = "Alerts: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
+            binding.dayJobAlertHours.text = "ख़बर कब: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
             val heldUntil = meta.worker.heldBackUntil
             binding.dayJobHeldBack.visibility = if (registered && heldUntil != null) View.VISIBLE else View.GONE
-            binding.dayJobHeldBack.text = "You missed jobs you accepted, so new job alerts are paused till " +
-                DayJobFormat.dayText(heldUntil) + ". You can still open jobs here."
+            binding.dayJobHeldBack.text = "आपने हाँ करके काम छोड़े, इसलिए नए काम की ख़बर इस दिन तक बंद है: " +
+                DayJobFormat.dayText(heldUntil) + "। काम यहाँ फिर भी देख सकते हैं।"
             loadNearby()
         } else {
             val company = meta.company
@@ -191,10 +191,10 @@ class DayJobHomeActivity : AppCompatActivity() {
                 binding.dayJobCompanyName.text = company.name
                 val status = company.status.orEmpty()
                 binding.dayJobCompanyStatus.text = when (status) {
-                    "active" -> "Verified"
-                    "pending" -> "Verify pending"
-                    "rejected" -> "Rejected"
-                    "blocked" -> "Blocked"
+                    "active" -> "जाँच पूरी"
+                    "pending" -> "जाँच बाकी"
+                    "rejected" -> "मंज़ूर नहीं"
+                    "blocked" -> "रोक दी गई"
                     else -> status
                 }
                 binding.dayJobCompanyStatus.setTextColor(ContextCompat.getColor(this, when (status) {
@@ -203,9 +203,9 @@ class DayJobHomeActivity : AppCompatActivity() {
                     else -> R.color.new_tag_red
                 }))
                 val note = when (status) {
-                    "pending" -> "We are checking your company. You can post now; jobs go live once verified."
-                    "rejected" -> company.adminNote ?: "Your company was not approved. Edit the details and send again."
-                    "blocked" -> "This company is blocked. Please contact support."
+                    "pending" -> "हम आपकी कंपनी की जाँच कर रहे हैं। काम अभी डाल सकते हैं, जाँच के बाद सबको दिखेगा।"
+                    "rejected" -> company.adminNote ?: "आपकी कंपनी मंज़ूर नहीं हुई। जानकारी सुधारकर फिर भेजें।"
+                    "blocked" -> "यह कंपनी रोक दी गई है। मदद के लिए हमसे बात करें।"
                     else -> null
                 }
                 binding.dayJobCompanyNote.text = note
@@ -227,7 +227,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         meta.trades.forEach { trade ->
             group.addView(DayJobUi.chip(this, trade.label, trade.key in meta.worker.trades).apply { tag = trade.key })
         }
-        binding.dayJobWorkerSave.text = if (meta.worker.registered) "Save" else "Start getting jobs"
+        binding.dayJobWorkerSave.text = if (meta.worker.registered) "सेव करें" else "काम की ख़बर पाना शुरू करें"
     }
 
     private fun saveWorker(available: Boolean) {
@@ -241,13 +241,13 @@ class DayJobHomeActivity : AppCompatActivity() {
             meta.worker.trades
         }
         if (chosen.isEmpty()) {
-            DayJobUi.toast(this, "Choose at least one kind of work")
+            DayJobUi.toast(this, "कम से कम एक काम चुनें")
             return
         }
         lifecycleScope.launch {
             when (val result = repository.saveWorker(chosen, available)) {
                 is DayJobOutcome.Ok -> {
-                    DayJobUi.toast(this@DayJobHomeActivity, if (available) "You will get job alerts near you" else "Job alerts paused")
+                    DayJobUi.toast(this@DayJobHomeActivity, if (available) "पास के काम की ख़बर आपको मिलेगी" else "काम की ख़बर बंद")
                     refresh()
                 }
                 is DayJobOutcome.Fail -> {
@@ -298,7 +298,7 @@ class DayJobHomeActivity : AppCompatActivity() {
                     val jobs = from.jobs
                     workerAdapter.submit(jobs)
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
-                    binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● ${jobs.size} ${if (jobs.size == 1) "job" else "jobs"} within 10 km"
+                    binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● 10 km में ${jobs.size} काम"
                     showOnMap(jobs)
                 }
                 is DayJobOutcome.Fail -> {
@@ -313,16 +313,16 @@ class DayJobHomeActivity : AppCompatActivity() {
 
     private fun chooseAlertHours() {
         val meta = meta ?: return
-        val options = arrayOf("Any time", "6 AM – 8 PM", "5 AM – 11 AM (morning only)", "Choose times…")
+        val options = arrayOf("कभी भी", "सुबह 6 – रात 8", "सुबह 5 – 11 (सिर्फ़ सुबह)", "अपना समय चुनें…")
         AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-            .setTitle("When should we alert you?")
+            .setTitle("काम की ख़बर कब भेजें?")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> saveAlertHours(null, null)
                     1 -> saveAlertHours("06:00", "20:00")
                     2 -> saveAlertHours("05:00", "11:00")
-                    else -> pickTime("From", meta.worker.alertFrom ?: "06:00") { from ->
-                        pickTime("Till", meta.worker.alertTo ?: "20:00") { to -> saveAlertHours(from, to) }
+                    else -> pickTime("कब से", meta.worker.alertFrom ?: "06:00") { from ->
+                        pickTime("कब तक", meta.worker.alertTo ?: "20:00") { to -> saveAlertHours(from, to) }
                     }
                 }
             }
@@ -341,7 +341,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // Empty strings clear the hours on the server ("any time").
             when (val result = repository.saveWorker(meta.worker.trades, meta.worker.isAvailable, from ?: "", to ?: "")) {
-                is DayJobOutcome.Ok -> { DayJobUi.toast(this@DayJobHomeActivity, "Alert time saved"); refresh() }
+                is DayJobOutcome.Ok -> { DayJobUi.toast(this@DayJobHomeActivity, "ख़बर का समय सेव हो गया"); refresh() }
                 is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobHomeActivity, result.message)
             }
         }
@@ -353,7 +353,7 @@ class DayJobHomeActivity : AppCompatActivity() {
                 is DayJobOutcome.Ok -> {
                     companyAdapter.submit(result.data)
                     binding.dayJobCompanyEmpty.visibility = if (result.data.isEmpty()) View.VISIBLE else View.GONE
-                    binding.dayJobCompanyEmpty.text = if (historyTab) "Finished and cancelled jobs show here." else "No active jobs. Tap + Add Job to find workers."
+                    binding.dayJobCompanyEmpty.text = if (historyTab) "पूरे और रद्द हुए काम यहाँ दिखेंगे।" else "अभी कोई काम नहीं। मज़दूर चाहिए तो '+ काम डालें' दबाएँ।"
                 }
                 is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobHomeActivity, result.message)
             }
@@ -382,7 +382,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         if (me != null) {
             googleMap.addCircle(CircleOptions().center(me).radius(10_000.0).strokeWidth(2f)
                 .strokeColor(0x66FFBB02).fillColor(0x14FFBB02))
-            googleMap.addMarker(MarkerOptions().position(me).title("You")
+            googleMap.addMarker(MarkerOptions().position(me).title("आप")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)))
         }
         val bounds = LatLngBounds.Builder()
@@ -392,7 +392,7 @@ class DayJobHomeActivity : AppCompatActivity() {
             googleMap.addMarker(
                 MarkerOptions().position(point)
                     .title("${DayJobFormat.wageText(job.wagePerDay)} · ${job.title}")
-                    .snippet(DayJobFormat.whenText(job.workDate, job.startTime) + " · tap to open")
+                    .snippet(DayJobFormat.whenText(job.workDate, job.startTime) + " · खोलने के लिए छुएँ")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)),
             )?.tag = job
             bounds.include(point)

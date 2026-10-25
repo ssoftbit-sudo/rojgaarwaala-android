@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="1 Day Job"
+            android:text="1 दिन का काम"
             android:textColor="@color/white"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -47,7 +47,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Find Work"
+            android:text="काम ढूँढें"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -57,7 +57,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Hire Workers"
+            android:text="मज़दूर चाहिए"
             android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -113,13 +113,13 @@
 
                         <TextView
                             style="@style/ResumeStepTitle"
-                            android:text="What work can you do?" />
+                            android:text="आप कौन सा काम करते हैं?" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="We will alert you when a job like this comes up near you."
+                            android:text="पास में ऐसा काम आते ही हम आपको ख़बर देंगे।"
                             android:textColor="@color/search_hint"
                             android:textSize="13sp" />
 
@@ -136,7 +136,7 @@
                             android:layout_marginTop="12dp"
                             android:background="@drawable/bg_brand_button"
                             android:gravity="center"
-                            android:text="Start getting jobs"
+                            android:text="काम की ख़बर पाना शुरू करें"
                             android:textColor="@color/on_brand"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -164,7 +164,7 @@
                                 android:id="@+id/dayJobAvailable"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Available for work"
+                                android:text="काम के लिए तैयार"
                                 android:textColor="@color/white"
                                 android:textStyle="bold"
                                 app:thumbTint="@color/brand_color_yellow" />
@@ -181,7 +181,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:minHeight="36dp"
-                                android:text="Read new jobs aloud  "
+                                android:text="नया काम बोलकर सुनाएँ  "
                                 android:textColor="@color/search_hint"
                                 android:textSize="12sp"
                                 app:thumbTint="@color/brand_color_yellow" />
@@ -202,7 +202,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:padding="8dp"
-                            android:text="Edit"
+                            android:text="बदलें"
                             android:textColor="@color/brand_color_yellow"
                             android:textStyle="bold" />
 
@@ -210,7 +210,7 @@
                             android:id="@+id/dayJobMyJobs"
                             style="@style/ResumeOutlineButton"
                             android:minHeight="38dp"
-                            android:text="My Jobs" />
+                            android:text="मेरे काम" />
                     </LinearLayout>
 
                     <TextView
@@ -231,7 +231,7 @@
                         android:layout_marginTop="10dp"
                         android:background="@drawable/bg_free_job_map_button"
                         android:gravity="center"
-                        android:text="Set my location"
+                        android:text="मेरी जगह चुनें"
                         android:textColor="@color/brand_color_yellow"
                         android:textStyle="bold"
                         android:visibility="gone" />
@@ -239,7 +239,7 @@
                     <TextView
                         style="@style/ResumeStepTitle"
                         android:layout_marginTop="16dp"
-                        android:text="Jobs near you" />
+                        android:text="आपके पास के काम" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/dayJobWorkerList"
@@ -255,7 +255,7 @@
                         android:layout_marginTop="8dp"
                         android:gravity="center"
                         android:padding="24dp"
-                        android:text="No jobs near you right now. Keep Available on and we will alert you."
+                        android:text="अभी पास में कोई काम नहीं। 'काम के लिए तैयार' चालू रखें, काम आते ही ख़बर देंगे।"
                         android:textColor="@color/search_hint"
                         android:visibility="gone" />
                 </LinearLayout>
@@ -280,13 +280,13 @@
 
                         <TextView
                             style="@style/ResumeStepTitle"
-                            android:text="Need workers for a day?" />
+                            android:text="एक दिन के लिए मज़दूर चाहिए?" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Register your company once. Then post a job and workers near your site get it on their phone."
+                            android:text="एक बार कंपनी जोड़ें। फिर काम डालें, आपकी साइट के पास के मज़दूरों को फ़ोन पर ख़बर जाएगी।"
                             android:textColor="@color/search_hint"
                             android:textSize="14sp" />
 
@@ -297,7 +297,7 @@
                             android:layout_marginTop="14dp"
                             android:background="@drawable/bg_brand_button"
                             android:gravity="center"
-                            android:text="Register company"
+                            android:text="कंपनी जोड़ें"
                             android:textColor="@color/on_brand"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -340,7 +340,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:padding="8dp"
-                                android:text="Edit"
+                                android:text="बदलें"
                                 android:textColor="@color/brand_color_yellow"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -361,7 +361,7 @@
                             android:layout_marginTop="14dp"
                             android:background="@drawable/bg_brand_button"
                             android:gravity="center"
-                            android:text="+ Add Job"
+                            android:text="+ काम डालें"
                             android:textColor="@color/on_brand"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -380,7 +380,7 @@
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
                                 android:gravity="center"
-                                android:text="Active"
+                                android:text="चालू"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -389,7 +389,7 @@
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
                                 android:gravity="center"
-                                android:text="History"
+                                android:text="पुराने"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
