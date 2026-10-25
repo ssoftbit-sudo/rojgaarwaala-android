@@ -1,6 +1,9 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
@@ -10,13 +13,20 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
+import com.google.android.gms.auth.api.phone.SmsRetriever
+import com.google.android.gms.common.api.CommonStatusCodes
+import com.google.android.gms.common.api.Status
 import androidx.lifecycle.ViewModelProvider
 import com.srijeesolution.rojgaarwaala.R
 import com.srijeesolution.rojgaarwaala.databinding.ActivityOtpBinding
 import com.srijeesolution.rojgaarwaala.network.handler.ApiError
 import com.srijeesolution.rojgaarwaala.network.handler.ApiResult
 import com.srijeesolution.rojgaarwaala.presentation.viewmodel.HomePageViewModel
+import com.srijeesolution.rojgaarwaala.utils.OtpSms
 import com.srijeesolution.rojgaarwaala.utils.ProfileGate
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefs
 import com.srijeesolution.rojgaarwaala.utils.sp.SharedPrefsConstant
@@ -33,6 +43,35 @@ class OtpActivity : AppCompatActivity() {
 
     @Inject
     lateinit var sharedPrefs: SharedPrefs
+
+    /**
+     * SMS User Consent: when the OTP SMS lands, Android asks the seeker once whether the
+     * app may read that one message. No SMS permission, no app hash in the SMS, and the
+     * sender name (e.g. CP-SBSITS-S) does not matter.
+     */
+    private val smsConsent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val code = OtpSms.extract(result.data?.getStringExtra(SmsRetriever.EXTRA_SMS_MESSAGE))
+            ?: return@registerForActivityResult
+        binding.otpEditText.setText(code)
+        binding.otpEditText.setSelection(code.length)
+        verifyOtp()
+    }
+
+    private val smsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != SmsRetriever.SMS_RETRIEVED_ACTION) return
+            val extras = intent.extras ?: return
+            val status = IntentCompat.getParcelableExtra(intent, SmsRetriever.EXTRA_STATUS, Status::class.java)
+            if (status?.statusCode != CommonStatusCodes.SUCCESS) return
+            val consent = IntentCompat.getParcelableExtra(intent, SmsRetriever.EXTRA_CONSENT_INTENT, Intent::class.java)
+                ?: return
+            if (extras.isEmpty) return
+            runCatching { smsConsent.launch(consent) }
+        }
+    }
+
+    private var smsReceiverRegistered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,10 +99,30 @@ class OtpActivity : AppCompatActivity() {
         binding.submitOtpButton.setOnClickListener { verifyOtp() }
         binding.resendOtpButton.setOnClickListener { resendOtp() }
         startResendCooldown(60)
+        listenForOtpSms()
+    }
+
+    /** Listens for the next SMS with a code in it, for up to five minutes. */
+    private fun listenForOtpSms() {
+        runCatching { SmsRetriever.getClient(this).startSmsUserConsent(null) }
+        if (!smsReceiverRegistered) {
+            runCatching {
+                ContextCompat.registerReceiver(
+                    this,
+                    smsReceiver,
+                    IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION),
+                    SmsRetriever.SEND_PERMISSION,
+                    null,
+                    ContextCompat.RECEIVER_EXPORTED,
+                )
+                smsReceiverRegistered = true
+            }
+        }
     }
 
     override fun onDestroy() {
         resendTimer?.cancel()
+        if (smsReceiverRegistered) runCatching { unregisterReceiver(smsReceiver) }
         super.onDestroy()
     }
 
@@ -143,6 +202,7 @@ class OtpActivity : AppCompatActivity() {
         binding.resendOtpButton.text = getString(R.string.login_sending)
         val requestBody = hashMapOf("mobile" to phone)
         homePageViewModel.sendOtp(requestBody)
+        listenForOtpSms()
     }
 
     private fun startResendCooldown(seconds: Long) {

@@ -164,6 +164,8 @@ dependencies {
 
     // Fused location provider for employee attendance punch in/out
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    // SMS User Consent: fills the login OTP after one tap, whatever the sender name.
+    implementation("com.google.android.gms:play-services-auth-api-phone:18.1.0")
     // Map + geofence circle on the attendance screen
     implementation("com.google.android.gms:play-services-maps:19.0.0")
 
