@@ -106,6 +106,11 @@ class DayJobHomeActivity : AppCompatActivity() {
             startActivity(Intent(this, DayJobMyJobsActivity::class.java))
         }
         binding.dayJobAlertHours.setOnClickListener { chooseAlertHours() }
+        binding.dayJobSpeak.isChecked = com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.isOn(this)
+        binding.dayJobSpeak.setOnCheckedChangeListener { _, on ->
+            com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.setOn(this, on)
+            if (on) com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this, "Naye kaam ki khabar ab bolkar sunayi jayegi.")
+        }
         binding.dayJobSetLocation.setOnClickListener { pickLocation.launch(Intent(this, MapPinActivity::class.java)) }
         binding.dayJobRegisterCompany.setOnClickListener { openCompanyForm() }
         binding.dayJobCompanyEdit.setOnClickListener { openCompanyForm() }

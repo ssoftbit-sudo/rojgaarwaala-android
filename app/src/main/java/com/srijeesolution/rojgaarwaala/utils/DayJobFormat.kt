@@ -37,6 +37,13 @@ object DayJobFormat {
     fun dayText(iso: String?): String =
         iso?.let { runCatching { OffsetDateTime.parse(it).format(dayFormat) }.getOrNull() ?: it }.orEmpty()
 
+    /** "Helper usually gets ₹600–₹650 a day in Raipur" (or one figure when the range is flat). */
+    fun wageHintText(label: String, low: Int, high: Int, district: String?): String {
+        val range = if (low == high) "₹$low" else "₹$low–₹$high"
+        val where = district?.let { " in $it" }.orEmpty()
+        return "$label usually gets $range a day$where"
+    }
+
     fun wageText(wage: Int): String = "₹$wage/day"
 
     fun distanceText(km: Double?): String = when {

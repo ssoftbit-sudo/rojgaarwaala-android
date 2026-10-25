@@ -69,6 +69,15 @@
                 android:maxLength="4"
                 android:textColorHint="@color/search_hint" />
 
+            <TextView
+                android:id="@+id/postWageHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/day_job_green"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <TextView style="@style/ResumeLabel" android:text="Date *" />
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/postDateChips"

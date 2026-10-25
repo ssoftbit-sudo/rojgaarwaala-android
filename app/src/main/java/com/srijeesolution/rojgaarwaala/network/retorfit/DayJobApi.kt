@@ -66,6 +66,15 @@ interface DayJobApi {
     @POST("day-jobs/{id}/repost")
     suspend fun repost(@Path("id") id: Int, @Body body: DayJobRepostRequest): Response<DayJobEnvelope<DayJobData>>
 
+    @GET("day-jobs/wage-hint")
+    suspend fun wageHint(
+        @Query("trade") trade: String,
+        @Query("district") district: String?,
+    ): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWageHintData>>
+
+    @POST("day-jobs/favourites/{workerId}")
+    suspend fun toggleFavourite(@Path("workerId") workerId: Int): Response<DayJobEnvelope<Any>>
+
     @POST("day-jobs/bookings/{id}/confirm")
     suspend fun confirm(@Path("id") id: Int, @Body body: DayJobConfirmRequest): Response<DayJobEnvelope<Any>>
 

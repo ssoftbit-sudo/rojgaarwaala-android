@@ -289,6 +289,14 @@ class DayJobDetailActivity : AppCompatActivity() {
                     textSize = 14f
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
+                if (b.status == "accepted" && b.workerId > 0) addView(TextView(context).apply {
+                    text = if (b.favourite) "★" else "☆"
+                    textSize = 22f
+                    contentDescription = if (b.favourite) "Remove from favourites" else "Add to favourites"
+                    setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
+                    setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
+                    setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
+                })
                 if (b.canMarkNoShow) addView(TextView(context).apply {
                     text = "Didn't come"
                     setTextColor(ContextCompat.getColor(context, R.color.new_tag_red))

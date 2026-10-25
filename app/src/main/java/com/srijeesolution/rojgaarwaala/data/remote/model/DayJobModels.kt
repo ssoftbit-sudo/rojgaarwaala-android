@@ -56,6 +56,8 @@ data class DayJobSlot(
 
 data class DayJobBooking(
     @SerializedName("id") val id: Int = 0,
+    @SerializedName("worker_id") val workerId: Int = 0,
+    @SerializedName("favourite") val favourite: Boolean = false,
     @SerializedName("status") val status: String = "",
     @SerializedName("trade") val trade: String? = null,
     @SerializedName("trade_label") val tradeLabel: String? = null,
@@ -145,3 +147,14 @@ data class DayJobRepostRequest(
     @SerializedName("start_time") val startTime: String?,
     @SerializedName("wage_per_day") val wagePerDay: Int?,
 )
+
+data class DayJobWageHint(
+    @SerializedName("label") val label: String = "",
+    @SerializedName("district") val district: String? = null,
+    @SerializedName("low") val low: Int = 0,
+    @SerializedName("typical") val typical: Int = 0,
+    @SerializedName("high") val high: Int = 0,
+    @SerializedName("jobs") val jobs: Int = 0,
+)
+
+data class DayJobWageHintData(@SerializedName("hint") val hint: DayJobWageHint? = null)

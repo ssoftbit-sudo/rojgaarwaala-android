@@ -71,6 +71,11 @@ class DayJobRepository @Inject constructor() {
     suspend fun answerPaid(bookingId: Int, paid: Boolean): DayJobOutcome<Any?> =
         call { api.paid(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobPaidRequest(paid)) }
 
+    suspend fun wageHint(trade: String, district: String?): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWageHint?> =
+        call { api.wageHint(trade, district) }.mapData { it.hint }
+
+    suspend fun toggleFavourite(workerId: Int): DayJobOutcome<Any?> = call { api.toggleFavourite(workerId) }
+
     suspend fun markNoShow(bookingId: Int): DayJobOutcome<Any?> = call { api.noShow(bookingId) }
 
     suspend fun nearby(latitude: Double?, longitude: Double?): DayJobOutcome<DayJobListData> =

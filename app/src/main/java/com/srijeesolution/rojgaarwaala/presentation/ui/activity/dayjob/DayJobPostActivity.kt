@@ -49,6 +49,8 @@ class DayJobPostActivity : AppCompatActivity() {
     private var lng: Double? = null
     private var siteName = ""
     private val photos = mutableListOf<File>()
+    private var district: String? = null
+    private var hintFor: String? = null
 
     private val pickSite = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val data = result.data ?: return@registerForActivityResult
@@ -92,6 +94,7 @@ class DayJobPostActivity : AppCompatActivity() {
             when (val result = repository.meta()) {
                 is DayJobOutcome.Ok -> {
                     trades = result.data.trades
+                    district = result.data.company?.district
                     result.data.company?.let { c ->
                         if (lat == null && c.latitude != null && c.longitude != null) {
                             lat = c.latitude; lng = c.longitude; siteName = c.address.orEmpty()
@@ -175,6 +178,7 @@ class DayJobPostActivity : AppCompatActivity() {
                 setOnClickListener {
                     counts[trade.key] = ((counts[trade.key] ?: 0) + delta).coerceIn(0, 200)
                     show()
+                    loadWageHint()
                 }
             }
             row.addView(label)
@@ -183,6 +187,23 @@ class DayJobPostActivity : AppCompatActivity() {
             row.addView(stepper("+", 1))
             show()
             box.addView(row)
+        }
+    }
+
+    /** "Helper usually gets ₹600–₹650 a day in Raipur" for the first trade asked for. */
+    private fun loadWageHint() {
+        val trade = counts.entries.firstOrNull { it.value > 0 }?.key
+        if (trade == hintFor) return
+        hintFor = trade
+        if (trade == null) {
+            binding.postWageHint.visibility = android.view.View.GONE
+            return
+        }
+        lifecycleScope.launch {
+            val hint = (repository.wageHint(trade, district) as? DayJobOutcome.Ok)?.data
+            if (hintFor != trade) return@launch
+            binding.postWageHint.visibility = if (hint == null) android.view.View.GONE else android.view.View.VISIBLE
+            binding.postWageHint.text = hint?.let { DayJobFormat.wageHintText(it.label, it.low, it.high, it.district) }
         }
     }
 

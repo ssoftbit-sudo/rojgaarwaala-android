@@ -92,6 +92,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Final Notification Type: $type, ID: $id, Application ID: $applicationId")
         Log.d(TAG, "Creating notification with title: $title, body: $body")
         sendNotification(title, body, type, id, applicationId)
+        if (type == "day_job_new") {
+            DayJobSpeaker.speak(this, remoteMessage.data["speak"])
+        }
     }
 
     private fun sendRegistrationToServer(token: String) {

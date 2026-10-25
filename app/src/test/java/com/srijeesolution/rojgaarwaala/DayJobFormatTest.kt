@@ -47,4 +47,13 @@ class DayJobFormatTest {
         assertEquals("6:00 AM – 8:00 PM", DayJobFormat.alertHoursText("06:00", "20:00"))
         assertEquals("2 Nov", DayJobFormat.dayText("2026-11-02T09:00:00+05:30"))
     }
+
+    @Test fun wageHintReadsPlainly() {
+        assertEquals("Helper usually gets ₹600–₹650 a day in Raipur", DayJobFormatWage.text())
+        assertEquals("Mason usually gets ₹800 a day", DayJobFormat.wageHintText("Mason", 800, 800, null))
+    }
+}
+
+private object DayJobFormatWage {
+    fun text() = DayJobFormat.wageHintText("Helper", 600, 650, "Raipur")
 }
