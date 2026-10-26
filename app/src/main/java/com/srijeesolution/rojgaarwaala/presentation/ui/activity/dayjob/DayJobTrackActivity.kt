@@ -61,8 +61,13 @@ class DayJobTrackActivity : AppCompatActivity() {
     private val pins = mutableMapOf<Int, com.google.android.gms.maps.model.BitmapDescriptor>()
 
     /** A round pin in the worker's colour with a white person inside and a dark ring. */
-    private fun personPin(colour: Int): com.google.android.gms.maps.model.BitmapDescriptor = pins.getOrPut(colour) {
-        val size = dp(40)
+    private fun personPin(colour: Int) = roundPin(colour, R.drawable.ic_day_job_person, 40)
+
+    /** The work site: a bigger orange pin with a building, so it stands apart from people. */
+    private val sitePin by lazy { roundPin(ContextCompat.getColor(this, R.color.brand_color_yellow), R.drawable.ic_day_job_site, 48) }
+
+    private fun roundPin(colour: Int, icon: Int, sizeDp: Int): com.google.android.gms.maps.model.BitmapDescriptor = pins.getOrPut(colour * 31 + icon) {
+        val size = dp(sizeDp)
         val bmp = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
         val canvas = android.graphics.Canvas(bmp)
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
@@ -70,8 +75,8 @@ class DayJobTrackActivity : AppCompatActivity() {
         canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
         paint.color = colour
         canvas.drawCircle(size / 2f, size / 2f, size / 2f - dp(3), paint)
-        ContextCompat.getDrawable(this, R.drawable.ic_day_job_person)!!.mutate().apply {
-            val pad = dp(8)
+        ContextCompat.getDrawable(this, icon)!!.mutate().apply {
+            val pad = size / 5
             setBounds(pad, pad, size - pad, size - pad)
             draw(canvas)
         }
@@ -135,11 +140,20 @@ class DayJobTrackActivity : AppCompatActivity() {
             m.clear()
             val site = LatLng(data.site.latitude, data.site.longitude)
             m.addMarker(MarkerOptions().position(site).title(data.site.name ?: "काम की जगह")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+                .anchor(0.5f, 0.5f)
+                .zIndex(1f)
+                .icon(sitePin))
             val bounds = LatLngBounds.builder().include(site)
             data.workers.filter { it.latitude != null && it.longitude != null }.forEach { w ->
                 val at = LatLng(w.latitude!!, w.longitude!!)
                 bounds.include(at)
+                // Dashed line in the worker's colour from them to the site.
+                m.addPolyline(com.google.android.gms.maps.model.PolylineOptions()
+                    .add(at, site)
+                    .color(colourOf(w))
+                    .width(dp(3).toFloat())
+                    .geodesic(true)
+                    .pattern(listOf(com.google.android.gms.maps.model.Dash(dp(10).toFloat()), com.google.android.gms.maps.model.Gap(dp(6).toFloat()))))
                 m.addMarker(MarkerOptions().position(at)
                     .title(w.name ?: "मज़दूर")
                     .snippet(listOfNotNull(w.distanceKm?.let { "$it km" }, w.etaMinutes?.let { "~$it मिनट" }).joinToString(" · "))
