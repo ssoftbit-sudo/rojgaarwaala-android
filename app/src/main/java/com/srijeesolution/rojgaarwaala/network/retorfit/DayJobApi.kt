@@ -86,4 +86,35 @@ interface DayJobApi {
 
     @POST("day-jobs/bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
+
+    // Gang leader
+    @GET("day-jobs/team")
+    suspend fun team(): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team")
+    suspend fun createTeam(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamNameRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/rename")
+    suspend fun renameTeam(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamNameRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/invite")
+    suspend fun invite(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamInviteRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/invites/{id}/respond")
+    suspend fun respondInvite(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/members/{id}/remove")
+    suspend fun removeMember(@Path("id") id: Int): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/leave")
+    suspend fun leaveTeam(): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @POST("day-jobs/team/disband")
+    suspend fun disbandTeam(): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData>>
+
+    @GET("day-jobs/{id}/team-options")
+    suspend fun teamOptions(@Path("id") id: Int): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamOptionsData>>
+
+    @POST("day-jobs/{id}/accept-team")
+    suspend fun acceptForTeam(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamAcceptRequest): Response<DayJobEnvelope<DayJobData>>
 }

@@ -69,6 +69,11 @@ data class DayJobBooking(
     @SerializedName("paid_answer") val paidAnswer: String? = null,
     @SerializedName("can_answer_payment") val canAnswerPayment: Boolean = false,
     @SerializedName("can_mark_no_show") val canMarkNoShow: Boolean = false,
+    // Team seats: the company calls the leader; the member sees who booked them.
+    @SerializedName("team_name") val teamName: String? = null,
+    @SerializedName("leader_name") val leaderName: String? = null,
+    @SerializedName("call_mobile") val callMobile: String? = null,
+    @SerializedName("booked_by_leader") val bookedByLeader: Boolean = false,
 )
 
 data class DayJobCompanyRef(
@@ -158,3 +163,59 @@ data class DayJobWageHint(
 )
 
 data class DayJobWageHintData(@SerializedName("hint") val hint: DayJobWageHint? = null)
+
+// ------------------------------------------------------------------ gang leader
+
+data class DayJobTeamPerson(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("mobile") val mobile: String? = null,
+)
+
+data class DayJobTeamMember(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("user_id") val userId: Int = 0,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("mobile") val mobile: String? = null,
+    @SerializedName("status") val status: String = "",
+    @SerializedName("trades") val trades: List<String> = emptyList(),
+    @SerializedName("free") val free: Boolean = false,
+    @SerializedName("booked_today") val bookedToday: Boolean = false,
+)
+
+data class DayJobTeam(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("name") val name: String = "",
+    @SerializedName("leader") val leader: DayJobTeamPerson = DayJobTeamPerson(),
+    @SerializedName("people") val people: Int = 1,
+    @SerializedName("members") val members: List<DayJobTeamMember> = emptyList(),
+)
+
+data class DayJobTeamInvite(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("team_name") val teamName: String? = null,
+    @SerializedName("leader_name") val leaderName: String? = null,
+)
+
+data class DayJobTeamData(
+    @SerializedName("role") val role: String = "none",
+    @SerializedName("team") val team: DayJobTeam? = null,
+    @SerializedName("invites") val invites: List<DayJobTeamInvite> = emptyList(),
+    @SerializedName("max_people") val maxPeople: Int = 20,
+)
+
+data class DayJobTeamOption(
+    @SerializedName("user_id") val userId: Int = 0,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("trades") val trades: List<DayJobTrade> = emptyList(),
+    @SerializedName("available") val available: Boolean = false,
+    @SerializedName("reason") val reason: String? = null,
+)
+
+data class DayJobTeamOptionsData(@SerializedName("people") val people: List<DayJobTeamOption> = emptyList())
+
+data class DayJobTeamNameRequest(@SerializedName("name") val name: String)
+data class DayJobTeamInviteRequest(@SerializedName("mobile") val mobile: String)
+data class DayJobYesRequest(@SerializedName("yes") val yes: Boolean)
+data class DayJobTeamPick(@SerializedName("user_id") val userId: Int, @SerializedName("trade") val trade: String)
+data class DayJobTeamAcceptRequest(@SerializedName("picks") val picks: List<DayJobTeamPick>)

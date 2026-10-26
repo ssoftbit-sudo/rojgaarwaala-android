@@ -194,6 +194,11 @@
             android:exported="false"
             android:theme="@style/AppTheme.NoSplash"/>
         <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobTeamActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustResize|stateHidden"/>
+        <activity
             android:name=".presentation.ui.activity.ResumeBuilderActivity"
             android:exported="false"
             android:theme="@style/AppTheme.NoSplash"

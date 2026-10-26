@@ -105,6 +105,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobMyJobs.setOnClickListener {
             startActivity(Intent(this, DayJobMyJobsActivity::class.java))
         }
+        binding.dayJobMyTeam.setOnClickListener { startActivity(Intent(this, DayJobTeamActivity::class.java)) }
         binding.dayJobAlertHours.setOnClickListener { chooseAlertHours() }
         binding.dayJobSpeak.isChecked = com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.isOn(this)
         binding.dayJobSpeak.setOnCheckedChangeListener { _, on ->

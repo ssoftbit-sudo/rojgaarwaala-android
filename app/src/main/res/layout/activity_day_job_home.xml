@@ -211,6 +211,13 @@
                             style="@style/ResumeOutlineButton"
                             android:minHeight="38dp"
                             android:text="मेरे काम" />
+
+                        <TextView
+                            android:id="@+id/dayJobMyTeam"
+                            style="@style/ResumeOutlineButton"
+                            android:layout_marginStart="8dp"
+                            android:minHeight="38dp"
+                            android:text="मेरी टीम" />
                     </LinearLayout>
 
                     <TextView

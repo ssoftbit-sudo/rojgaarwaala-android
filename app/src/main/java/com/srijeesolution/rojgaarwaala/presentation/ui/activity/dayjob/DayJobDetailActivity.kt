@@ -54,6 +54,8 @@ class DayJobDetailActivity : AppCompatActivity() {
     /** Work the viewer chose as a worker; seats for other work are shown but not offered. */
     private var myTrades: List<String> = emptyList()
     private var mapReady: SupportMapFragment? = null
+    /** True when the viewer leads a team, so they can take seats for it. */
+    private var leadsTeam = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +74,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
             (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades }
+            (repository.team() as? DayJobOutcome.Ok)?.let { leadsTeam = it.data.role == "leader" }
             val result = repository.show(id)
             binding.detailLoading.visibility = View.GONE
             when (result) {
@@ -203,6 +206,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                 }
             }
             if (job.slots.none { it.left > 0 }) actions.addView(note("सारी जगह भर गई हैं।"))
+            else if (leadsTeam) actions.addView(button("टीम के साथ हाँ करें", 2) { pickTeam(job) })
         }
         actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
     }
@@ -218,6 +222,10 @@ class DayJobDetailActivity : AppCompatActivity() {
                 actions.addView(button("नहीं, पूरा पैसा नहीं मिला", 1) { act { repository.answerPaid(booking.id, false) } })
             }
             booking.paidAnswer != null -> actions.addView(note("पैसे के बारे में बताने के लिए धन्यवाद।", R.color.day_job_green))
+            booking.bookedByLeader && job.isAccepting && !booking.confirmAsked -> actions.addView(note(
+                "${booking.leaderName ?: "आपके लीडर"} ने आपकी जगह पक्की की। आप $trade बनकर जा रहे हैं। न जा सकें तो नीचे 'नहीं जा सकता' दबाएँ।",
+                R.color.day_job_green,
+            ))
             booking.confirmAsked && !booking.confirmed && job.isAccepting -> {
                 actions.addView(note("क्या आप इस काम पर आ रहे हैं?", R.color.white))
                 actions.addView(button("हाँ, मैं आ रहा हूँ", 2) { act { repository.confirm(booking.id, true) } })
@@ -234,10 +242,11 @@ class DayJobDetailActivity : AppCompatActivity() {
         // While "Are you coming?" is shown, its No already gives the seat back.
         val asking = booking.confirmAsked && !booking.confirmed
         if (job.isAccepting && !asking) {
-            actions.addView(button("मेरी जगह छोड़ें", 1) {
+            val byLeader = booking.bookedByLeader
+            actions.addView(button(if (byLeader) "नहीं जा सकता" else "मेरी जगह छोड़ें", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-                    .setTitle("अपनी जगह छोड़ें?")
-                    .setMessage("कंपनी को ख़बर जाएगी और कोई और यह जगह ले सकेगा।")
+                    .setTitle(if (byLeader) "आप नहीं जा सकते?" else "अपनी जगह छोड़ें?")
+                    .setMessage(if (byLeader) "लीडर और कंपनी को ख़बर जाएगी, और कोई और यह जगह ले सकेगा।" else "कंपनी को ख़बर जाएगी और कोई और यह जगह ले सकेगा।")
                     .setPositiveButton("हाँ, छोड़ दें") { _, _ -> act { repository.cancelBooking(job.myBooking!!.id) } }
                     .setNegativeButton("नहीं", null)
                     .show()
@@ -270,7 +279,41 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailWorkersTitle.visibility = View.VISIBLE
         binding.detailWorkersTitle.text = "कौन आ रहा है (${job.filledTotal}/${job.neededTotal})"
         if (coming.isEmpty()) list.addView(note("अभी कोई नहीं। कोई हाँ करेगा तो आपको ख़बर आएगी।"))
-        coming.forEach { b ->
+        // A team shows as one block with a single Call, to its leader.
+        val teams = coming.filter { it.teamName != null }.groupBy { it.teamName!! }
+        teams.forEach { (name, people) ->
+            list.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_day_job_card)
+                setPadding(DayJobUi.dp(context, 12), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { bottomMargin = DayJobUi.dp(context, 8) }
+                addView(TextView(context).apply {
+                    val lines = people.joinToString("\n") { b ->
+                        "• ${b.name ?: "मज़दूर"} · ${b.tradeLabel.orEmpty()}" + when {
+                            b.status == "no_show" -> " · नहीं आया"
+                            b.confirmed -> " · ✓"
+                            else -> ""
+                        }
+                    }
+                    text = "$name टीम (${people.size})\nलीडर: ${people.first().leaderName.orEmpty()}\n$lines"
+                    setTextColor(ContextCompat.getColor(context, R.color.white))
+                    textSize = 14f
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                addView(TextView(context).apply {
+                    text = "Call"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.day_job_on_green))
+                    setBackgroundResource(R.drawable.bg_day_job_green_button)
+                    setPadding(DayJobUi.dp(context, 16), DayJobUi.dp(context, 8), DayJobUi.dp(context, 16), DayJobUi.dp(context, 8))
+                    contentDescription = "लीडर को Call करें"
+                    setOnClickListener { DayJobUi.call(context, people.first().callMobile) }
+                })
+            })
+        }
+        coming.filter { it.teamName == null }.forEach { b ->
             list.addView(LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -336,6 +379,39 @@ class DayJobDetailActivity : AppCompatActivity() {
             .setPositiveButton("हाँ, मैं आऊँगा") { _, _ -> act { repository.accept(job.id, trade) } }
             .setNegativeButton("नहीं", null)
             .show()
+    }
+
+    /** The leader ticks who goes and as what; all seats are taken together or none. */
+    private fun pickTeam(job: DayJob) {
+        binding.detailLoading.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            val result = repository.teamOptions(job.id)
+            binding.detailLoading.visibility = View.GONE
+            val people = (result as? DayJobOutcome.Ok)?.data ?: run {
+                DayJobUi.toast(this@DayJobDetailActivity, (result as DayJobOutcome.Fail).message); return@launch
+            }
+            val ready = people.filter { it.available }
+            if (ready.isEmpty()) {
+                DayJobUi.toast(this@DayJobDetailActivity, "टीम में अभी कोई इस काम के लिए खाली नहीं है।")
+                return@launch
+            }
+            // One row per person and work they can do, e.g. "Ramesh · हेल्पर".
+            val rows = ready.flatMap { p -> p.trades.map { t -> Triple(p.userId, t.key, "${p.name ?: "मज़दूर"} · ${t.label}") } }
+            val checked = BooleanArray(rows.size)
+            val busy = people.filter { !it.available }.joinToString("\n") { "${it.name}: ${it.reason.orEmpty()}" }
+            AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
+                .setTitle("कौन जाएगा?")
+                .setMultiChoiceItems(rows.map { it.third }.toTypedArray(), checked) { _, i, on -> checked[i] = on }
+                .setPositiveButton("सबकी जगह पक्की करें") { _, _ ->
+                    val picks = rows.filterIndexed { i, _ -> checked[i] }.distinctBy { it.first }
+                        .map { com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamPick(it.first, it.second) }
+                    if (picks.isEmpty()) DayJobUi.toast(this@DayJobDetailActivity, "कम से कम एक व्यक्ति चुनें।")
+                    else act { repository.acceptForTeam(job.id, picks) }
+                }
+                .setNegativeButton("रहने दें", null)
+                .show()
+            if (busy.isNotBlank()) DayJobUi.toast(this@DayJobDetailActivity, "नहीं जा सकते:\n$busy")
+        }
     }
 
     private fun askRepost(job: DayJob) {

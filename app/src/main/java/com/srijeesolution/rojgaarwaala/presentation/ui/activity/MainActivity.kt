@@ -770,11 +770,15 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 }
                 "day_job_new", "day_job_accepted", "day_job_full", "day_job_live",
                 "day_job_cancelled", "day_job_booking_cancelled", "day_job_expired",
-                "day_job_confirm", "day_job_confirmed", "day_job_paid_question", "day_job_no_show" -> {
+                "day_job_confirm", "day_job_confirmed", "day_job_paid_question", "day_job_no_show",
+                "day_job_team_booked", "day_job_team_declined" -> {
                     notificationId?.toIntOrNull()?.let {
                         startActivity(com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobDetailActivity.intent(this, it))
                     }
                 }
+                "day_job_team_invite", "day_job_team_member" -> startActivity(
+                    Intent(this, com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobTeamActivity::class.java),
+                )
                 "ot_request" -> startActivity(Intent(this, OtReviewActivity::class.java))
                 "missed_punch_request" -> startActivity(Intent(this, BulkAttendanceActivity::class.java))
                 "missed_punch_submitted" -> startActivity(

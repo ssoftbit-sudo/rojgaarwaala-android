@@ -98,6 +98,33 @@ class DayJobRepository @Inject constructor() {
     suspend fun repost(id: Int, workDate: String, startTime: String?, wage: Int?): DayJobOutcome<DayJob?> =
         call { api.repost(id, DayJobRepostRequest(workDate, startTime, wage)) }.mapData { it.job }
 
+    // Gang leader
+    suspend fun team(): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> = call { api.team() }
+
+    suspend fun createTeam(name: String): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> =
+        call { api.createTeam(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamNameRequest(name)) }
+
+    suspend fun renameTeam(name: String): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> =
+        call { api.renameTeam(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamNameRequest(name)) }
+
+    suspend fun invite(mobile: String): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> =
+        call { api.invite(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamInviteRequest(mobile)) }
+
+    suspend fun respondInvite(id: Int, yes: Boolean): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> =
+        call { api.respondInvite(id, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest(yes)) }
+
+    suspend fun removeMember(id: Int): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> = call { api.removeMember(id) }
+
+    suspend fun leaveTeam(): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> = call { api.leaveTeam() }
+
+    suspend fun disbandTeam(): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> = call { api.disbandTeam() }
+
+    suspend fun teamOptions(jobId: Int): DayJobOutcome<List<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamOption>> =
+        call { api.teamOptions(jobId) }.mapData { it.people }
+
+    suspend fun acceptForTeam(jobId: Int, picks: List<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamPick>): DayJobOutcome<DayJob?> =
+        call { api.acceptForTeam(jobId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamAcceptRequest(picks)) }.mapData { it.job }
+
     suspend fun create(draft: DayJobDraft): DayJobOutcome<DayJob?> {
         val text = "text/plain".toMediaType()
         val fields = linkedMapOf<String, RequestBody>()
