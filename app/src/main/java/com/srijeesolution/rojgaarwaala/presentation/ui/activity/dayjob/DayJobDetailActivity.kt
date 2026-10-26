@@ -56,6 +56,14 @@ class DayJobDetailActivity : AppCompatActivity() {
     private var mapReady: SupportMapFragment? = null
     /** True when the viewer leads a team, so they can take seats for it. */
     private var leadsTeam = false
+    /** Booking to start sharing for once location is allowed. */
+    private var pendingShare: Pair<Int, Int>? = null
+    private val askLocation = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        val share = pendingShare ?: return@registerForActivityResult
+        pendingShare = null
+        if (granted[android.Manifest.permission.ACCESS_FINE_LOCATION] == true) startSharing(share.first, share.second)
+        else DayJobUi.toast(this, "लोकेशन की इजाज़त नहीं मिली, इसलिए कंपनी आपको नक्शे पर नहीं देख पाएगी।")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -237,6 +245,19 @@ class DayJobDetailActivity : AppCompatActivity() {
                 R.color.day_job_green,
             ))
         }
+        // On the way: nothing is shared until the worker taps this.
+        val sharingHere = com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.activeBooking(this) == booking.id
+        when {
+            booking.arrived -> actions.addView(note("✓ आप काम की जगह पहुँच गए।", R.color.day_job_green))
+            sharingHere -> {
+                actions.addView(note("● कंपनी आपको नक्शे पर देख रही है। पहुँचते ही अपने-आप बंद हो जाएगा।", R.color.day_job_green))
+                actions.addView(button("लोकेशन भेजना रोकें", 1) {
+                    com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.stop(this)
+                    binding.root.postDelayed({ load() }, 800)
+                })
+            }
+            booking.canShareLocation -> actions.addView(button("घर से निकल पड़ा", 0) { askToShare(booking.id, job.id) })
+        }
         actions.addView(button("कंपनी को Call करें", 2) { DayJobUi.call(this, job.company.phone) })
         actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
         // While "Are you coming?" is shown, its No already gives the seat back.
@@ -260,6 +281,9 @@ class DayJobDetailActivity : AppCompatActivity() {
             actions.addView(note("कंपनी की जाँच पूरी होते ही यह काम सबको दिखेगा।"))
         } else if (job.notifiedCount > 0) {
             actions.addView(note("${job.radiusKm} km के ${job.notifiedCount} ${if (job.notifiedCount == 1) "मज़दूर" else "मज़दूरों"} को ख़बर भेजी गई।"))
+        }
+        if (job.canTrack && job.filledTotal > 0) {
+            actions.addView(button("नक्शे पर देखें, कौन कहाँ है", 2) { startActivity(DayJobTrackActivity.intent(this, job.id)) })
         }
         actions.addView(button("यही काम दोबारा डालें", 0) { askRepost(job) })
         if (job.status in listOf("in_review", "open", "full", "closed")) {
@@ -412,6 +436,31 @@ class DayJobDetailActivity : AppCompatActivity() {
                 .show()
             if (busy.isNotBlank()) DayJobUi.toast(this@DayJobDetailActivity, "नहीं जा सकते:\n$busy")
         }
+    }
+
+    private fun askToShare(bookingId: Int, jobId: Int) {
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("काम पर निकल रहे हैं?")
+            .setMessage("रास्ते में कंपनी आपको नक्शे पर देख सकेगी। काम की जगह पहुँचते ही लोकेशन भेजना अपने-आप बंद हो जाएगा। आप कभी भी रोक सकते हैं।")
+            .setPositiveButton("हाँ, निकल पड़ा") { _, _ ->
+                val fine = android.Manifest.permission.ACCESS_FINE_LOCATION
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, fine) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    startSharing(bookingId, jobId)
+                } else {
+                    pendingShare = bookingId to jobId
+                    val perms = mutableListOf(fine, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                    if (android.os.Build.VERSION.SDK_INT >= 33) perms += android.Manifest.permission.POST_NOTIFICATIONS
+                    askLocation.launch(perms.toTypedArray())
+                }
+            }
+            .setNegativeButton("नहीं", null)
+            .show()
+    }
+
+    private fun startSharing(bookingId: Int, jobId: Int) {
+        com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.start(this, bookingId, jobId)
+        DayJobUi.toast(this, "ठीक है, कंपनी को ख़बर भेज दी। सुरक्षित पहुँचें।")
+        binding.root.postDelayed({ load() }, 800)
     }
 
     private fun askRepost(job: DayJob) {

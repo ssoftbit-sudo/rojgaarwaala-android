@@ -74,6 +74,10 @@ data class DayJobBooking(
     @SerializedName("leader_name") val leaderName: String? = null,
     @SerializedName("call_mobile") val callMobile: String? = null,
     @SerializedName("booked_by_leader") val bookedByLeader: Boolean = false,
+    // On the way: the worker shares only after tapping "घर से निकल पड़ा".
+    @SerializedName("can_share_location") val canShareLocation: Boolean = false,
+    @SerializedName("sharing_location") val sharingLocation: Boolean = false,
+    @SerializedName("arrived") val arrived: Boolean = false,
 )
 
 data class DayJobCompanyRef(
@@ -103,6 +107,7 @@ data class DayJob(
     @SerializedName("is_accepting") val isAccepting: Boolean = false,
     @SerializedName("radius_km") val radiusKm: Int = 5,
     @SerializedName("notified_count") val notifiedCount: Int = 0,
+    @SerializedName("can_track") val canTrack: Boolean = false,
     @SerializedName("distance_km") val distanceKm: Double? = null,
     @SerializedName("company") val company: DayJobCompanyRef = DayJobCompanyRef(),
     @SerializedName("slots") val slots: List<DayJobSlot> = emptyList(),
@@ -219,3 +224,38 @@ data class DayJobTeamInviteRequest(@SerializedName("mobile") val mobile: String)
 data class DayJobYesRequest(@SerializedName("yes") val yes: Boolean)
 data class DayJobTeamPick(@SerializedName("user_id") val userId: Int, @SerializedName("trade") val trade: String)
 data class DayJobTeamAcceptRequest(@SerializedName("picks") val picks: List<DayJobTeamPick>)
+
+// ------------------------------------------------------------------ on the way
+
+data class DayJobLocationRequest(@SerializedName("latitude") val latitude: Double, @SerializedName("longitude") val longitude: Double)
+
+data class DayJobLocationReply(
+    @SerializedName("stop") val stop: Boolean = false,
+    @SerializedName("arrived") val arrived: Boolean = false,
+    @SerializedName("distance_km") val distanceKm: Double? = null,
+)
+
+data class DayJobTrackSite(
+    @SerializedName("latitude") val latitude: Double = 0.0,
+    @SerializedName("longitude") val longitude: Double = 0.0,
+    @SerializedName("name") val name: String? = null,
+)
+
+data class DayJobTrackWorker(
+    @SerializedName("booking_id") val bookingId: Int = 0,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("trade_label") val tradeLabel: String? = null,
+    /** not_started, on_way, stopped or arrived. */
+    @SerializedName("state") val state: String = "not_started",
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
+    @SerializedName("distance_km") val distanceKm: Double? = null,
+    @SerializedName("eta_minutes") val etaMinutes: Int? = null,
+    @SerializedName("updated_seconds_ago") val updatedSecondsAgo: Int? = null,
+    @SerializedName("call_mobile") val callMobile: String? = null,
+)
+
+data class DayJobTrackData(
+    @SerializedName("site") val site: DayJobTrackSite = DayJobTrackSite(),
+    @SerializedName("workers") val workers: List<DayJobTrackWorker> = emptyList(),
+)

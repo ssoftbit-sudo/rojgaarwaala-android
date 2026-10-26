@@ -98,6 +98,14 @@ class DayJobRepository @Inject constructor() {
     suspend fun repost(id: Int, workDate: String, startTime: String?, wage: Int?): DayJobOutcome<DayJob?> =
         call { api.repost(id, DayJobRepostRequest(workDate, startTime, wage)) }.mapData { it.job }
 
+    // On the way
+    suspend fun sendLocation(bookingId: Int, latitude: Double, longitude: Double): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobLocationReply?> =
+        call { api.sendLocation(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobLocationRequest(latitude, longitude)) }
+
+    suspend fun stopLocation(bookingId: Int): DayJobOutcome<Any?> = call { api.stopLocation(bookingId) }
+
+    suspend fun tracking(jobId: Int): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTrackData> = call { api.tracking(jobId) }
+
     // Gang leader
     suspend fun team(): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamData> = call { api.team() }
 

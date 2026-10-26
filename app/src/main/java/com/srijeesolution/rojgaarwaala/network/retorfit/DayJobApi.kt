@@ -117,4 +117,14 @@ interface DayJobApi {
 
     @POST("day-jobs/{id}/accept-team")
     suspend fun acceptForTeam(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamAcceptRequest): Response<DayJobEnvelope<DayJobData>>
+
+    // On the way
+    @POST("day-jobs/bookings/{id}/location")
+    suspend fun sendLocation(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobLocationRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobLocationReply>>
+
+    @POST("day-jobs/bookings/{id}/location/stop")
+    suspend fun stopLocation(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
+
+    @GET("day-jobs/{id}/tracking")
+    suspend fun tracking(@Path("id") id: Int): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTrackData>>
 }
