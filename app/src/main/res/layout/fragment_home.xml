@@ -217,10 +217,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_day_job_card"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_day_job_home_card"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -229,60 +229,146 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:background="@drawable/bg_day_job_icon_circle"
                         android:contentDescription="@null"
-                        android:src="@drawable/ic_day_job_helmet" />
+                        android:padding="8dp"
+                        android:src="@drawable/ic_day_job_helmet"
+                        android:tint="@color/on_brand" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:text="1 दिन का काम"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1 दिन का काम"
+                            android:textColor="@color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="पास में रोज़ की मज़दूरी, आज और कल का काम"
+                            android:textColor="@color/search_hint"
+                            android:textSize="12sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="पास में रोज़ की मज़दूरी"
-                        android:textColor="@color/search_hint"
-                        android:textSize="12sp" />
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_brand_button"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:text="नया"
+                        android:textColor="@color/on_brand"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
+
+                <!-- Filled from the nearby jobs; hidden when there are none or the call fails. -->
+                <TextView
+                    android:id="@+id/homeDayJobLive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_day_job_pill"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:textColor="@color/day_job_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:orientation="horizontal">
 
-                    <TextView
+                    <LinearLayout
                         android:id="@+id/homeDayJobFindWork"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="6dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_brand_button"
-                        android:gravity="center"
-                        android:text="काम ढूँढें"
-                        android:textColor="@color/on_brand"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:background="@drawable/bg_day_job_tile_amber"
+                        android:clickable="true"
+                        android:contentDescription="काम ढूँढें"
+                        android:focusable="true"
+                        android:minHeight="92dp"
+                        android:orientation="vertical"
+                        android:padding="12dp">
 
-                    <TextView
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_day_job_search"
+                            android:tint="@color/on_brand" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="काम ढूँढें"
+                            android:textColor="@color/on_brand"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="पास के काम देखें"
+                            android:textColor="#5A4300"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/homeDayJobHire"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_free_job_map_button"
-                        android:gravity="center"
-                        android:text="मज़दूर चाहिए"
-                        android:textColor="@color/brand_color_yellow"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:background="@drawable/bg_day_job_tile_outline"
+                        android:clickable="true"
+                        android:contentDescription="मज़दूर चाहिए"
+                        android:focusable="true"
+                        android:minHeight="92dp"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_day_job_people"
+                            android:tint="@color/brand_color_yellow" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="मज़दूर चाहिए"
+                            android:textColor="@color/brand_color_yellow"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="काम डालें, मज़दूर बुलाएँ"
+                            android:textColor="@color/search_hint"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 

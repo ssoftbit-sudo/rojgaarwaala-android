@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- A builder's hard hat (shell with a centre ridge, wide brim), for 1 दिन का काम. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#FFBB02"
-        android:pathData="M12,4a7,7 0,0 0,-7 7v2H3v2h18v-2h-2v-2a7,7 0,0 0,-5 -6.7V8h-2V4.1C12.7,4 12.3,4 12,4zM10,4.3a7,7 0,0 0,-1 0.4V8h1V4.3zM3,17v2h18v-2H3z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M4,15C4,11.1 6.8,7.9 10.4,7.2V15Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M13.6,7.2C17.2,7.9 20,11.1 20,15H13.6Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M11.1,5.8h1.8v9.2h-1.8z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M2,15.8h20v1.6c0,0.6 -0.4,1 -1,1H3c-0.6,0 -1,-0.4 -1,-1z" />
 </vector>

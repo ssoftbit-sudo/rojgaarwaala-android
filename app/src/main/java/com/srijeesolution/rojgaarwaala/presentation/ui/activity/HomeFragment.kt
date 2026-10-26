@@ -1,5 +1,7 @@
 package com.srijeesolution.rojgaarwaala.presentation.ui.activity
 
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 import com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobHomeActivity
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -57,6 +59,9 @@ import android.util.Log
 class HomeFragment : Fragment() {
     @Inject
     lateinit var sharedPrefs: SharedPrefs
+
+    @Inject
+    lateinit var dayJobRepository: com.srijeesolution.rojgaarwaala.data.repository.DayJobRepository
     private lateinit var homePageViewModel: HomePageViewModel
     private lateinit var attendanceViewModel: EmployeeAttendanceViewModel
     private var _binding: FragmentHomeBinding? = null
@@ -125,6 +130,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        showNearbyDayJobs()
         if (isEmployee) attendanceViewModel.loadDashboard()
         startPunchElapsedTicker()
     }
@@ -163,6 +169,18 @@ class HomeFragment : Fragment() {
         } else {
             isSearchMode = true
             filterContent(q, loc)
+        }
+    }
+
+    /** "● आपके 10 km में 3 काम खुले हैं" on the 1 दिन का काम card; silent when none or offline. */
+    private fun showNearbyDayJobs() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = dayJobRepository.nearby(null, null)
+            val b = _binding ?: return@launch
+            val count = (result as? com.srijeesolution.rojgaarwaala.data.repository.DayJobOutcome.Ok)
+                ?.data?.jobs?.count { it.myBooking?.status != "accepted" } ?: 0
+            b.homeDayJobLive.visibility = if (count > 0) View.VISIBLE else View.GONE
+            b.homeDayJobLive.text = "● आपके 10 km में $count काम " + if (count == 1) "खुला है" else "खुले हैं"
         }
     }
 
