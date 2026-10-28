@@ -317,7 +317,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             })
         }
         actions.addView(button("यही काम दोबारा डालें", 0) { askRepost(job) })
-        if (job.status in listOf("in_review", "open", "full", "closed")) {
+        if (job.canCancel ?: (job.status in listOf("in_review", "open", "full", "closed"))) {
             actions.addView(button("काम रद्द करें", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                     .setTitle("यह काम रद्द करें?")

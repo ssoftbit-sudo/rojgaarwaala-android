@@ -133,6 +133,8 @@ data class DayJob(
     @SerializedName("photos") val photos: List<String> = emptyList(),
     @SerializedName("status") val status: String = "",
     @SerializedName("is_accepting") val isAccepting: Boolean = false,
+    /** Null from an older server; then fall back to the status. */
+    @SerializedName("can_cancel") val canCancel: Boolean? = null,
     @SerializedName("radius_km") val radiusKm: Int = 5,
     @SerializedName("notified_count") val notifiedCount: Int = 0,
     @SerializedName("can_track") val canTrack: Boolean = false,
