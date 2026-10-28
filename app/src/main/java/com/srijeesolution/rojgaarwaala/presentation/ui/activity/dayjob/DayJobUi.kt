@@ -87,6 +87,7 @@ internal object DayJobUi {
             stepSize = 1f
             rating = 0f
             progressTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.brand_color_yellow))
+            progressBackgroundTintList = ColorStateList.valueOf(Color.parseColor("#8A8A8A"))
             layoutParams = android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         val box = android.widget.LinearLayout(context).apply {
@@ -120,7 +121,14 @@ internal object DayJobUi {
         }
         androidx.appcompat.app.AlertDialog.Builder(context, R.style.Theme_Rojgaarwaala_AlertDialog)
             .setTitle(title)
-            .setItems(reasons.toTypedArray()) { _, i -> onPick(reasons[i]) }
+            .setAdapter(object : android.widget.ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, reasons) {
+                // The dialog theme's list text is too faint on the dark background.
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
+                    (super.getView(position, convertView, parent) as TextView).apply {
+                        setTextColor(Color.WHITE)
+                        textSize = 17f
+                    }
+            }) { _, i -> onPick(reasons[i]) }
             .setNegativeButton("रहने दें", null)
             .show()
     }
