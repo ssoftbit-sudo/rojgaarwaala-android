@@ -102,6 +102,15 @@ interface DayJobApi {
     @POST("day-jobs/bookings/{id}/rebook")
     suspend fun rebook(@Path("id") id: Int, @Body body: DayJobRepostRequest): Response<DayJobEnvelope<DayJobData>>
 
+    @POST("day-jobs/voice")
+    suspend fun voice(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobVoiceRequest): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobVoiceData>>
+
+    @POST("day-jobs/{id}/overtime")
+    suspend fun askOvertime(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOvertimeRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/overtime")
+    suspend fun answerOvertime(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest): Response<DayJobEnvelope<Any>>
+
     @POST("day-jobs/terms")
     suspend fun acceptTerms(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest): Response<DayJobEnvelope<Any>>
 

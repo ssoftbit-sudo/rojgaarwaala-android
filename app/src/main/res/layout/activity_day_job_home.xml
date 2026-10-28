@@ -47,7 +47,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="काम ढूँढें"
+            android:text="🔍 काम ढूँढें"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -57,7 +57,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="मज़दूर चाहिए"
+            android:text="👷 मज़दूर चाहिए"
             android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -210,14 +210,14 @@
                             android:id="@+id/dayJobMyJobs"
                             style="@style/ResumeOutlineButton"
                             android:minHeight="38dp"
-                            android:text="मेरे काम" />
+                            android:text="📋 मेरे काम" />
 
                         <TextView
                             android:id="@+id/dayJobMyTeam"
                             style="@style/ResumeOutlineButton"
                             android:layout_marginStart="8dp"
                             android:minHeight="38dp"
-                            android:text="मेरी टीम" />
+                            android:text="👥 मेरी टीम" />
                     </LinearLayout>
 
                     <TextView

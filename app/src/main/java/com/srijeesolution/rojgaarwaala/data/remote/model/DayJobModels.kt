@@ -45,6 +45,8 @@ data class DayJobWorker(
 )
 
 data class DayJobMeta(
+    /** Posting by speaking is switched on at the server. */
+    @SerializedName("voice_available") val voiceAvailable: Boolean = false,
     @SerializedName("trades") val trades: List<DayJobTrade> = emptyList(),
     @SerializedName("districts") val districts: List<String> = emptyList(),
     @SerializedName("company") val company: DayJobCompany? = null,
@@ -106,6 +108,10 @@ data class DayJobBooking(
     @SerializedName("worker_rating_count") val workerRatingCount: Int = 0,
     // Easy booking: "हाँ" keeps the seat a few minutes until "अभी Book करें".
     @SerializedName("on_hold") val onHold: Boolean = false,
+    /** Overtime asked on the day: asked, accepted or declined. */
+    @SerializedName("ot_status") val otStatus: String? = null,
+    @SerializedName("ot_hours") val otHours: Double? = null,
+    @SerializedName("ot_amount") val otAmount: Int? = null,
     @SerializedName("held_until") val heldUntil: String? = null,
     @SerializedName("can_rebook") val canRebook: Boolean = false,
 )
@@ -152,6 +158,8 @@ data class DayJob(
     @SerializedName("is_accepting") val isAccepting: Boolean = false,
     /** Null from an older server; then fall back to the status. */
     @SerializedName("can_cancel") val canCancel: Boolean? = null,
+    @SerializedName("can_ask_overtime") val canAskOvertime: Boolean = false,
+    @SerializedName("hourly_rate") val hourlyRate: Int = 0,
     /** A re-booking kept for this worker for a while. */
     @SerializedName("reserved_for_me") val reservedForMe: Boolean = false,
     @SerializedName("reserved_until") val reservedUntil: String? = null,
@@ -204,6 +212,28 @@ data class DayJobWorkerRequest(
     @SerializedName("alert_from") val alertFrom: String? = null,
     @SerializedName("alert_to") val alertTo: String? = null,
     @SerializedName("accept_terms") val acceptTerms: Boolean? = null,
+)
+
+data class DayJobVoiceRequest(@SerializedName("text") val text: String)
+
+/** The job form as Claude filled it from what the company said; nulls are left for them. */
+data class DayJobVoiceDraft(
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("slots") val slots: List<DayJobVoiceSlot> = emptyList(),
+    @SerializedName("wage_per_day") val wagePerDay: Int? = null,
+    @SerializedName("work_date") val workDate: String? = null,
+    @SerializedName("start_time") val startTime: String? = null,
+    @SerializedName("hours") val hours: Int? = null,
+    @SerializedName("area_name") val areaName: String? = null,
+    @SerializedName("description") val description: String? = null,
+)
+
+data class DayJobVoiceSlot(@SerializedName("trade") val trade: String = "", @SerializedName("count") val count: Int = 0)
+data class DayJobVoiceData(@SerializedName("draft") val draft: DayJobVoiceDraft? = null)
+
+data class DayJobOvertimeRequest(
+    @SerializedName("hours") val hours: Double,
+    @SerializedName("amount") val amount: Int?,
 )
 
 data class DayJobTermsRequest(@SerializedName("audience") val audience: String)

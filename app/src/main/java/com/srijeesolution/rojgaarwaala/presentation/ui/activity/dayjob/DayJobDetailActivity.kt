@@ -218,7 +218,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         job.canTakeFrom?.let { from ->
             actions.addView(note("यह काम ${DayJobFormat.dayText(from)} ${DayJobFormat.clockText(from)} से ले सकेंगे। 20 rating के बाद 3 दिन आगे तक का काम ले सकते हैं।", R.color.brand_color_yellow))
             if (!job.rejectedByMe) actions.addView(button("✗  नहीं, यह काम नहीं", 1) { act { repository.reject(job.id) } })
-            actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+            actions.addView(button("🧭  रास्ता देखें", 1) { DayJobUi.directions(this, job) })
             return
         }
         if (job.reservedForMe) {
@@ -237,10 +237,10 @@ class DayJobDetailActivity : AppCompatActivity() {
                 }
             }
             if (job.slots.none { it.left > 0 }) actions.addView(note("सारी जगह भर गई हैं।"))
-            else if (leadsTeam) actions.addView(button("टीम के साथ हाँ करें", 2) { pickTeam(job) })
+            else if (leadsTeam) actions.addView(button("👥  टीम के साथ हाँ करें", 2) { pickTeam(job) })
             if (!job.rejectedByMe) actions.addView(button("✗  नहीं, यह काम नहीं", 1) { act { repository.reject(job.id) } })
         }
-        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+        actions.addView(button("🧭  रास्ता देखें", 1) { DayJobUi.directions(this, job) })
     }
 
     private fun renderBooked(job: DayJob) {
@@ -252,6 +252,14 @@ class DayJobDetailActivity : AppCompatActivity() {
             return
         }
         holdTimer = null
+        when (booking.otStatus) {
+            "asked" -> {
+                actions.addView(note("कंपनी पूछ रही है: ${otHoursText(booking.otHours)} और रुक सकते हैं? ₹${booking.otAmount ?: 0} extra मिलेंगे।", R.color.brand_color_yellow))
+                actions.addView(button("✓  हाँ, रुकूँगा", 2) { act { repository.answerOvertime(booking.id, true) } })
+                actions.addView(button("✗  नहीं रुक सकता", 1) { act { repository.answerOvertime(booking.id, false) } })
+            }
+            "accepted" -> actions.addView(note("✓ OT: ${otHoursText(booking.otHours)} · ₹${booking.otAmount ?: 0} extra", R.color.day_job_green))
+        }
         when {
             booking.doneByMe -> actions.addView(note(
                 (if (booking.paidAnswer == "no") "आपने बताया कि पूरा पैसा नहीं मिला। हमारी टीम कंपनी से बात करेगी।"
@@ -261,12 +269,12 @@ class DayJobDetailActivity : AppCompatActivity() {
             ))
             booking.canMarkDone -> {
                 actions.addView(note("काम पूरा हुआ? पूरा पैसा मिलने पर Job Done दबाएँ। तभी अगला काम ले पाएँगे।", R.color.white))
-                actions.addView(button("पैसा मिल गया, Job Done", 2) {
+                actions.addView(button("✅  पैसा मिल गया, Job Done", 2) {
                     DayJobUi.askStars(this, "Job Done", "${job.company.name} को कितने स्टार देंगे?") { stars ->
                         act { repository.workerDone(booking.id, true, stars) }
                     }
                 })
-                actions.addView(button("पूरा पैसा नहीं मिला", 1) {
+                actions.addView(button("⚠️  पूरा पैसा नहीं मिला", 1) {
                     AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                         .setTitle("पूरा पैसा नहीं मिला?")
                         .setMessage("हमारी टीम कंपनी से बात करेगी। आप नया काम ले सकेंगे।")
@@ -296,15 +304,15 @@ class DayJobDetailActivity : AppCompatActivity() {
             booking.arrived -> actions.addView(note("✓ आप काम की जगह पहुँच गए।", R.color.day_job_green))
             sharingHere -> {
                 actions.addView(note("● कंपनी आपको नक्शे पर देख रही है। पहुँचते ही अपने-आप बंद हो जाएगा।", R.color.day_job_green))
-                actions.addView(button("लोकेशन भेजना रोकें", 1) {
+                actions.addView(button("⏹  लोकेशन भेजना रोकें", 1) {
                     com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.stop(this)
                     binding.root.postDelayed({ load() }, 800)
                 })
             }
-            booking.canShareLocation -> actions.addView(button("घर से निकल पड़ा", 0) { askToShare(booking.id, job.id) })
+            booking.canShareLocation -> actions.addView(button("🛵  घर से निकल पड़ा", 0) { askToShare(booking.id, job.id) })
         }
-        actions.addView(button("कंपनी को Call करें", 2) { DayJobUi.call(this, job.company.phone) })
-        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+        actions.addView(button("📞  कंपनी को Call करें", 2) { DayJobUi.call(this, job.company.phone) })
+        actions.addView(button("🧭  रास्ता देखें", 1) { DayJobUi.directions(this, job) })
         // While "Are you coming?" is shown, its No already gives the seat back.
         val asking = booking.confirmAsked && !booking.confirmed
         if (job.isAccepting && !asking) {
@@ -336,20 +344,23 @@ class DayJobDetailActivity : AppCompatActivity() {
             actions.addView(note("${job.radiusKm} km के ${job.notifiedCount} ${if (job.notifiedCount == 1) "मज़दूर" else "मज़दूरों"} को ख़बर भेजी गई।"))
         }
         if (job.canTrack && job.filledTotal > 0) {
-            actions.addView(button("नक्शे पर देखें, कौन कहाँ है", 2) { startActivity(DayJobTrackActivity.intent(this, job.id)) })
+            actions.addView(button("🗺  नक्शे पर देखें, कौन कहाँ है", 2) { startActivity(DayJobTrackActivity.intent(this, job.id)) })
+        }
+        if (job.canAskOvertime) {
+            actions.addView(button("⏱  OT माँगें (ज़्यादा देर रुकें)", 0) { askOvertime(job) })
         }
         val waitingDone = job.bookings.orEmpty().filter { it.canMarkDone }
         if (waitingDone.isNotEmpty()) {
             actions.addView(note("काम पूरा हुआ? मज़दूरों को स्टार देकर Job Done दबाएँ। तभी नया काम डाल पाएँगे।", R.color.white))
-            if (waitingDone.size > 1) actions.addView(button("सबका Job Done (${waitingDone.size})", 2) {
+            if (waitingDone.size > 1) actions.addView(button("✅  सबका Job Done (${waitingDone.size})", 2) {
                 DayJobUi.askStars(this, "सबका Job Done", "सभी ${waitingDone.size} मज़दूरों को कितने स्टार देंगे? किसी को अलग देना हो तो नीचे उसके नाम पर Job Done दबाएँ।") { stars ->
                     act { repository.companyDoneAll(job.id, stars) }
                 }
             })
         }
-        actions.addView(button("यही काम दोबारा डालें", 0) { askRepost(job) })
+        actions.addView(button("🔁  यही काम दोबारा डालें", 0) { askRepost(job) })
         if (job.canCancel ?: (job.status in listOf("in_review", "open", "full", "closed"))) {
-            actions.addView(button("काम रद्द करें", 1) {
+            actions.addView(button("🚫  काम रद्द करें", 1) {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                     .setTitle("यह काम रद्द करें?")
                     .setMessage("जिसने भी हाँ कहा है, सबको ख़बर जाएगी।")
@@ -433,6 +444,9 @@ class DayJobDetailActivity : AppCompatActivity() {
                     val state = when {
                         b.status == "no_show" -> " · नहीं आया"
                         b.onHold -> " · बुक कर रहा है (4 मिनट)"
+                        b.otStatus == "asked" -> " · OT पूछा, जवाब बाक़ी"
+                        b.otStatus == "accepted" -> " · OT हाँ: ${otHoursText(b.otHours)}, ₹${b.otAmount ?: 0}"
+                        b.otStatus == "declined" -> " · OT नहीं"
                         b.companyDone -> " · Job Done, आपने ${b.companyRating ?: ""}★ दिए"
                         b.confirmed -> " · ✓ पक्का आएगा"
                         else -> ""
@@ -452,8 +466,8 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
                     setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
                 })
-                if (b.canRebook && b.companyDone) addView(TextView(context).apply {
-                    text = "फिर बुलाएँ"
+                if (b.canRebook) addView(TextView(context).apply {
+                    text = if (b.companyDone) "फिर बुलाएँ" else "कल फिर बुलाएँ"
                     setTypeface(typeface, android.graphics.Typeface.BOLD)
                     setTextColor(ContextCompat.getColor(context, R.color.day_job_green))
                     setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
@@ -528,7 +542,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             actions.addView(button("✓  हाँ, टीम भेजूँगा", 2) { act { repository.answerTeamTurn(job.id, true) } })
             actions.addView(button("✗  नहीं", 1) { act { repository.answerTeamTurn(job.id, false) } })
         }
-        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+        actions.addView(button("🧭  रास्ता देखें", 1) { DayJobUi.directions(this, job) })
     }
 
     /** Booking Summary for a held seat, with the minutes left and a big Book button. */
@@ -553,7 +567,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         holdTimer = left
         updateHoldTimer()
         actions.addView(left)
-        actions.addView(button("✓  अभी Book करें", 2) {
+        actions.addView(button("✅  अभी Book करें", 2) {
             binding.detailLoading.visibility = View.VISIBLE
             lifecycleScope.launch {
                 val result = repository.book(booking.id)
@@ -569,7 +583,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                 load()
             }
         })
-        actions.addView(button("कंपनी को Call करें", 1) { DayJobUi.call(this, job.company.phone) })
+        actions.addView(button("📞  कंपनी को Call करें", 1) { DayJobUi.call(this, job.company.phone) })
         actions.addView(button("नहीं चाहिए, छोड़ दें", 1) { act { repository.cancelBooking(booking.id) } })
     }
 
@@ -646,6 +660,37 @@ class DayJobDetailActivity : AppCompatActivity() {
         com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.start(this, bookingId, jobId)
         DayJobUi.toast(this, "ठीक है, कंपनी को ख़बर भेज दी। सुरक्षित पहुँचें।")
         binding.root.postDelayed({ load() }, 800)
+    }
+
+    private fun otHoursText(hours: Double?): String {
+        val h = hours ?: 0.0
+        val whole = h.toInt()
+        return (if (whole > 0) "$whole" else "") + (if (h - whole >= 0.5) "½" else "") + " घंटे"
+    }
+
+    /** Hours on a picker; the app works out the money (day's wage ÷ hours × extra), the company can change it. */
+    private fun askOvertime(job: DayJob) {
+        val choices = listOf(1.0, 1.5, 2.0, 3.0, 4.0)
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("कितने घंटे और रुकना है?")
+            .setItems(choices.map { "${otHoursText(it)} · ₹${(job.hourlyRate * it).toInt()} हर मज़दूर" }.toTypedArray()) { _, i ->
+                val hours = choices[i]
+                val suggested = (job.hourlyRate * hours).toInt()
+                val input = android.widget.EditText(this).apply {
+                    inputType = android.text.InputType.TYPE_CLASS_NUMBER
+                    setText(suggested.toString())
+                    setSelection(text.length)
+                }
+                AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+                    .setTitle("हर मज़दूर को कितने रुपये?")
+                    .setMessage("मज़दूरी ₹${job.wagePerDay} ÷ ${job.hours} घंटे × ${otHoursText(hours)} = ₹$suggested। चाहें तो बदलें।")
+                    .setView(input)
+                    .setPositiveButton("OT माँगें") { _, _ -> act { repository.askOvertime(job.id, hours, input.text.toString().toIntOrNull() ?: suggested) } }
+                    .setNegativeButton("रहने दें", null)
+                    .show()
+            }
+            .setNegativeButton("रहने दें", null)
+            .show()
     }
 
     /** Same worker, a new date; the job is theirs for an hour. */

@@ -61,6 +61,13 @@ class DayJobPostActivity : AppCompatActivity() {
         binding.postSite.text = siteName.ifBlank { "नक्शे पर लगा दी" }
     }
 
+    /** The phone's own speech screen in Hindi; no microphone permission needed here. */
+    private val listen = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val spoken = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (result.resultCode != RESULT_OK || spoken.isNullOrBlank()) return@registerForActivityResult
+        fillFromVoice(spoken)
+    }
+
     private val pickPhotos = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNullOrEmpty()) return@registerForActivityResult
         lifecycleScope.launch {
@@ -93,6 +100,7 @@ class DayJobPostActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.meta()) {
                 is DayJobOutcome.Ok -> {
+                    if (result.data.voiceAvailable) addMicButton()
                     trades = result.data.trades
                     district = result.data.company?.district
                     result.data.company?.let { c ->
@@ -102,6 +110,73 @@ class DayJobPostActivity : AppCompatActivity() {
                         }
                     }
                     renderSlots()
+                }
+                is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobPostActivity, result.message)
+            }
+        }
+    }
+
+    private fun addMicButton() {
+        val form = binding.postTitle.parent as? LinearLayout ?: return
+        form.addView(TextView(this).apply {
+            text = "🎤  बोलकर काम डालें"
+            textSize = 17f
+            gravity = Gravity.CENTER
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(ContextCompat.getColor(context, R.color.day_job_on_green))
+            setBackgroundResource(R.drawable.bg_day_job_green_button)
+            setPadding(0, DayJobUi.dp(context, 14), 0, DayJobUi.dp(context, 14))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { topMargin = DayJobUi.dp(context, 8); bottomMargin = DayJobUi.dp(context, 4) }
+            contentDescription = "बोलकर काम डालें"
+            setOnClickListener { startListening() }
+        }, 0)
+        form.addView(TextView(this).apply {
+            text = "जैसे: \"कल सुबह 8 बजे 5 हेल्पर चाहिए, 600 रुपये, गोल चौक\""
+            textSize = 13f
+            setTextColor(ContextCompat.getColor(context, R.color.search_hint))
+            setPadding(0, 0, 0, DayJobUi.dp(context, 8))
+        }, 1)
+    }
+
+    private fun startListening() {
+        val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "काम, कितने लोग, मज़दूरी, कब और कहाँ — बोलें")
+        runCatching { listen.launch(intent) }.onFailure { DayJobUi.toast(this, "इस फ़ोन में बोलकर लिखने की सुविधा नहीं है।") }
+    }
+
+    /** Sends what was said to the server and fills the form; the company checks and posts. */
+    private fun fillFromVoice(spoken: String) {
+        DayJobUi.toast(this, "सुना: $spoken")
+        lifecycleScope.launch {
+            when (val result = repository.voice(spoken)) {
+                is DayJobOutcome.Ok -> result.data?.let { d ->
+                    d.title?.let { binding.postTitle.setText(it) }
+                    if (d.slots.isNotEmpty()) {
+                        counts.clear()
+                        d.slots.forEach { counts[it.trade] = it.count }
+                        renderSlots()
+                    }
+                    d.wagePerDay?.let { binding.postWage.setText(it.toString()) }
+                    d.hours?.let { binding.postHours.setSelection((it - 1).coerceIn(0, 11)) }
+                    d.startTime?.let { t ->
+                        startTime = t
+                        binding.postTime.text = DayJobFormat.whenText(LocalDate.now().toString(), t).substringAfter(", ")
+                    }
+                    d.workDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() }?.let { date ->
+                        workDate = date
+                        val group = binding.postDateChips
+                        val index = when (date) { LocalDate.now() -> 0; LocalDate.now().plusDays(1) -> 1; else -> 2 }
+                        (group.getChildAt(index) as? com.google.android.material.chip.Chip)?.let { chip ->
+                            if (index == 2) chip.text = DayJobFormat.whenText(date.toString(), "", LocalDate.now()).substringBefore(",")
+                            chip.isChecked = true
+                        }
+                    }
+                    d.description?.let { binding.postDescription.setText(it) }
+                    d.areaName?.let { if (siteName.isBlank()) binding.postSite.text = "$it — नक्शे पर जगह लगाएँ" }
+                    DayJobUi.toast(this@DayJobPostActivity, result.message)
                 }
                 is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobPostActivity, result.message)
             }

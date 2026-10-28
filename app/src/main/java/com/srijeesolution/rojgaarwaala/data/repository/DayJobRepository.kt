@@ -66,6 +66,17 @@ class DayJobRepository @Inject constructor() {
     ): DayJobOutcome<DayJobWorker?> =
         call { api.saveWorker(DayJobWorkerRequest(trades, available, alertFrom, alertTo, acceptTerms)) }.mapData { it.worker }
 
+    /** What the company said, as a filled job form. */
+    suspend fun voice(text: String): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobVoiceDraft?> =
+        call { api.voice(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobVoiceRequest(text)) }.mapData { it.draft }
+
+    /** [amount] null: the hourly rate × hours. */
+    suspend fun askOvertime(jobId: Int, hours: Double, amount: Int?): DayJobOutcome<Any?> =
+        call { api.askOvertime(jobId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOvertimeRequest(hours, amount)) }
+
+    suspend fun answerOvertime(bookingId: Int, yes: Boolean): DayJobOutcome<Any?> =
+        call { api.answerOvertime(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest(yes)) }
+
     /** [audience] is "worker" or "company". */
     suspend fun acceptTerms(audience: String): DayJobOutcome<Any?> =
         call { api.acceptTerms(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest(audience)) }
