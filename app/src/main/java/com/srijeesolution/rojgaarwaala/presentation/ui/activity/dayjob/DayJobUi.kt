@@ -119,16 +119,20 @@ internal object DayJobUi {
             onPick(null)
             return
         }
+        pickOne(context, title, reasons) { onPick(reasons[it]) }
+    }
+
+    /** A list to pick one from, in large white text (the dialog theme's own list is too faint). */
+    fun pickOne(context: Context, title: String, items: List<String>, onPick: (Int) -> Unit) {
         androidx.appcompat.app.AlertDialog.Builder(context, R.style.Theme_Rojgaarwaala_AlertDialog)
             .setTitle(title)
-            .setAdapter(object : android.widget.ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, reasons) {
-                // The dialog theme's list text is too faint on the dark background.
+            .setAdapter(object : android.widget.ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, items) {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
                     (super.getView(position, convertView, parent) as TextView).apply {
                         setTextColor(Color.WHITE)
                         textSize = 17f
                     }
-            }) { _, i -> onPick(reasons[i]) }
+            }) { _, i -> onPick(i) }
             .setNegativeButton("रहने दें", null)
             .show()
     }
