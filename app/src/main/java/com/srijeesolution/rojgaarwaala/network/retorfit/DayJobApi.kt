@@ -90,6 +90,12 @@ interface DayJobApi {
     @POST("day-jobs/bookings/{id}/book")
     suspend fun book(@Path("id") id: Int): Response<DayJobEnvelope<DayJobData>>
 
+    @POST("day-jobs/{id}/team-turn")
+    suspend fun teamTurn(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest): Response<DayJobEnvelope<DayJobData>>
+
+    @POST("day-jobs/{id}/invite/{userId}")
+    suspend fun inviteMember(@Path("id") id: Int, @Path("userId") userId: Int): Response<DayJobEnvelope<Any>>
+
     @POST("day-jobs/{id}/reject")
     suspend fun reject(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
 

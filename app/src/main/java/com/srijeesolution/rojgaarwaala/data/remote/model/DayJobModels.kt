@@ -110,6 +110,19 @@ data class DayJobBooking(
     @SerializedName("can_rebook") val canRebook: Boolean = false,
 )
 
+data class DayJobTeamTurn(
+    /** offered (say yes/no) or yes (pick who goes). */
+    @SerializedName("status") val status: String = "",
+    @SerializedName("respond_by") val respondBy: String? = null,
+    @SerializedName("pick_by") val pickBy: String? = null,
+)
+
+data class DayJobFreeMember(
+    @SerializedName("team_name") val teamName: String = "",
+    @SerializedName("user_id") val userId: Int = 0,
+    @SerializedName("name") val name: String? = null,
+)
+
 data class DayJobCompanyRef(
     @SerializedName("id") val id: Int = 0,
     @SerializedName("name") val name: String = "",
@@ -143,6 +156,13 @@ data class DayJob(
     @SerializedName("reserved_for_me") val reservedForMe: Boolean = false,
     @SerializedName("reserved_until") val reservedUntil: String? = null,
     @SerializedName("rejected_by_me") val rejectedByMe: Boolean = false,
+    /** Not yet takeable by this worker (a day ahead; 3 days with 20+ ratings): from when. */
+    @SerializedName("can_take_from") val canTakeFrom: String? = null,
+    /** This leader's team's turn at the job, if it is theirs now. */
+    @SerializedName("team_turn") val teamTurn: DayJobTeamTurn? = null,
+    @SerializedName("teams_turn_now") val teamsTurnNow: Boolean = false,
+    /** Owner: free people in the teams coming who could fill an empty seat. */
+    @SerializedName("team_free_members") val teamFreeMembers: List<DayJobFreeMember>? = null,
     @SerializedName("radius_km") val radiusKm: Int = 5,
     @SerializedName("notified_count") val notifiedCount: Int = 0,
     @SerializedName("can_track") val canTrack: Boolean = false,

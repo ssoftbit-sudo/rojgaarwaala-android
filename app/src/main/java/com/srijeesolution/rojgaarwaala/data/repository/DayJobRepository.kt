@@ -108,6 +108,12 @@ class DayJobRepository @Inject constructor() {
     /** "अभी Book करें" on a held seat. */
     suspend fun book(bookingId: Int): DayJobOutcome<DayJob?> = call { api.book(bookingId) }.mapData { it.job }
 
+    /** The leader answers their team's turn. */
+    suspend fun answerTeamTurn(jobId: Int, yes: Boolean): DayJobOutcome<DayJob?> =
+        call { api.teamTurn(jobId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest(yes)) }.mapData { it.job }
+
+    suspend fun inviteMember(jobId: Int, userId: Int): DayJobOutcome<Any?> = call { api.inviteMember(jobId, userId) }
+
     suspend fun reject(jobId: Int): DayJobOutcome<Any?> = call { api.reject(jobId) }
 
     /** The company calls the same worker back for [workDate]. */

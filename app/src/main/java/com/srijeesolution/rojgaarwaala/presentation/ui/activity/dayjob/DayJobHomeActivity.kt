@@ -313,12 +313,19 @@ class DayJobHomeActivity : AppCompatActivity() {
         }
         if (hasLocation()) {
             try {
-                com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this)
-                    .getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
-                    .addOnCompleteListener { task ->
-                        val here = task.result
-                        if (here != null) loadNearbyAt(here.latitude, here.longitude) else loadNearbyAt(null, null)
-                    }
+                val client = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this)
+                // Show the list at once from the last known place; a fresh fix can take
+                // a while, and the list is redrawn when it comes.
+                client.lastLocation.addOnCompleteListener { last ->
+                    val known = last.result
+                    if (known != null) loadNearbyAt(known.latitude, known.longitude) else loadNearbyAt(null, null)
+                    client.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                        .addOnCompleteListener { task ->
+                            val here = task.result ?: return@addOnCompleteListener
+                            val moved = known == null || here.distanceTo(known) > 200f
+                            if (moved) loadNearbyAt(here.latitude, here.longitude)
+                        }
+                }
                 return
             } catch (_: SecurityException) {
                 // fall through to the saved pin

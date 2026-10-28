@@ -132,6 +132,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         renderPhotos(job)
         renderMap(job)
         binding.detailActions.removeAllViews()
+        holdTimer = null
         when {
             isOwner -> renderOwner(job)
             booked -> renderBooked(job)
@@ -209,6 +210,17 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private fun renderWorker(job: DayJob) {
         val actions = binding.detailActions
+        holdTimer = null
+        job.teamTurn?.let { turn ->
+            renderTeamTurn(job, turn)
+            return
+        }
+        job.canTakeFrom?.let { from ->
+            actions.addView(note("यह काम ${DayJobFormat.dayText(from)} ${DayJobFormat.clockText(from)} से ले सकेंगे। 20 rating के बाद 3 दिन आगे तक का काम ले सकते हैं।", R.color.brand_color_yellow))
+            if (!job.rejectedByMe) actions.addView(button("✗  नहीं, यह काम नहीं", 1) { act { repository.reject(job.id) } })
+            actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+            return
+        }
         if (job.reservedForMe) {
             actions.addView(note("${job.company.name} ने आपको फिर बुलाया है। यह काम ${DayJobFormat.clockText(job.reservedUntil)} तक सिर्फ़ आपके लिए है।", R.color.day_job_green))
         } else if (job.rejectedByMe && job.isAccepting) {
@@ -316,6 +328,8 @@ class DayJobDetailActivity : AppCompatActivity() {
         val actions = binding.detailActions
         if (job.status == "in_review") {
             actions.addView(note("कंपनी की जाँच पूरी होते ही यह काम सबको दिखेगा।"))
+        } else if (job.teamsTurnNow) {
+            actions.addView(note("अभी पास की टीमों से एक-एक करके पूछ रहे हैं। बची जगह के लिए फिर सबको ख़बर जाएगी।", R.color.brand_color_yellow))
         } else if (job.reservedUntil != null) {
             actions.addView(note("यह काम ${DayJobFormat.clockText(job.reservedUntil)} तक सिर्फ़ उसी मज़दूर के लिए रखा है जिसे आपने फिर बुलाया। उसके बाद सबको ख़बर जाएगी।", R.color.day_job_green))
         } else if (job.notifiedCount > 0) {
@@ -383,6 +397,27 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setPadding(DayJobUi.dp(context, 16), DayJobUi.dp(context, 8), DayJobUi.dp(context, 16), DayJobUi.dp(context, 8))
                     contentDescription = "लीडर को Call करें"
                     setOnClickListener { DayJobUi.call(context, people.first().callMobile) }
+                })
+            })
+        }
+        // Free people of the teams coming: the company can call them for empty seats.
+        job.teamFreeMembers.orEmpty().forEach { m ->
+            list.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(DayJobUi.dp(context, 12), DayJobUi.dp(context, 4), DayJobUi.dp(context, 8), DayJobUi.dp(context, 8))
+                addView(TextView(context).apply {
+                    text = "${m.name ?: "सदस्य"} · ${m.teamName} टीम · खाली"
+                    setTextColor(ContextCompat.getColor(context, R.color.search_hint))
+                    textSize = 14f
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                addView(TextView(context).apply {
+                    text = "बुलाएँ"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
+                    setPadding(DayJobUi.dp(context, 12), DayJobUi.dp(context, 6), DayJobUi.dp(context, 12), DayJobUi.dp(context, 6))
+                    setOnClickListener { act { repository.inviteMember(job.id, m.userId) } }
                 })
             })
         }
@@ -473,6 +508,29 @@ class DayJobDetailActivity : AppCompatActivity() {
         act { repository.accept(job.id, trade) }
     }
 
+    /** The leader's turn: 1 minute to say yes for the team, then 2 minutes to pick who goes. */
+    private fun renderTeamTurn(job: DayJob, turn: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamTurn) {
+        val actions = binding.detailActions
+        val seats = job.neededTotal - job.filledTotal
+        if (turn.status == "yes") {
+            actions.addView(note("आपकी टीम की बारी है। $seats लोग चाहिए। लोग चुनकर पक्का करें।", R.color.day_job_green))
+            val left = note("", R.color.brand_color_yellow).apply { textSize = 18f; tag = turn.pickBy to " में लोग चुनें, नहीं तो काम अगली टीम को जाएगा।" }
+            holdTimer = left
+            updateHoldTimer()
+            actions.addView(left)
+            actions.addView(button("✓  टीम के लोग चुनें", 2) { pickTeam(job) })
+        } else {
+            actions.addView(note("आपकी टीम के लिए काम आया है: $seats लोग चाहिए। सबसे पहले आपको पूछा जा रहा है।", R.color.white))
+            val left = note("", R.color.brand_color_yellow).apply { textSize = 18f; tag = turn.respondBy to " में हाँ करें, नहीं तो अगली टीम को जाएगा।" }
+            holdTimer = left
+            updateHoldTimer()
+            actions.addView(left)
+            actions.addView(button("✓  हाँ, टीम भेजूँगा", 2) { act { repository.answerTeamTurn(job.id, true) } })
+            actions.addView(button("✗  नहीं", 1) { act { repository.answerTeamTurn(job.id, false) } })
+        }
+        actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+    }
+
     /** Booking Summary for a held seat, with the minutes left and a big Book button. */
     private fun renderHold(job: DayJob, booking: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobBooking) {
         val actions = binding.detailActions
@@ -491,7 +549,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                 .apply { bottomMargin = DayJobUi.dp(context, 12) }
         })
-        val left = note("", R.color.brand_color_yellow).apply { textSize = 18f; tag = booking.heldUntil }
+        val left = note("", R.color.brand_color_yellow).apply { textSize = 18f; tag = booking.heldUntil to " में Book करें, नहीं तो जगह छूट जाएगी।" }
         holdTimer = left
         updateHoldTimer()
         actions.addView(left)
@@ -517,10 +575,11 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private var holdTimer: TextView? = null
 
-    /** "3:42 में Book करें, नहीं तो जगह छूट जाएगी"; at zero the screen reloads. */
+    /** "3:42 में Book करें…" (any countdown line on screen); at zero the screen reloads. */
     private fun updateHoldTimer() {
         val view = holdTimer ?: return
-        val until = (view.tag as? String)?.let { runCatching { java.time.OffsetDateTime.parse(it).toInstant() }.getOrNull() } ?: return
+        val (iso, suffix) = (view.tag as? Pair<*, *>) ?: return
+        val until = (iso as? String)?.let { runCatching { java.time.OffsetDateTime.parse(it).toInstant() }.getOrNull() } ?: return
         val seconds = java.time.Duration.between(java.time.Instant.now(), until).seconds
         if (seconds <= 0) {
             holdTimer = null
@@ -528,7 +587,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             load()
             return
         }
-        view.text = String.format(java.util.Locale.US, "%d:%02d", seconds / 60, seconds % 60) + " में Book करें, नहीं तो जगह छूट जाएगी।"
+        view.text = String.format(java.util.Locale.US, "%d:%02d", seconds / 60, seconds % 60) + suffix
     }
 
     /** The leader ticks who goes and as what; all seats are taken together or none. */
