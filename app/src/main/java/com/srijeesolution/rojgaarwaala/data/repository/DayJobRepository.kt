@@ -62,8 +62,22 @@ class DayJobRepository @Inject constructor() {
         available: Boolean,
         alertFrom: String? = null,
         alertTo: String? = null,
+        acceptTerms: Boolean? = null,
     ): DayJobOutcome<DayJobWorker?> =
-        call { api.saveWorker(DayJobWorkerRequest(trades, available, alertFrom, alertTo)) }.mapData { it.worker }
+        call { api.saveWorker(DayJobWorkerRequest(trades, available, alertFrom, alertTo, acceptTerms)) }.mapData { it.worker }
+
+    /** [audience] is "worker" or "company". */
+    suspend fun acceptTerms(audience: String): DayJobOutcome<Any?> =
+        call { api.acceptTerms(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest(audience)) }
+
+    suspend fun workerDone(bookingId: Int, paid: Boolean, rating: Int?): DayJobOutcome<Any?> =
+        call { api.workerDone(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobDoneRequest(paid, rating)) }
+
+    suspend fun companyDone(bookingId: Int, rating: Int): DayJobOutcome<Any?> =
+        call { api.companyDone(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest(rating)) }
+
+    suspend fun companyDoneAll(jobId: Int, rating: Int): DayJobOutcome<Any?> =
+        call { api.companyDoneAll(jobId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest(rating)) }
 
     suspend fun confirm(bookingId: Int, coming: Boolean): DayJobOutcome<Any?> =
         call { api.confirm(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobConfirmRequest(coming)) }
@@ -93,7 +107,8 @@ class DayJobRepository @Inject constructor() {
 
     suspend fun cancelJob(id: Int): DayJobOutcome<DayJob?> = call { api.cancel(id) }.mapData { it.job }
 
-    suspend fun cancelBooking(bookingId: Int): DayJobOutcome<Any?> = call { api.cancelBooking(bookingId) }
+    suspend fun cancelBooking(bookingId: Int, reason: String? = null): DayJobOutcome<Any?> =
+        call { api.cancelBooking(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCancelRequest(reason)) }
 
     suspend fun repost(id: Int, workDate: String, startTime: String?, wage: Int?): DayJobOutcome<DayJob?> =
         call { api.repost(id, DayJobRepostRequest(workDate, startTime, wage)) }.mapData { it.job }

@@ -26,6 +26,8 @@ data class DayJobCompany(
     @SerializedName("status") val status: String? = null,
     @SerializedName("admin_note") val adminNote: String? = null,
     @SerializedName("paid_rate") val paidRate: Int? = null,
+    @SerializedName("rating_avg") val ratingAvg: Double? = null,
+    @SerializedName("rating_count") val ratingCount: Int = 0,
 )
 
 data class DayJobWorker(
@@ -35,6 +37,11 @@ data class DayJobWorker(
     @SerializedName("alert_from") val alertFrom: String? = null,
     @SerializedName("alert_to") val alertTo: String? = null,
     @SerializedName("held_back_until") val heldBackUntil: String? = null,
+    // No new bookings until then (no-show or too many cancels), with the reason in Hindi.
+    @SerializedName("booking_blocked_until") val bookingBlockedUntil: String? = null,
+    @SerializedName("booking_block_message") val bookingBlockMessage: String? = null,
+    @SerializedName("rating_avg") val ratingAvg: Double? = null,
+    @SerializedName("rating_count") val ratingCount: Int = 0,
 )
 
 data class DayJobMeta(
@@ -43,6 +50,13 @@ data class DayJobMeta(
     @SerializedName("company") val company: DayJobCompany? = null,
     @SerializedName("worker") val worker: DayJobWorker = DayJobWorker(),
     @SerializedName("terms") val terms: List<String> = emptyList(),
+    @SerializedName("worker_terms") val workerTerms: List<String> = emptyList(),
+    @SerializedName("needs_worker_terms") val needsWorkerTerms: Boolean = false,
+    @SerializedName("needs_company_terms") val needsCompanyTerms: Boolean = false,
+    @SerializedName("cancel_reasons") val cancelReasons: List<String> = emptyList(),
+    /** Jobs where this user still has to press Job Done, as worker and as company. */
+    @SerializedName("pending_done") val pendingDone: List<Int> = emptyList(),
+    @SerializedName("pending_done_company") val pendingDoneCompany: List<Int> = emptyList(),
 )
 
 data class DayJobSlot(
@@ -78,6 +92,18 @@ data class DayJobBooking(
     @SerializedName("can_share_location") val canShareLocation: Boolean = false,
     @SerializedName("sharing_location") val sharingLocation: Boolean = false,
     @SerializedName("arrived") val arrived: Boolean = false,
+    // Job Done: the worker's own (my_booking) and the company's, per worker (owner list).
+    @SerializedName("can_mark_done") val canMarkDone: Boolean = false,
+    @SerializedName("done_by_me") val doneByMe: Boolean = false,
+    @SerializedName("done_by_company") val doneByCompany: Boolean = false,
+    @SerializedName("my_rating") val myRating: Int? = null,
+    @SerializedName("company_done") val companyDone: Boolean = false,
+    @SerializedName("worker_done") val workerDone: Boolean = false,
+    @SerializedName("company_rating") val companyRating: Int? = null,
+    @SerializedName("worker_rating") val workerRating: Int? = null,
+    @SerializedName("not_paid") val notPaid: Boolean = false,
+    @SerializedName("worker_rating_avg") val workerRatingAvg: Double? = null,
+    @SerializedName("worker_rating_count") val workerRatingCount: Int = 0,
 )
 
 data class DayJobCompanyRef(
@@ -85,6 +111,8 @@ data class DayJobCompanyRef(
     @SerializedName("name") val name: String = "",
     @SerializedName("phone") val phone: String? = null,
     @SerializedName("paid_rate") val paidRate: Int? = null,
+    @SerializedName("rating_avg") val ratingAvg: Double? = null,
+    @SerializedName("rating_count") val ratingCount: Int = 0,
 )
 
 data class DayJob(
@@ -145,7 +173,17 @@ data class DayJobWorkerRequest(
     @SerializedName("is_available") val isAvailable: Boolean,
     @SerializedName("alert_from") val alertFrom: String? = null,
     @SerializedName("alert_to") val alertTo: String? = null,
+    @SerializedName("accept_terms") val acceptTerms: Boolean? = null,
 )
+
+data class DayJobTermsRequest(@SerializedName("audience") val audience: String)
+data class DayJobCancelRequest(@SerializedName("reason") val reason: String?)
+data class DayJobDoneRequest(
+    @SerializedName("paid") val paid: Boolean,
+    @SerializedName("rating") val rating: Int?,
+    @SerializedName("note") val note: String? = null,
+)
+data class DayJobRatingRequest(@SerializedName("rating") val rating: Int, @SerializedName("note") val note: String? = null)
 
 data class DayJobConfirmRequest(@SerializedName("coming") val coming: Boolean)
 data class DayJobPaidRequest(@SerializedName("paid") val paid: Boolean)

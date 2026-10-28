@@ -85,7 +85,19 @@ interface DayJobApi {
     suspend fun noShow(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
 
     @POST("day-jobs/bookings/{id}/cancel")
-    suspend fun cancelBooking(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
+    suspend fun cancelBooking(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCancelRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/terms")
+    suspend fun acceptTerms(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/done")
+    suspend fun workerDone(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobDoneRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/company-done")
+    suspend fun companyDone(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/{id}/company-done")
+    suspend fun companyDoneAll(@Path("id") jobId: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest): Response<DayJobEnvelope<Any>>
 
     // Gang leader
     @GET("day-jobs/team")

@@ -56,6 +56,7 @@ class DayJobDetailActivity : AppCompatActivity() {
     private var mapReady: SupportMapFragment? = null
     /** True when the viewer leads a team, so they can take seats for it. */
     private var leadsTeam = false
+    private var cancelReasons: List<String> = emptyList()
     /** Booking to start sharing for once location is allowed. */
     private var pendingShare: Pair<Int, Int>? = null
     private val askLocation = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { granted ->
@@ -81,7 +82,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         val id = intent.getIntExtra(EXTRA_ID, 0)
         binding.detailLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
-            (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades }
+            (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades; cancelReasons = it.data.cancelReasons }
             (repository.team() as? DayJobOutcome.Ok)?.let { leadsTeam = it.data.role == "leader" }
             val result = repository.show(id)
             binding.detailLoading.visibility = View.GONE
@@ -110,6 +111,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailTitle.text = job.title
         binding.detailCompany.text = listOfNotNull(
             job.company.name,
+            DayJobUi.ratingText(job.company.ratingAvg, job.company.ratingCount).ifBlank { null },
             job.company.paidRate?.let { "$it% मज़दूरों को समय पर पैसा मिला" },
         ).joinToString(" · ")
         binding.detailWage.text = DayJobFormat.wageText(job.wagePerDay)
@@ -224,12 +226,28 @@ class DayJobDetailActivity : AppCompatActivity() {
         val trade = job.slots.firstOrNull { it.trade == job.myBooking?.trade }?.label ?: ""
         val booking = job.myBooking!!
         when {
-            booking.canAnswerPayment -> {
-                actions.addView(note("क्या इस काम का पूरा पैसा मिला?", R.color.white))
-                actions.addView(button("हाँ, पूरा पैसा मिला", 2) { act { repository.answerPaid(booking.id, true) } })
-                actions.addView(button("नहीं, पूरा पैसा नहीं मिला", 1) { act { repository.answerPaid(booking.id, false) } })
+            booking.doneByMe -> actions.addView(note(
+                (if (booking.paidAnswer == "no") "आपने बताया कि पूरा पैसा नहीं मिला। हमारी टीम कंपनी से बात करेगी।"
+                else "✓ Job Done" + (booking.myRating?.let { " · आपने कंपनी को $it ★ दिए" } ?: "")) +
+                    (booking.companyRating?.let { "\nकंपनी ने आपको $it ★ दिए।" } ?: ""),
+                R.color.day_job_green,
+            ))
+            booking.canMarkDone -> {
+                actions.addView(note("काम पूरा हुआ? पूरा पैसा मिलने पर Job Done दबाएँ। तभी अगला काम ले पाएँगे।", R.color.white))
+                actions.addView(button("पैसा मिल गया, Job Done", 2) {
+                    DayJobUi.askStars(this, "Job Done", "${job.company.name} को कितने स्टार देंगे?") { stars ->
+                        act { repository.workerDone(booking.id, true, stars) }
+                    }
+                })
+                actions.addView(button("पूरा पैसा नहीं मिला", 1) {
+                    AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+                        .setTitle("पूरा पैसा नहीं मिला?")
+                        .setMessage("हमारी टीम कंपनी से बात करेगी। आप नया काम ले सकेंगे।")
+                        .setPositiveButton("हाँ, नहीं मिला") { _, _ -> act { repository.workerDone(booking.id, false, null) } }
+                        .setNegativeButton("रहने दें", null)
+                        .show()
+                })
             }
-            booking.paidAnswer != null -> actions.addView(note("पैसे के बारे में बताने के लिए धन्यवाद।", R.color.day_job_green))
             booking.bookedByLeader && job.isAccepting && !booking.confirmAsked -> actions.addView(note(
                 "${booking.leaderName ?: "आपके लीडर"} ने आपकी जगह पक्की की। आप $trade बनकर जा रहे हैं। न जा सकें तो नीचे 'नहीं जा सकता' दबाएँ।",
                 R.color.day_job_green,
@@ -268,7 +286,11 @@ class DayJobDetailActivity : AppCompatActivity() {
                 AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                     .setTitle(if (byLeader) "आप नहीं जा सकते?" else "अपनी जगह छोड़ें?")
                     .setMessage(if (byLeader) "लीडर और कंपनी को ख़बर जाएगी, और कोई और यह जगह ले सकेगा।" else "कंपनी को ख़बर जाएगी और कोई और यह जगह ले सकेगा।")
-                    .setPositiveButton("हाँ, छोड़ दें") { _, _ -> act { repository.cancelBooking(job.myBooking!!.id) } }
+                    .setPositiveButton("हाँ, छोड़ दें") { _, _ ->
+                        DayJobUi.askReason(this, "जगह क्यों छोड़ रहे हैं?", cancelReasons) { reason ->
+                            act { repository.cancelBooking(job.myBooking!!.id, reason) }
+                        }
+                    }
                     .setNegativeButton("नहीं", null)
                     .show()
             })
@@ -284,6 +306,15 @@ class DayJobDetailActivity : AppCompatActivity() {
         }
         if (job.canTrack && job.filledTotal > 0) {
             actions.addView(button("नक्शे पर देखें, कौन कहाँ है", 2) { startActivity(DayJobTrackActivity.intent(this, job.id)) })
+        }
+        val waitingDone = job.bookings.orEmpty().filter { it.canMarkDone }
+        if (waitingDone.isNotEmpty()) {
+            actions.addView(note("काम पूरा हुआ? मज़दूरों को स्टार देकर Job Done दबाएँ। तभी नया काम डाल पाएँगे।", R.color.white))
+            if (waitingDone.size > 1) actions.addView(button("सबका Job Done (${waitingDone.size})", 2) {
+                DayJobUi.askStars(this, "सबका Job Done", "सभी ${waitingDone.size} मज़दूरों को कितने स्टार देंगे? किसी को अलग देना हो तो नीचे उसके नाम पर Job Done दबाएँ।") { stars ->
+                    act { repository.companyDoneAll(job.id, stars) }
+                }
+            })
         }
         actions.addView(button("यही काम दोबारा डालें", 0) { askRepost(job) })
         if (job.status in listOf("in_review", "open", "full", "closed")) {
@@ -317,6 +348,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                     val lines = people.joinToString("\n") { b ->
                         "• ${b.name ?: "मज़दूर"} · ${b.tradeLabel.orEmpty()}" + when {
                             b.status == "no_show" -> " · नहीं आया"
+                            b.companyDone -> " · Job Done ${b.companyRating ?: ""}★"
                             b.confirmed -> " · ✓"
                             else -> ""
                         }
@@ -348,10 +380,13 @@ class DayJobDetailActivity : AppCompatActivity() {
                 addView(TextView(context).apply {
                     val state = when {
                         b.status == "no_show" -> " · नहीं आया"
+                        b.companyDone -> " · Job Done, आपने ${b.companyRating ?: ""}★ दिए"
                         b.confirmed -> " · ✓ पक्का आएगा"
                         else -> ""
                     }
-                    text = "${b.name ?: "मज़दूर"}\n${b.tradeLabel.orEmpty()}$state"
+                    val rating = DayJobUi.ratingText(b.workerRatingAvg, b.workerRatingCount)
+                    text = "${b.name ?: "मज़दूर"}${if (rating.isBlank()) "" else "  $rating"}\n${b.tradeLabel.orEmpty()}$state" +
+                        if (b.notPaid) "\nमज़दूर ने कहा: पूरा पैसा नहीं मिला" else ""
                     setTextColor(ContextCompat.getColor(context, R.color.white))
                     textSize = 14f
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -363,6 +398,17 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
                     setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
                     setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
+                })
+                if (b.canMarkDone) addView(TextView(context).apply {
+                    text = "Job Done"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
+                    setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
+                    setOnClickListener {
+                        DayJobUi.askStars(this@DayJobDetailActivity, "Job Done", "${b.name ?: "मज़दूर"} को कितने स्टार देंगे?") { stars ->
+                            act { repository.companyDone(b.id, stars) }
+                        }
+                    }
                 })
                 if (b.canMarkNoShow) addView(TextView(context).apply {
                     text = "नहीं आया"

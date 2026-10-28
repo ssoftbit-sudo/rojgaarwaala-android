@@ -61,6 +61,9 @@ class DayJobHomeActivity : AppCompatActivity() {
     private val workerAdapter = DayJobAdapter(forCompany = false) { openJob(it) }
     private val companyAdapter = DayJobAdapter(forCompany = true) { openJob(it) }
 
+    /** The rules dialog shows once per visit to this screen. */
+    private var termsShown = false
+
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
 
     private val pickLocation = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -180,9 +183,23 @@ class DayJobHomeActivity : AppCompatActivity() {
             }
             binding.dayJobAlertHours.text = "ख़बर कब: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
             val heldUntil = meta.worker.heldBackUntil
-            binding.dayJobHeldBack.visibility = if (registered && heldUntil != null) View.VISIBLE else View.GONE
-            binding.dayJobHeldBack.text = "आपने हाँ करके काम छोड़े, इसलिए नए काम की ख़बर इस दिन तक बंद है: " +
-                DayJobFormat.dayText(heldUntil) + "। काम यहाँ फिर भी देख सकते हैं।"
+            val rating = DayJobUi.ratingText(meta.worker.ratingAvg, meta.worker.ratingCount)
+            if (rating.isNotBlank()) binding.dayJobMyTrades.append("  ·  $rating")
+            // One yellow line for whatever stops new work right now; tapping a Job Done opens it.
+            val warning = listOfNotNull(
+                meta.pendingDone.takeIf { it.isNotEmpty() }?.let { "${it.size} काम का Job Done बाक़ी है। यहाँ दबाकर पूरा करें, तभी नया काम ले पाएँगे।" },
+                meta.worker.bookingBlockMessage,
+                heldUntil?.let { "आपने हाँ करके काम छोड़े, इसलिए नए काम की ख़बर इस दिन तक बंद है: " + DayJobFormat.dayText(it) + "।" },
+            )
+            binding.dayJobHeldBack.visibility = if (registered && warning.isNotEmpty()) View.VISIBLE else View.GONE
+            binding.dayJobHeldBack.text = warning.joinToString("\n\n")
+            binding.dayJobHeldBack.setOnClickListener {
+                meta.pendingDone.firstOrNull()?.let { startActivity(DayJobDetailActivity.intent(this, it)) }
+            }
+            if (registered && meta.needsWorkerTerms && !termsShown) {
+                termsShown = true
+                DayJobUi.askTerms(this, "मज़दूर के नियम बदले हैं", meta.workerTerms) { agree("worker") }
+            }
             loadNearby()
         } else {
             val company = meta.company
@@ -209,13 +226,32 @@ class DayJobHomeActivity : AppCompatActivity() {
                     "blocked" -> "यह कंपनी रोक दी गई है। मदद के लिए हमसे बात करें।"
                     else -> null
                 }
-                binding.dayJobCompanyNote.text = note
-                binding.dayJobCompanyNote.visibility = if (note == null) View.GONE else View.VISIBLE
+                val pending = meta.pendingDoneCompany
+                val doneNote = if (pending.isEmpty()) null
+                    else "${pending.size} काम का Job Done बाक़ी है। यहाँ दबाकर मज़दूरों को स्टार दें, तभी नया काम डाल पाएँगे।"
+                val shown = listOfNotNull(doneNote, note).joinToString("\n\n").ifBlank { null }
+                binding.dayJobCompanyNote.text = shown
+                binding.dayJobCompanyNote.visibility = if (shown == null) View.GONE else View.VISIBLE
+                binding.dayJobCompanyNote.setOnClickListener {
+                    pending.firstOrNull()?.let { startActivity(DayJobDetailActivity.intent(this, it)) }
+                }
+                if (meta.needsCompanyTerms && !termsShown) {
+                    termsShown = true
+                    DayJobUi.askTerms(this, "कंपनी के नियम बदले हैं", meta.terms) { agree("company") }
+                }
                 val canPost = status == "active" || status == "pending"
                 binding.dayJobAddJob.isEnabled = canPost
                 binding.dayJobAddJob.alpha = if (canPost) 1f else 0.4f
                 loadCompanyJobs()
             }
+        }
+    }
+
+    private fun agree(audience: String) {
+        lifecycleScope.launch {
+            val result = repository.acceptTerms(audience)
+            DayJobUi.toast(this@DayJobHomeActivity, (result as? DayJobOutcome.Ok)?.message ?: (result as? DayJobOutcome.Fail)?.message)
+            refresh()
         }
     }
 
@@ -231,7 +267,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobWorkerSave.text = if (meta.worker.registered) "सेव करें" else "काम की ख़बर पाना शुरू करें"
     }
 
-    private fun saveWorker(available: Boolean) {
+    private fun saveWorker(available: Boolean, agreed: Boolean = false) {
         val meta = meta ?: return
         val chosen = if (binding.dayJobWorkerSetup.visibility == View.VISIBLE) {
             (0 until binding.dayJobWorkerTrades.childCount)
@@ -245,8 +281,14 @@ class DayJobHomeActivity : AppCompatActivity() {
             DayJobUi.toast(this, "कम से कम एक काम चुनें")
             return
         }
+        // First time (or the rules changed): read and accept the rules, then save.
+        if (meta.needsWorkerTerms && !agreed) {
+            DayJobUi.askTerms(this, "मज़दूर के नियम", meta.workerTerms) { saveWorker(available, agreed = true) }
+            if (meta.worker.registered) binding.dayJobAvailable.isChecked = meta.worker.isAvailable
+            return
+        }
         lifecycleScope.launch {
-            when (val result = repository.saveWorker(chosen, available)) {
+            when (val result = repository.saveWorker(chosen, available, acceptTerms = if (agreed) true else null)) {
                 is DayJobOutcome.Ok -> {
                     DayJobUi.toast(this@DayJobHomeActivity, if (available) "पास के काम की ख़बर आपको मिलेगी" else "काम की ख़बर बंद")
                     refresh()

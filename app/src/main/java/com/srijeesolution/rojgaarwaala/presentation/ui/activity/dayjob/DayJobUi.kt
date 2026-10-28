@@ -68,6 +68,66 @@ internal object DayJobUi {
     fun toast(context: Context, message: String?) {
         if (!message.isNullOrBlank()) Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
+
+    /** The rules as a list, with "मैं मानता हूँ"; nothing happens until it is pressed. */
+    fun askTerms(context: Context, title: String, rules: List<String>, onAgree: () -> Unit) {
+        androidx.appcompat.app.AlertDialog.Builder(context, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle(title)
+            .setMessage(rules.joinToString("\n\n") { "• $it" })
+            .setCancelable(false)
+            .setPositiveButton("मैं मानता हूँ") { _, _ -> onAgree() }
+            .setNegativeButton("बाद में", null)
+            .show()
+    }
+
+    /** 1 to 5 big stars; Job Done waits for a choice. */
+    fun askStars(context: Context, title: String, message: String, onPick: (Int) -> Unit) {
+        val bar = android.widget.RatingBar(context).apply {
+            numStars = 5
+            stepSize = 1f
+            rating = 0f
+            progressTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.brand_color_yellow))
+            layoutParams = android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val box = android.widget.LinearLayout(context).apply {
+            gravity = android.view.Gravity.CENTER
+            setPadding(dp(context, 16), dp(context, 12), dp(context, 16), 0)
+            addView(bar)
+        }
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(context, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle(title)
+            .setMessage(message)
+            .setView(box)
+            .setPositiveButton("Job Done", null)
+            .setNegativeButton("रहने दें", null)
+            .show()
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val stars = bar.rating.toInt()
+            if (stars < 1) {
+                toast(context, "1 से 5 स्टार चुनें")
+            } else {
+                dialog.dismiss()
+                onPick(stars)
+            }
+        }
+    }
+
+    /** Why the worker leaves the seat; the list comes from the admin. */
+    fun askReason(context: Context, title: String, reasons: List<String>, onPick: (String?) -> Unit) {
+        if (reasons.isEmpty()) {
+            onPick(null)
+            return
+        }
+        androidx.appcompat.app.AlertDialog.Builder(context, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle(title)
+            .setItems(reasons.toTypedArray()) { _, i -> onPick(reasons[i]) }
+            .setNegativeButton("रहने दें", null)
+            .show()
+    }
+
+    /** "★ 4.3 (12)", or empty before the first rating. */
+    fun ratingText(avg: Double?, count: Int): String =
+        if (avg == null || count == 0) "" else "★ " + String.format(java.util.Locale.US, "%.1f", avg) + " ($count)"
 }
 
 /** Cards for jobs: a worker sees wage, distance and seats; a company sees how many are coming. */
