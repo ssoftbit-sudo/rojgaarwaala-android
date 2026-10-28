@@ -111,6 +111,12 @@ interface DayJobApi {
     @POST("day-jobs/bookings/{id}/overtime")
     suspend fun answerOvertime(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest): Response<DayJobEnvelope<Any>>
 
+    @POST("day-jobs/bookings/{id}/overtime-request")
+    suspend fun requestOvertime(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOtRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/overtime-decision")
+    suspend fun decideOvertime(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOtDecision): Response<DayJobEnvelope<Any>>
+
     @POST("day-jobs/terms")
     suspend fun acceptTerms(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest): Response<DayJobEnvelope<Any>>
 

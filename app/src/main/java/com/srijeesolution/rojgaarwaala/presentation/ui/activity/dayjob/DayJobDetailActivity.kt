@@ -260,6 +260,16 @@ class DayJobDetailActivity : AppCompatActivity() {
                 actions.addView(button("✗  नहीं रुक सकता", 1) { act { repository.answerOvertime(booking.id, false) } })
             }
             "accepted" -> actions.addView(note("✓ OT: ${otHoursText(booking.otHours)} · ₹${booking.otAmount ?: 0} extra", R.color.day_job_green))
+            "requested" -> actions.addView(note("आपने ${otHoursText(booking.otHours)} OT (₹${booking.otAmount ?: 0}) के लिए पूछा है। कंपनी के जवाब का इंतज़ार।", R.color.brand_color_yellow))
+            "declined" -> actions.addView(note("कंपनी को अभी OT नहीं चाहिए।"))
+        }
+        if (booking.canRequestOvertime) {
+            actions.addView(button("⏱  काम बाक़ी है? OT के लिए पूछें", 1) {
+                val choices = listOf(1.0, 1.5, 2.0, 3.0, 4.0)
+                DayJobUi.pickOne(this, "कितने घंटे और रुक सकते हैं?", choices.map { "${otHoursText(it)} · ₹${(booking.hourlyRate * it).toInt()} extra" }) { i ->
+                    act { repository.requestOvertime(booking.id, choices[i]) }
+                }
+            })
         }
         when {
             booking.doneByMe -> actions.addView(note(
@@ -445,6 +455,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                     val state = when {
                         b.status == "no_show" -> " · नहीं आया"
                         b.onHold -> " · बुक कर रहा है (4 मिनट)"
+                        b.otStatus == "requested" -> " · OT माँगा: ${otHoursText(b.otHours)}, ₹${b.otAmount ?: 0}"
                         b.otStatus == "asked" -> " · OT पूछा, जवाब बाक़ी"
                         b.otStatus == "accepted" -> " · OT हाँ: ${otHoursText(b.otHours)}, ₹${b.otAmount ?: 0}"
                         b.otStatus == "declined" -> " · OT नहीं"
@@ -465,16 +476,38 @@ class DayJobDetailActivity : AppCompatActivity() {
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                         .apply { topMargin = DayJobUi.dp(context, 6) }
                 }
+                // The star sits beside the name, so the action row keeps room for Call.
+                val nameView = getChildAt(0)
+                removeView(nameView)
+                addView(LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    nameView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    addView(nameView)
+                    if (b.status == "accepted" && b.workerId > 0) addView(TextView(context).apply {
+                        text = if (b.favourite) "★" else "☆"
+                        textSize = 22f
+                        contentDescription = if (b.favourite) "पसंदीदा से हटाएँ" else "पसंदीदा में जोड़ें"
+                        setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
+                        setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
+                        setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
+                    })
+                }, 0)
                 addView(actionsRow)
-                if (b.status == "accepted" && b.workerId > 0) actionsRow.addView(TextView(context).apply {
-                    text = if (b.favourite) "★" else "☆"
-                    textSize = 22f
-                    contentDescription = if (b.favourite) "पसंदीदा से हटाएँ" else "पसंदीदा में जोड़ें"
+                // Less frequent actions go on a row above, so the main row never runs out of room.
+                val extraRow = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                }
+                addView(extraRow, childCount - 1)
+                if (b.otStatus == "requested") extraRow.addView(TextView(context).apply {
+                    text = "OT हाँ/ना"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
                     setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
-                    setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
-                    setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
+                    setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
+                    setOnClickListener { decideOvertime(b) }
                 })
-                if (b.canRebook) actionsRow.addView(TextView(context).apply {
+                if (b.canRebook) extraRow.addView(TextView(context).apply {
                     text = if (b.companyDone) "फिर बुलाएँ" else "कल फिर बुलाएँ"
                     setTypeface(typeface, android.graphics.Typeface.BOLD)
                     setTextColor(ContextCompat.getColor(context, R.color.day_job_green))
@@ -692,16 +725,43 @@ class DayJobDetailActivity : AppCompatActivity() {
             val input = android.widget.EditText(this).apply {
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
                 setText(suggested.toString())
-                setSelection(text.length)
+                setSelectAllOnFocus(true)
+                selectAll()
             }
             AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
                 .setTitle("हर मज़दूर को कितने रुपये?")
                 .setMessage("मज़दूरी ₹${job.wagePerDay} ÷ ${job.hours} घंटे × ${otHoursText(hours)} = ₹$suggested। चाहें तो बदलें।")
                 .setView(input)
-                .setPositiveButton("OT माँगें") { _, _ -> act { repository.askOvertime(job.id, hours, input.text.toString().toIntOrNull() ?: suggested) } }
+                .setPositiveButton("OT माँगें") { _, _ ->
+                    val amount = input.text.toString().toIntOrNull()
+                    if (amount == null || amount > 5000) DayJobUi.toast(this, "OT के रुपये ₹0 से ₹5000 तक लिखें।")
+                    else act { repository.askOvertime(job.id, hours, amount) }
+                }
                 .setNegativeButton("रहने दें", null)
                 .show()
         }
+    }
+
+    /** A worker offered OT: yes (amount editable) or no. */
+    private fun decideOvertime(b: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobBooking) {
+        val input = android.widget.EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            setText((b.otAmount ?: 0).toString())
+            // Selected, so typing a new amount replaces the suggestion.
+            setSelectAllOnFocus(true)
+            selectAll()
+        }
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("${b.name ?: "मज़दूर"}: ${otHoursText(b.otHours)} OT")
+            .setMessage("कितने रुपये देंगे? चाहें तो बदलें।")
+            .setView(input)
+            .setPositiveButton("हाँ, OT करें") { _, _ ->
+                val amount = input.text.toString().toIntOrNull()
+                if (amount == null || amount > 5000) DayJobUi.toast(this, "OT के रुपये ₹0 से ₹5000 तक लिखें।")
+                else act { repository.decideOvertime(b.id, true, amount) }
+            }
+            .setNegativeButton("नहीं") { _, _ -> act { repository.decideOvertime(b.id, false, null) } }
+            .show()
     }
 
     /** Same worker, a new date; the job is theirs for an hour. */

@@ -41,8 +41,8 @@ android {
         applicationId = "com.srijeesolution.rojgaarwaala"
         minSdk = 24
         targetSdk = 36
-        versionCode = if (allowScreenCaptureForScreenshots) 57 else 56
-        versionName = if (allowScreenCaptureForScreenshots) "2.0.37-screenshots" else "2.0.36"
+        versionCode = if (allowScreenCaptureForScreenshots) 58 else 57
+        versionName = if (allowScreenCaptureForScreenshots) "2.0.38-screenshots" else "2.0.37"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndkVersion = "28.2.13676358"
         manifestPlaceholders["mapsApiKey"] = mapsApiKey

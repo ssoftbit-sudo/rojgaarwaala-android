@@ -77,6 +77,13 @@ class DayJobRepository @Inject constructor() {
     suspend fun answerOvertime(bookingId: Int, yes: Boolean): DayJobOutcome<Any?> =
         call { api.answerOvertime(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobYesRequest(yes)) }
 
+    /** The worker offers to stay [hours] longer. */
+    suspend fun requestOvertime(bookingId: Int, hours: Double): DayJobOutcome<Any?> =
+        call { api.requestOvertime(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOtRequest(hours)) }
+
+    suspend fun decideOvertime(bookingId: Int, yes: Boolean, amount: Int?): DayJobOutcome<Any?> =
+        call { api.decideOvertime(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobOtDecision(yes, amount)) }
+
     /** [audience] is "worker" or "company". */
     suspend fun acceptTerms(audience: String): DayJobOutcome<Any?> =
         call { api.acceptTerms(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest(audience)) }

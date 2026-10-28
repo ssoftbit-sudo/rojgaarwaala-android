@@ -112,6 +112,9 @@ data class DayJobBooking(
     @SerializedName("ot_status") val otStatus: String? = null,
     @SerializedName("ot_hours") val otHours: Double? = null,
     @SerializedName("ot_amount") val otAmount: Int? = null,
+    /** The worker may offer to stay longer today; the money is worked out from this rate. */
+    @SerializedName("can_request_overtime") val canRequestOvertime: Boolean = false,
+    @SerializedName("hourly_rate") val hourlyRate: Int = 0,
     @SerializedName("held_until") val heldUntil: String? = null,
     @SerializedName("can_rebook") val canRebook: Boolean = false,
 )
@@ -235,6 +238,9 @@ data class DayJobOvertimeRequest(
     @SerializedName("hours") val hours: Double,
     @SerializedName("amount") val amount: Int?,
 )
+
+data class DayJobOtRequest(@SerializedName("hours") val hours: Double)
+data class DayJobOtDecision(@SerializedName("yes") val yes: Boolean, @SerializedName("amount") val amount: Int?)
 
 data class DayJobTermsRequest(@SerializedName("audience") val audience: String)
 data class DayJobCancelRequest(@SerializedName("reason") val reason: String?)
