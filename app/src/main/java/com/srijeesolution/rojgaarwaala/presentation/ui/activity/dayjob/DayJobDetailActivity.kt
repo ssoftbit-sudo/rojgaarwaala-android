@@ -57,6 +57,7 @@ class DayJobDetailActivity : AppCompatActivity() {
     /** True when the viewer leads a team, so they can take seats for it. */
     private var leadsTeam = false
     private var cancelReasons: List<String> = emptyList()
+    private var workerTerms: List<String> = emptyList()
     /** Booking to start sharing for once location is allowed. */
     private var pendingShare: Pair<Int, Int>? = null
     private val askLocation = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { granted ->
@@ -82,7 +83,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         val id = intent.getIntExtra(EXTRA_ID, 0)
         binding.detailLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
-            (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades; cancelReasons = it.data.cancelReasons }
+            (repository.meta() as? DayJobOutcome.Ok)?.let { myTrades = it.data.worker.trades; cancelReasons = it.data.cancelReasons; workerTerms = it.data.workerTerms }
             (repository.team() as? DayJobOutcome.Ok)?.let { leadsTeam = it.data.role == "leader" }
             val result = repository.show(id)
             binding.detailLoading.visibility = View.GONE
@@ -628,8 +629,15 @@ class DayJobDetailActivity : AppCompatActivity() {
                 .setPositiveButton("सबकी जगह पक्की करें") { _, _ ->
                     val picks = rows.filterIndexed { i, _ -> checked[i] }.distinctBy { it.first }
                         .map { com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamPick(it.first, it.second) }
-                    if (picks.isEmpty()) DayJobUi.toast(this@DayJobDetailActivity, "कम से कम एक व्यक्ति चुनें।")
-                    else act { repository.acceptForTeam(job.id, picks) }
+                    if (picks.isEmpty()) {
+                        DayJobUi.toast(this@DayJobDetailActivity, "कम से कम एक व्यक्ति चुनें।")
+                    } else {
+                        // The leader agrees to the rules for everyone they send.
+                        val rules = workerTerms.ifEmpty { listOf("समय पर पहुँचें और पूरा पैसा मिलने पर ही Job Done दबाएँ।") }
+                        DayJobUi.askTerms(this@DayJobDetailActivity, "टीम के ${picks.size} लोगों के लिए नियम", rules + "ये नियम टीम के हर व्यक्ति को बता दें।") {
+                            act { repository.acceptForTeam(job.id, picks) }
+                        }
+                    }
                 }
                 .setNegativeButton("रहने दें", null)
                 .show()

@@ -92,7 +92,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Final Notification Type: $type, ID: $id, Application ID: $applicationId")
         Log.d(TAG, "Creating notification with title: $title, body: $body")
         sendNotification(title, body, type, id, applicationId)
-        if (type == "day_job_new") {
+        // New work, a team booking or the team's turn: read aloud when the server sends words for it.
+        if (type?.startsWith("day_job_") == true) {
             DayJobSpeaker.speak(this, remoteMessage.data["speak"])
         }
     }
