@@ -97,6 +97,10 @@ object DayJobFormat {
     fun dayText(iso: String?): String =
         iso?.let { runCatching { dayMonth(OffsetDateTime.parse(it).toLocalDate()) }.getOrNull() ?: it }.orEmpty()
 
+    /** "शाम 7:00" from an ISO date-time, in the phone's time zone; empty when unreadable. */
+    fun clockText(iso: String?, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): String =
+        iso?.let { runCatching { clock(OffsetDateTime.parse(it).atZoneSameInstant(zone).toLocalTime()) }.getOrNull() }.orEmpty()
+
     /** "Raipur में हेल्पर को आम तौर पर ₹600–₹650/दिन मिलते हैं" */
     fun wageHintText(label: String, low: Int, high: Int, district: String?): String {
         val range = if (low == high) "₹$low" else "₹$low–₹$high"

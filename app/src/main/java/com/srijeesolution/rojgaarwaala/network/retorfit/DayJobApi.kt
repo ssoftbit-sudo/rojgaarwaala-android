@@ -87,6 +87,15 @@ interface DayJobApi {
     @POST("day-jobs/bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCancelRequest): Response<DayJobEnvelope<Any>>
 
+    @POST("day-jobs/bookings/{id}/book")
+    suspend fun book(@Path("id") id: Int): Response<DayJobEnvelope<DayJobData>>
+
+    @POST("day-jobs/{id}/reject")
+    suspend fun reject(@Path("id") id: Int): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/bookings/{id}/rebook")
+    suspend fun rebook(@Path("id") id: Int, @Body body: DayJobRepostRequest): Response<DayJobEnvelope<DayJobData>>
+
     @POST("day-jobs/terms")
     suspend fun acceptTerms(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTermsRequest): Response<DayJobEnvelope<Any>>
 

@@ -174,6 +174,14 @@ internal class DayJobAdapter(
                 holder.badge.text = "आप जा रहे हैं"
                 holder.badge.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.day_job_green))
             }
+            !forCompany && job.reservedForMe -> {
+                holder.badge.text = "आपके लिए रखा है"
+                holder.badge.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.day_job_green))
+            }
+            !forCompany && job.rejectedByMe -> {
+                holder.badge.text = "आपने मना किया"
+                holder.badge.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.search_hint))
+            }
             else -> DayJobUi.styleStatus(holder.badge, job.status)
         }
         holder.seats.text = if (forCompany) DayJobFormat.comingText(job) else DayJobFormat.seatsLeftText(job)

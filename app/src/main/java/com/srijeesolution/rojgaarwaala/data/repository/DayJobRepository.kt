@@ -105,6 +105,15 @@ class DayJobRepository @Inject constructor() {
     suspend fun accept(id: Int, trade: String): DayJobOutcome<DayJob?> =
         call { api.accept(id, DayJobAcceptRequest(trade)) }.mapData { it.job }
 
+    /** "अभी Book करें" on a held seat. */
+    suspend fun book(bookingId: Int): DayJobOutcome<DayJob?> = call { api.book(bookingId) }.mapData { it.job }
+
+    suspend fun reject(jobId: Int): DayJobOutcome<Any?> = call { api.reject(jobId) }
+
+    /** The company calls the same worker back for [workDate]. */
+    suspend fun rebook(bookingId: Int, workDate: String): DayJobOutcome<DayJob?> =
+        call { api.rebook(bookingId, DayJobRepostRequest(workDate, null, null)) }.mapData { it.job }
+
     suspend fun cancelJob(id: Int): DayJobOutcome<DayJob?> = call { api.cancel(id) }.mapData { it.job }
 
     suspend fun cancelBooking(bookingId: Int, reason: String? = null): DayJobOutcome<Any?> =

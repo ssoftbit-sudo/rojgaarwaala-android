@@ -95,9 +95,13 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private fun tickCountdown() {
         lifecycleScope.launch {
+            var tick = 0
             while (isActive) {
-                job?.let { binding.detailCloses.text = if (it.isAccepting) DayJobFormat.closesInText(it.acceptClosesAt) else DayJobFormat.statusText(it.status) }
-                delay(30_000)
+                updateHoldTimer()
+                if (tick++ % 30 == 0) {
+                    job?.let { binding.detailCloses.text = if (it.isAccepting) DayJobFormat.closesInText(it.acceptClosesAt) else DayJobFormat.statusText(it.status) }
+                }
+                delay(1_000)
             }
         }
     }
@@ -205,18 +209,24 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     private fun renderWorker(job: DayJob) {
         val actions = binding.detailActions
+        if (job.reservedForMe) {
+            actions.addView(note("${job.company.name} ने आपको फिर बुलाया है। यह काम ${DayJobFormat.clockText(job.reservedUntil)} तक सिर्फ़ आपके लिए है।", R.color.day_job_green))
+        } else if (job.rejectedByMe && job.isAccepting) {
+            actions.addView(note("आपने इस काम को मना किया था। जगह खाली है तो अब भी ले सकते हैं।"))
+        }
         if (!job.isAccepting) {
             actions.addView(note("इस काम के लिए अब मज़दूर नहीं लिए जा रहे।"))
         } else {
             job.slots.filter { it.left > 0 }.forEach { slot ->
                 if (slot.trade in myTrades) {
-                    actions.addView(button("हाँ, ${slot.label} बनकर आऊँगा", 0) { confirmAccept(job, slot.trade, slot.label) })
+                    actions.addView(button("✓  हाँ, ${slot.label} बनकर आऊँगा", 0) { confirmAccept(job, slot.trade, slot.label) })
                 } else {
                     actions.addView(note("${slot.label}: यह जगह लेने के लिए 'काम ढूँढें' में 'बदलें' से इसे अपने काम में जोड़ें।"))
                 }
             }
             if (job.slots.none { it.left > 0 }) actions.addView(note("सारी जगह भर गई हैं।"))
             else if (leadsTeam) actions.addView(button("टीम के साथ हाँ करें", 2) { pickTeam(job) })
+            if (!job.rejectedByMe) actions.addView(button("✗  नहीं, यह काम नहीं", 1) { act { repository.reject(job.id) } })
         }
         actions.addView(button("रास्ता देखें", 1) { DayJobUi.directions(this, job) })
     }
@@ -225,6 +235,11 @@ class DayJobDetailActivity : AppCompatActivity() {
         val actions = binding.detailActions
         val trade = job.slots.firstOrNull { it.trade == job.myBooking?.trade }?.label ?: ""
         val booking = job.myBooking!!
+        if (booking.onHold) {
+            renderHold(job, booking)
+            return
+        }
+        holdTimer = null
         when {
             booking.doneByMe -> actions.addView(note(
                 (if (booking.paidAnswer == "no") "आपने बताया कि पूरा पैसा नहीं मिला। हमारी टीम कंपनी से बात करेगी।"
@@ -301,6 +316,8 @@ class DayJobDetailActivity : AppCompatActivity() {
         val actions = binding.detailActions
         if (job.status == "in_review") {
             actions.addView(note("कंपनी की जाँच पूरी होते ही यह काम सबको दिखेगा।"))
+        } else if (job.reservedUntil != null) {
+            actions.addView(note("यह काम ${DayJobFormat.clockText(job.reservedUntil)} तक सिर्फ़ उसी मज़दूर के लिए रखा है जिसे आपने फिर बुलाया। उसके बाद सबको ख़बर जाएगी।", R.color.day_job_green))
         } else if (job.notifiedCount > 0) {
             actions.addView(note("${job.radiusKm} km के ${job.notifiedCount} ${if (job.notifiedCount == 1) "मज़दूर" else "मज़दूरों"} को ख़बर भेजी गई।"))
         }
@@ -380,6 +397,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                 addView(TextView(context).apply {
                     val state = when {
                         b.status == "no_show" -> " · नहीं आया"
+                        b.onHold -> " · बुक कर रहा है (4 मिनट)"
                         b.companyDone -> " · Job Done, आपने ${b.companyRating ?: ""}★ दिए"
                         b.confirmed -> " · ✓ पक्का आएगा"
                         else -> ""
@@ -398,6 +416,13 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
                     setPadding(DayJobUi.dp(context, 8), 0, DayJobUi.dp(context, 8), 0)
                     setOnClickListener { act { repository.toggleFavourite(b.workerId) } }
+                })
+                if (b.canRebook && b.companyDone) addView(TextView(context).apply {
+                    text = "फिर बुलाएँ"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.day_job_green))
+                    setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
+                    setOnClickListener { askRebook(b.id, b.name ?: "मज़दूर") }
                 })
                 if (b.canMarkDone) addView(TextView(context).apply {
                     text = "Job Done"
@@ -442,13 +467,68 @@ class DayJobDetailActivity : AppCompatActivity() {
         setPadding(0, 0, 0, DayJobUi.dp(context, 12))
     }
 
+    /** "हाँ" holds the seat for 4 minutes; the Booking Summary then asks for "अभी Book करें". */
+    @Suppress("UNUSED_PARAMETER")
     private fun confirmAccept(job: DayJob, trade: String, label: String) {
-        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
-            .setTitle("यह काम लेना है?")
-            .setMessage("$label · ${DayJobFormat.wageText(job.wagePerDay)}\n${DayJobFormat.whenText(job.workDate, job.startTime)}\n${job.place}\n\nपक्का आना हो तभी हाँ करें।")
-            .setPositiveButton("हाँ, मैं आऊँगा") { _, _ -> act { repository.accept(job.id, trade) } }
-            .setNegativeButton("नहीं", null)
-            .show()
+        act { repository.accept(job.id, trade) }
+    }
+
+    /** Booking Summary for a held seat, with the minutes left and a big Book button. */
+    private fun renderHold(job: DayJob, booking: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobBooking) {
+        val actions = binding.detailActions
+        val trade = job.slots.firstOrNull { it.trade == booking.trade }?.label.orEmpty()
+        actions.addView(TextView(this).apply {
+            text = "Booking Summary\n\n" +
+                "काम: ${job.title} · $trade\n" +
+                "मज़दूरी: ${DayJobFormat.wageText(job.wagePerDay)}\n" +
+                "कब: ${DayJobFormat.whenText(job.workDate, job.startTime)} · ${job.hours} घंटे\n" +
+                (job.place.ifBlank { job.district.orEmpty() }.takeIf { it.isNotBlank() }?.let { "कहाँ: $it\n" } ?: "") +
+                "कंपनी: ${job.company.name}"
+            setTextColor(ContextCompat.getColor(context, R.color.white))
+            textSize = 16f
+            setBackgroundResource(R.drawable.bg_day_job_card)
+            setPadding(DayJobUi.dp(context, 16), DayJobUi.dp(context, 14), DayJobUi.dp(context, 16), DayJobUi.dp(context, 14))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { bottomMargin = DayJobUi.dp(context, 12) }
+        })
+        val left = note("", R.color.brand_color_yellow).apply { textSize = 18f; tag = booking.heldUntil }
+        holdTimer = left
+        updateHoldTimer()
+        actions.addView(left)
+        actions.addView(button("✓  अभी Book करें", 2) {
+            binding.detailLoading.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                val result = repository.book(booking.id)
+                binding.detailLoading.visibility = View.GONE
+                when (result) {
+                    is DayJobOutcome.Ok -> {
+                        DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                        com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this@DayJobDetailActivity,
+                            "बधाई हो! काम बुक हो गया है। घर से निकलते समय, घर से निकल पड़ा दबाइए।")
+                    }
+                    is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                }
+                load()
+            }
+        })
+        actions.addView(button("कंपनी को Call करें", 1) { DayJobUi.call(this, job.company.phone) })
+        actions.addView(button("नहीं चाहिए, छोड़ दें", 1) { act { repository.cancelBooking(booking.id) } })
+    }
+
+    private var holdTimer: TextView? = null
+
+    /** "3:42 में Book करें, नहीं तो जगह छूट जाएगी"; at zero the screen reloads. */
+    private fun updateHoldTimer() {
+        val view = holdTimer ?: return
+        val until = (view.tag as? String)?.let { runCatching { java.time.OffsetDateTime.parse(it).toInstant() }.getOrNull() } ?: return
+        val seconds = java.time.Duration.between(java.time.Instant.now(), until).seconds
+        if (seconds <= 0) {
+            holdTimer = null
+            view.text = "समय ख़त्म।"
+            load()
+            return
+        }
+        view.text = String.format(java.util.Locale.US, "%d:%02d", seconds / 60, seconds % 60) + " में Book करें, नहीं तो जगह छूट जाएगी।"
     }
 
     /** The leader ticks who goes and as what; all seats are taken together or none. */
@@ -507,6 +587,18 @@ class DayJobDetailActivity : AppCompatActivity() {
         com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.start(this, bookingId, jobId)
         DayJobUi.toast(this, "ठीक है, कंपनी को ख़बर भेज दी। सुरक्षित पहुँचें।")
         binding.root.postDelayed({ load() }, 800)
+    }
+
+    /** Same worker, a new date; the job is theirs for an hour. */
+    private fun askRebook(bookingId: Int, name: String) {
+        val tomorrow = LocalDate.now().plusDays(1)
+        DatePickerDialog(this, { _, y, m, d ->
+            act { repository.rebook(bookingId, LocalDate.of(y, m + 1, d).toString()) }
+        }, tomorrow.year, tomorrow.monthValue - 1, tomorrow.dayOfMonth).apply {
+            setTitle("$name को किस दिन बुलाएँ?")
+            datePicker.minDate = System.currentTimeMillis() - 1000
+            datePicker.maxDate = System.currentTimeMillis() + 14L * 24 * 3600 * 1000
+        }.show()
     }
 
     private fun askRepost(job: DayJob) {

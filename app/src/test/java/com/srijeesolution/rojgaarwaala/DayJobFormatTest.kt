@@ -53,4 +53,10 @@ class DayJobFormatTest {
         assertEquals("Raipur में हेल्पर को आम तौर पर ₹600–₹650/दिन मिलते हैं", DayJobFormat.wageHintText("हेल्पर", 600, 650, "Raipur"))
         assertEquals("मिस्त्री को आम तौर पर ₹800/दिन मिलते हैं", DayJobFormat.wageHintText("मिस्त्री", 800, 800, null))
     }
+
+    @Test
+    fun clockTextReadsAnIsoTimeInTheGivenZone() {
+        assertEquals("शाम 5:00", DayJobFormat.clockText("2026-10-26T17:00:00+05:30", java.time.ZoneId.of("Asia/Kolkata")))
+        assertEquals("", DayJobFormat.clockText(null))
+    }
 }

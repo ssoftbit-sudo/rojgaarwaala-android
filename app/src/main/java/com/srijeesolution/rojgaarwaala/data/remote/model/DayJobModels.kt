@@ -104,6 +104,10 @@ data class DayJobBooking(
     @SerializedName("not_paid") val notPaid: Boolean = false,
     @SerializedName("worker_rating_avg") val workerRatingAvg: Double? = null,
     @SerializedName("worker_rating_count") val workerRatingCount: Int = 0,
+    // Easy booking: "हाँ" keeps the seat a few minutes until "अभी Book करें".
+    @SerializedName("on_hold") val onHold: Boolean = false,
+    @SerializedName("held_until") val heldUntil: String? = null,
+    @SerializedName("can_rebook") val canRebook: Boolean = false,
 )
 
 data class DayJobCompanyRef(
@@ -135,6 +139,10 @@ data class DayJob(
     @SerializedName("is_accepting") val isAccepting: Boolean = false,
     /** Null from an older server; then fall back to the status. */
     @SerializedName("can_cancel") val canCancel: Boolean? = null,
+    /** A re-booking kept for this worker for a while. */
+    @SerializedName("reserved_for_me") val reservedForMe: Boolean = false,
+    @SerializedName("reserved_until") val reservedUntil: String? = null,
+    @SerializedName("rejected_by_me") val rejectedByMe: Boolean = false,
     @SerializedName("radius_km") val radiusKm: Int = 5,
     @SerializedName("notified_count") val notifiedCount: Int = 0,
     @SerializedName("can_track") val canTrack: Boolean = false,
@@ -190,7 +198,7 @@ data class DayJobRatingRequest(@SerializedName("rating") val rating: Int, @Seria
 data class DayJobConfirmRequest(@SerializedName("coming") val coming: Boolean)
 data class DayJobPaidRequest(@SerializedName("paid") val paid: Boolean)
 
-data class DayJobAcceptRequest(@SerializedName("trade") val trade: String)
+data class DayJobAcceptRequest(@SerializedName("trade") val trade: String, @SerializedName("hold") val hold: Boolean = true)
 
 data class DayJobRepostRequest(
     @SerializedName("work_date") val workDate: String,
