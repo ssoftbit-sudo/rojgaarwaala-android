@@ -206,6 +206,11 @@
             android:exported="false"
             android:theme="@style/AppTheme.NoSplash"/>
         <activity
+            android:name=".presentation.ui.activity.dayjob.DayJobZoneActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoSplash"
+            android:windowSoftInputMode="adjustResize|stateHidden"/>
+        <activity
             android:name=".presentation.ui.activity.dayjob.DayJobTeamActivity"
             android:exported="false"
             android:theme="@style/AppTheme.NoSplash"

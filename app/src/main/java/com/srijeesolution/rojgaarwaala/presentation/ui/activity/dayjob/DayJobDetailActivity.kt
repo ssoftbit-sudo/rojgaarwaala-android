@@ -129,6 +129,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         binding.detailDescription.text = job.description.orEmpty()
         binding.detailDescription.visibility = if (job.description.isNullOrBlank()) View.GONE else View.VISIBLE
 
+        renderJobCard(job, isOwner)
         renderSlots(job)
         renderPhotos(job)
         renderMap(job)
@@ -138,6 +139,21 @@ class DayJobDetailActivity : AppCompatActivity() {
             isOwner -> renderOwner(job)
             booked -> renderBooked(job)
             else -> renderWorker(job)
+        }
+    }
+
+    /** A worker sees one big card with every fact, and can have it read out. */
+    private fun renderJobCard(job: DayJob, isOwner: Boolean) {
+        val facts = DayJobFormat.jobCardFacts(job)
+        binding.detailFactsCard.visibility = if (isOwner) View.GONE else View.VISIBLE
+        binding.detailListen.visibility = binding.detailFactsCard.visibility
+        listOf(binding.detailWage, binding.detailWhen, binding.detailPlace).forEach {
+            it.visibility = if (isOwner) View.VISIBLE else View.GONE
+        }
+        if (isOwner) return
+        binding.detailFactsCard.text = DayJobUi.factsText(facts)
+        binding.detailListen.setOnClickListener {
+            com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this, DayJobFormat.spokenCard(job, facts), always = true)
         }
     }
 

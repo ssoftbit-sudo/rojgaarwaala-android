@@ -21,9 +21,12 @@ object DayJobSpeaker {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY, on).apply()
     }
 
-    /** Speaks [text] once, then lets the engine go. Silent if the phone has no Hindi voice. */
-    fun speak(context: Context, text: String?) {
-        if (text.isNullOrBlank() || !isOn(context)) return
+    /**
+     * Speaks [text] once, then lets the engine go. Silent if the phone has no Hindi voice.
+     * [always] is for a "सुनें" button the worker pressed, which plays even with alerts muted.
+     */
+    fun speak(context: Context, text: String?, always: Boolean = false) {
+        if (text.isNullOrBlank() || (!always && !isOn(context))) return
         val app = context.applicationContext
         var tts: TextToSpeech? = null
         tts = TextToSpeech(app) { status ->

@@ -59,6 +59,34 @@ object DayJobFormat {
         return if (left == 0) "सब जगह भर गईं" else "${job.neededTotal} में से $left जगह खाली"
     }
 
+    /** The short card a worker sees in the list: label to value, in this order. */
+    fun cardFacts(job: DayJob): List<Pair<String, String>> = listOf(
+        "👷 काम" to job.slots.joinToString(", ") { it.label },
+        "💰 रोज़ी" to wageText(job.wagePerDay),
+        "🪑 खाली जगह" to (job.neededTotal - job.filledTotal).coerceAtLeast(0).toString(),
+        "📍 आपसे दूरी" to distanceText(job.distanceKm).removeSuffix(" दूर"),
+        "🏢 कंपनी" to job.company.name,
+    ).filter { it.second.isNotBlank() }
+
+    /** The full Job Card on the detail screen. */
+    fun jobCardFacts(job: DayJob): List<Pair<String, String>> = listOf(
+        "🛠️ काम" to job.title,
+        "👷 किसकी ज़रूरत" to slotsText(job),
+        "💰 रोज़ी" to wageText(job.wagePerDay),
+        "🪑 खाली जगह" to seatsLeftText(job),
+        "📅 कब" to whenText(job.workDate, job.startTime),
+        "⏱️ कितने घंटे" to "${job.hours} घंटे",
+        "📍 कहाँ" to listOfNotNull(job.place.ifBlank { null }, job.district).joinToString(", "),
+        "🚶 आपसे दूरी" to distanceText(job.distanceKm).removeSuffix(" दूर"),
+        "🏢 कंपनी" to job.company.name,
+    ).filter { it.second.isNotBlank() }
+
+    /** What the "सुनें" button says: the card as plain sentences, without the icons. */
+    fun spokenCard(job: DayJob, facts: List<Pair<String, String>>): String =
+        facts.joinToString("। ") { (label, value) ->
+            label.substringAfter(' ') + ": " + value.replace("km", "किलोमीटर").replace("₹", "").replace("/दिन", " रुपये रोज़")
+        } + "।" + (job.description?.takeIf { it.isNotBlank() }?.let { " काम के बारे में: $it।" } ?: "")
+
     fun comingText(job: DayJob): String = "${job.filledTotal}/${job.neededTotal} आ रहे हैं"
 
     fun statusText(status: String): String = when (status) {

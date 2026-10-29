@@ -79,6 +79,40 @@ class DayJobPostActivity : AppCompatActivity() {
         }
     }
 
+    // A photo taken now goes to this cache file first, then is shrunk like a gallery one.
+    private var cameraFile: File? = null
+
+    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        val file = cameraFile ?: return@registerForActivityResult
+        cameraFile = null
+        if (!saved || photos.size >= 4) {
+            file.delete()
+            return@registerForActivityResult
+        }
+        lifecycleScope.launch {
+            val shrunk = withContext(Dispatchers.IO) { shrink(Uri.fromFile(file)).also { file.delete() } }
+            shrunk?.let { photos.add(it) }
+            renderPhotos()
+        }
+    }
+
+    /** Camera or gallery, the company's choice. */
+    private fun addPhoto() {
+        DayJobUi.pickOne(this, "फ़ोटो जोड़ें", listOf("📷  कैमरा से फ़ोटो लें", "🖼️  गैलरी से चुनें")) { which ->
+            if (which == 1) {
+                pickPhotos.launch("image/*")
+                return@pickOne
+            }
+            val file = File(cacheDir, "day_job_camera_${System.nanoTime()}.jpg")
+            cameraFile = file
+            val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+            runCatching { takePhoto.launch(uri) }.onFailure {
+                cameraFile = null
+                DayJobUi.toast(this, "कैमरा नहीं खुला। गैलरी से फ़ोटो चुनें।")
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDayJobPostBinding.inflate(layoutInflater)
@@ -308,7 +342,7 @@ class DayJobPostActivity : AppCompatActivity() {
                 setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
                 setBackgroundResource(R.drawable.bg_free_job_map_button)
                 layoutParams = LinearLayout.LayoutParams(size, size)
-                setOnClickListener { pickPhotos.launch("image/*") }
+                setOnClickListener { addPhoto() }
             })
         }
     }
@@ -322,8 +356,19 @@ class DayJobPostActivity : AppCompatActivity() {
         val bitmap = contentResolver.openInputStream(uri)?.use {
             BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
         } ?: return null
+        // Camera photos are often stored sideways with a note saying how to turn them.
+        val turn = contentResolver.openInputStream(uri)?.use {
+            when (android.media.ExifInterface(it).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, 1)) {
+                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        } ?: 0f
+        val upright = if (turn == 0f) bitmap
+        else Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, android.graphics.Matrix().apply { postRotate(turn) }, true)
         File(cacheDir, "day_job_${System.nanoTime()}.jpg").also { out ->
-            out.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 82, it) }
+            out.outputStream().use { upright.compress(Bitmap.CompressFormat.JPEG, 82, it) }
         }
     }.getOrNull()
 

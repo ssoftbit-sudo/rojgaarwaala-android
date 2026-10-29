@@ -35,6 +35,19 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Worker card: the few facts a worker needs, big and bold in one box. -->
+    <TextView
+        android:id="@+id/itemDayJobFacts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_day_job_highlight"
+        android:lineSpacingExtra="4dp"
+        android:padding="12dp"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/itemDayJobSlots"
         android:layout_width="wrap_content"
@@ -83,6 +96,7 @@
             android:layout_height="wrap_content"
             android:text="देखें ›"
             android:textColor="@color/brand_color_yellow"
+            android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

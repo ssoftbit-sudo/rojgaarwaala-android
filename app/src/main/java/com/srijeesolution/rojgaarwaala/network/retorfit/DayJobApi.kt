@@ -51,6 +51,18 @@ interface DayJobApi {
         @Query("longitude") longitude: Double?,
     ): Response<DayJobEnvelope<DayJobListData>>
 
+    @GET("day-jobs/zones")
+    suspend fun zones(
+        @Query("latitude") latitude: Double?,
+        @Query("longitude") longitude: Double?,
+    ): Response<DayJobEnvelope<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZonesData>>
+
+    @POST("day-jobs/zones/mine")
+    suspend fun saveZones(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZonesRequest): Response<DayJobEnvelope<Any>>
+
+    @POST("day-jobs/zones/request")
+    suspend fun askZone(@Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZoneAskRequest): Response<DayJobEnvelope<Any>>
+
     @GET("day-jobs/bookings")
     suspend fun myBookings(): Response<DayJobEnvelope<DayJobListData>>
 

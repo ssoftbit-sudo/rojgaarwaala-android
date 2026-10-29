@@ -110,6 +110,11 @@ class DayJobHomeActivity : AppCompatActivity() {
         }
         binding.dayJobMyTeam.setOnClickListener { startActivity(Intent(this, DayJobTeamActivity::class.java)) }
         binding.dayJobAlertHours.setOnClickListener { chooseAlertHours() }
+        binding.dayJobMyZone.setOnClickListener {
+            val lat = if (prefs.contains("lat")) prefs.getFloat("lat", 0f).toDouble() else null
+            val lng = if (prefs.contains("lng")) prefs.getFloat("lng", 0f).toDouble() else null
+            returnRefresh.launch(DayJobZoneActivity.intent(this, lat, lng, meta?.myZones.orEmpty().map { it.id }))
+        }
         binding.dayJobSpeak.isChecked = com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.isOn(this)
         binding.dayJobSpeak.setOnCheckedChangeListener { _, on ->
             com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.setOn(this, on)
@@ -182,6 +187,8 @@ class DayJobHomeActivity : AppCompatActivity() {
                 meta.trades.firstOrNull { it.key == key }?.label ?: key
             }
             binding.dayJobAlertHours.text = "ख़बर कब: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
+            binding.dayJobMyZone.text = if (meta.myZones.isEmpty()) "📍 अपना चौक (ज़ोन) चुनें ›"
+            else "📍 ज़ोन: " + meta.myZones.joinToString(", ") { it.name } + " ›"
             val heldUntil = meta.worker.heldBackUntil
             val rating = DayJobUi.ratingText(meta.worker.ratingAvg, meta.worker.ratingCount)
             if (rating.isNotBlank()) binding.dayJobMyTrades.append("  ·  $rating")

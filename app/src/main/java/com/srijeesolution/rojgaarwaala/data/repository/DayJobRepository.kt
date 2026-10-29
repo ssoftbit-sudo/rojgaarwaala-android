@@ -134,6 +134,15 @@ class DayJobRepository @Inject constructor() {
 
     suspend fun reject(jobId: Int): DayJobOutcome<Any?> = call { api.reject(jobId) }
 
+    suspend fun zones(latitude: Double?, longitude: Double?): DayJobOutcome<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZonesData> =
+        call { api.zones(latitude, longitude) }
+
+    suspend fun saveZones(ids: List<Int>): DayJobOutcome<Any?> =
+        call { api.saveZones(com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZonesRequest(ids)) }
+
+    suspend fun askZone(body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobZoneAskRequest): DayJobOutcome<Any?> =
+        call { api.askZone(body) }
+
     /** The company calls the same worker back for [workDate]. */
     suspend fun rebook(bookingId: Int, workDate: String): DayJobOutcome<DayJob?> =
         call { api.rebook(bookingId, DayJobRepostRequest(workDate, null, null)) }.mapData { it.job }

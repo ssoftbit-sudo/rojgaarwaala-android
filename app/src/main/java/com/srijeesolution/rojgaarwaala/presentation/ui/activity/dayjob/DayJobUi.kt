@@ -137,6 +137,20 @@ internal object DayJobUi {
             .show()
     }
 
+    /** "label: value" lines with the value in bold yellow, for the big job cards. */
+    fun factsText(facts: List<Pair<String, String>>): CharSequence {
+        val out = android.text.SpannableStringBuilder()
+        facts.forEachIndexed { i, (label, value) ->
+            if (i > 0) out.append("\n")
+            out.append("$label:  ")
+            val start = out.length
+            out.append(value)
+            out.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, out.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            out.setSpan(android.text.style.ForegroundColorSpan(0xFFFFBB02.toInt()), start, out.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        return out
+    }
+
     /** "★ 4.3 (12)", or empty before the first rating. */
     fun ratingText(avg: Double?, count: Int): String =
         if (avg == null || count == 0) "" else "★ " + String.format(java.util.Locale.US, "%.1f", avg) + " ($count)"
@@ -188,7 +202,11 @@ internal class DayJobAdapter(
             }
             else -> DayJobUi.styleStatus(holder.badge, job.status)
         }
-        holder.seats.text = if (forCompany) DayJobFormat.comingText(job) else DayJobFormat.seatsLeftText(job)
+        holder.seats.text = if (forCompany) DayJobFormat.comingText(job) else DayJobFormat.whenText(job.workDate, job.startTime)
+        // A worker gets one bold box with just what they need; the rest is on "देखें".
+        holder.facts.visibility = if (forCompany) View.GONE else View.VISIBLE
+        listOf(holder.wage, holder.slots, holder.meta).forEach { it.visibility = if (forCompany) View.VISIBLE else View.GONE }
+        if (!forCompany) holder.facts.text = DayJobUi.factsText(DayJobFormat.cardFacts(job))
         holder.itemView.setOnClickListener { onClick(job) }
     }
 
@@ -199,5 +217,6 @@ internal class DayJobAdapter(
         val meta: TextView = view.findViewById(R.id.itemDayJobMeta)
         val badge: TextView = view.findViewById(R.id.itemDayJobBadge)
         val seats: TextView = view.findViewById(R.id.itemDayJobSeats)
+        val facts: TextView = view.findViewById(R.id.itemDayJobFacts)
     }
 }

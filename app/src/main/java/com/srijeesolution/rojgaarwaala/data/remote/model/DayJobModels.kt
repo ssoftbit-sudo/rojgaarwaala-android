@@ -59,6 +59,41 @@ data class DayJobMeta(
     /** Jobs where this user still has to press Job Done, as worker and as company. */
     @SerializedName("pending_done") val pendingDone: List<Int> = emptyList(),
     @SerializedName("pending_done_company") val pendingDoneCompany: List<Int> = emptyList(),
+    /** Labour zones (chowks) the worker picked; work near them reaches the worker too. */
+    @SerializedName("my_zones") val myZones: List<DayJobZone> = emptyList(),
+    @SerializedName("max_zones") val maxZones: Int = 2,
+)
+
+data class DayJobZone(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("name") val name: String = "",
+    @SerializedName("district") val district: String? = null,
+    @SerializedName("radius_km") val radiusKm: Int = 3,
+    @SerializedName("distance_km") val distanceKm: Double? = null,
+)
+
+data class DayJobZoneAsk(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("name") val name: String = "",
+    @SerializedName("status") val status: String = "pending",
+    @SerializedName("admin_note") val adminNote: String? = null,
+)
+
+data class DayJobZonesData(
+    @SerializedName("zones") val zones: List<DayJobZone> = emptyList(),
+    @SerializedName("requests") val requests: List<DayJobZoneAsk> = emptyList(),
+    @SerializedName("max_zones") val maxZones: Int = 2,
+)
+
+data class DayJobZonesRequest(@SerializedName("zone_ids") val zoneIds: List<Int>)
+
+data class DayJobZoneAskRequest(
+    @SerializedName("name") val name: String,
+    @SerializedName("landmark") val landmark: String?,
+    @SerializedName("district") val district: String?,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("note") val note: String?,
 )
 
 data class DayJobSlot(
