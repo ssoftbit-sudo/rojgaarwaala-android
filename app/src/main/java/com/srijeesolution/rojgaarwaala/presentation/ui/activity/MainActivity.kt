@@ -772,7 +772,8 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 "day_job_cancelled", "day_job_booking_cancelled", "day_job_expired",
                 "day_job_confirm", "day_job_confirmed", "day_job_paid_question", "day_job_no_show",
                 "day_job_team_booked", "day_job_team_declined", "day_job_arrived",
-                "day_job_done_ask", "day_job_worker_done", "day_job_company_done", "day_job_rebook", "day_job_team_turn", "day_job_invite", "day_job_ot", "day_job_ot_answer", "day_job_ot_request" -> {
+                "day_job_done_ask", "day_job_worker_done", "day_job_company_done", "day_job_rebook", "day_job_team_turn", "day_job_invite", "day_job_ot", "day_job_ot_answer", "day_job_ot_request",
+                "day_job_team_ask", "day_job_team_member_yes" -> {
                     notificationId?.toIntOrNull()?.let {
                         startActivity(com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobDetailActivity.intent(this, it))
                     }
@@ -780,7 +781,7 @@ class MainActivity : AppCompatActivity(), com.srijeesolution.rojgaarwaala.utils.
                 "day_job_on_way" -> notificationId?.toIntOrNull()?.let {
                     startActivity(com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobTrackActivity.intent(this, it))
                 }
-                "day_job_blocked" -> startActivity(
+                "day_job_blocked", "day_job_zone" -> startActivity(
                     com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobHomeActivity.intent(this, com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobHomeActivity.MODE_WORK),
                 )
                 "day_job_team_invite", "day_job_team_member" -> startActivity(

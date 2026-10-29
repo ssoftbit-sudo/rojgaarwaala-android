@@ -357,6 +357,7 @@ class DayJobHomeActivity : AppCompatActivity() {
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
                     binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● 10 km में ${jobs.size} काम"
                     showOnMap(jobs)
+                    flashNew(jobs)
                 }
                 is DayJobOutcome.Fail -> {
                     workerAdapter.submit(emptyList())
@@ -366,6 +367,53 @@ class DayJobHomeActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private var flash: android.app.Dialog? = null
+
+    /** New jobs (and team picks) pop up as big cards the worker can swipe through. */
+    private fun flashNew(nearby: List<DayJob>) {
+        if (mode != MODE_WORK || flash?.isShowing == true || isFinishing) return
+        lifecycleScope.launch {
+            val mine = (repository.myBookings() as? DayJobOutcome.Ok)?.data.orEmpty()
+            val jobs = DayJobFlash.pick(this@DayJobHomeActivity, nearby, mine)
+            if (jobs.isEmpty() || flash?.isShowing == true || isFinishing) return@launch
+            flash = DayJobFlash.show(this@DayJobHomeActivity, jobs, DayJobFlash.Actions(
+                onYes = { returnRefresh.launch(DayJobDetailActivity.acceptIntent(this@DayJobHomeActivity, it.id)) },
+                onNo = { job -> lifecycleScope.launch { repository.reject(job.id); loadNearby() } },
+                onTeamYes = { job -> job.myBooking?.let { b -> flashAnswer { repository.book(b.id) } } },
+                onTeamNo = { job -> job.myBooking?.let { b -> flashAnswer { repository.cancelBooking(b.id) } } },
+                onOpen = { openJob(it) },
+            ))
+        }
+    }
+
+    private fun flashAnswer(block: suspend () -> DayJobOutcome<*>) {
+        lifecycleScope.launch {
+            when (val result = block()) {
+                is DayJobOutcome.Ok -> DayJobUi.toast(this@DayJobHomeActivity, result.message)
+                is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobHomeActivity, result.message)
+            }
+            loadNearby()
+        }
+    }
+
+    /** A new-job push while this screen is open refreshes the list, which flashes the job. */
+    private val newWork = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (mode == MODE_WORK) loadNearby()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        androidx.core.content.ContextCompat.registerReceiver(this, newWork,
+            android.content.IntentFilter(DayJobFlash.ACTION_NEW_WORK), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    override fun onStop() {
+        runCatching { unregisterReceiver(newWork) }
+        super.onStop()
     }
 
     private fun chooseAlertHours() {

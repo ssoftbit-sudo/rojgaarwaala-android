@@ -143,6 +143,8 @@ data class DayJobBooking(
     @SerializedName("worker_rating_count") val workerRatingCount: Int = 0,
     // Easy booking: "हाँ" keeps the seat a few minutes until "अभी Book करें".
     @SerializedName("on_hold") val onHold: Boolean = false,
+    /** The leader picked this member; booked once they press "जाऊँगा". */
+    @SerializedName("team_ask") val teamAsk: Boolean = false,
     /** Overtime asked on the day: asked, accepted or declined. */
     @SerializedName("ot_status") val otStatus: String? = null,
     @SerializedName("ot_hours") val otHours: Double? = null,

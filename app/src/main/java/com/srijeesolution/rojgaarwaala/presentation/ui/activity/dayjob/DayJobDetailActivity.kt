@@ -44,7 +44,11 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_ID = "day_job_id"
+        private const val EXTRA_ACCEPT = "accept"
         fun intent(context: Context, id: Int) = Intent(context, DayJobDetailActivity::class.java).putExtra(EXTRA_ID, id)
+
+        /** Opens the job and goes straight to "हाँ" (from the flash card). */
+        fun acceptIntent(context: Context, id: Int) = intent(context, id).putExtra(EXTRA_ACCEPT, true)
     }
 
     @Inject lateinit var repository: DayJobRepository
@@ -251,6 +255,16 @@ class DayJobDetailActivity : AppCompatActivity() {
                     actions.addView(button("✓  हाँ, ${slot.label} बनकर आऊँगा", 0) { confirmAccept(job, slot.trade, slot.label) })
                 } else {
                     actions.addView(note("${slot.label}: यह जगह लेने के लिए 'काम ढूँढें' में 'बदलें' से इसे अपने काम में जोड़ें।"))
+                }
+            }
+            if (intent.getBooleanExtra(EXTRA_ACCEPT, false)) {
+                intent.removeExtra(EXTRA_ACCEPT)
+                job.slots.filter { it.left > 0 && it.trade in myTrades }.let { open ->
+                    when {
+                        open.size == 1 -> confirmAccept(job, open[0].trade, open[0].label)
+                        leadsTeam && open.isNotEmpty() -> Unit
+                        open.size > 1 -> DayJobUi.toast(this, "आप किस काम के लिए आएँगे? नीचे चुनें।")
+                    }
                 }
             }
             if (job.slots.none { it.left > 0 }) actions.addView(note("सारी जगह भर गई हैं।"))
@@ -603,8 +617,40 @@ class DayJobDetailActivity : AppCompatActivity() {
     }
 
     /** Booking Summary for a held seat, with the minutes left and a big Book button. */
+    /** The leader picked this member: just "जाऊँगा" or "नहीं जाऊँगा". */
+    private fun renderTeamAsk(job: DayJob, booking: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobBooking) {
+        val actions = binding.detailActions
+        actions.addView(note("${booking.leaderName ?: "आपके लीडर"} ने आपको यह काम के लिए चुना है। क्या आप जाएँगे?", R.color.brand_color_yellow).apply { textSize = 18f })
+        val left = note("", R.color.brand_color_yellow).apply { tag = booking.heldUntil to " में बताएँ, नहीं तो जगह छूट जाएगी।" }
+        holdTimer = left
+        updateHoldTimer()
+        actions.addView(left)
+        actions.addView(button("✅  जाऊँगा", 2) {
+            binding.detailLoading.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                val result = repository.book(booking.id)
+                binding.detailLoading.visibility = View.GONE
+                when (result) {
+                    is DayJobOutcome.Ok -> {
+                        DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                        com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this@DayJobDetailActivity,
+                            "बधाई हो! काम बुक हो गया है। घर से निकलते समय, घर से निकल पड़ा दबाइए।")
+                    }
+                    is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                }
+                load()
+            }
+        })
+        actions.addView(button("❌  नहीं जाऊँगा", 1) { act { repository.cancelBooking(booking.id) } })
+        actions.addView(button("🧭  रास्ता देखें", 1) { DayJobUi.directions(this, job) })
+    }
+
     private fun renderHold(job: DayJob, booking: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobBooking) {
         val actions = binding.detailActions
+        if (booking.teamAsk) {
+            renderTeamAsk(job, booking)
+            return
+        }
         val trade = job.slots.firstOrNull { it.trade == booking.trade }?.label.orEmpty()
         actions.addView(TextView(this).apply {
             text = "Booking Summary\n\n" +
@@ -682,7 +728,7 @@ class DayJobDetailActivity : AppCompatActivity() {
             AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
                 .setTitle("कौन जाएगा?")
                 .setMultiChoiceItems(rows.map { it.third }.toTypedArray(), checked) { _, i, on -> checked[i] = on }
-                .setPositiveButton("सबकी जगह पक्की करें") { _, _ ->
+                .setPositiveButton("सबसे पूछें") { _, _ ->
                     val picks = rows.filterIndexed { i, _ -> checked[i] }.distinctBy { it.first }
                         .map { com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamPick(it.first, it.second) }
                     if (picks.isEmpty()) {

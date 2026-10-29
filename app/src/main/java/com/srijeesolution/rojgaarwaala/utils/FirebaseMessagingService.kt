@@ -95,6 +95,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         // New work, a team booking or the team's turn: read aloud when the server sends words for it.
         if (type?.startsWith("day_job_") == true) {
             DayJobSpeaker.speak(this, remoteMessage.data["speak"])
+            if (type in setOf("day_job_new", "day_job_team_ask", "day_job_rebook", "day_job_invite")) {
+                sendBroadcast(android.content.Intent(com.srijeesolution.rojgaarwaala.presentation.ui.activity.dayjob.DayJobFlash.ACTION_NEW_WORK).setPackage(packageName))
+            }
         }
     }
 
