@@ -590,7 +590,7 @@ class DayJobDetailActivity : AppCompatActivity() {
     /** "हाँ" holds the seat for 4 minutes; the Booking Summary then asks for "अभी Book करें". */
     @Suppress("UNUSED_PARAMETER")
     private fun confirmAccept(job: DayJob, trade: String, label: String) {
-        act { repository.accept(job.id, trade) }
+        act(failAsDialog = true) { repository.accept(job.id, trade) }
     }
 
     /** The leader's turn: 1 minute to say yes for the team, then 2 minutes to pick who goes. */
@@ -851,7 +851,8 @@ class DayJobDetailActivity : AppCompatActivity() {
     }
 
     /** Runs an action, shows the server's message, and reloads (or opens the new job). */
-    private fun act(block: suspend () -> DayJobOutcome<Any?>) {
+    /** [failAsDialog]: a refusal the worker must read (e.g. Job Done pending) stays on screen instead of a toast. */
+    private fun act(failAsDialog: Boolean = false, block: suspend () -> DayJobOutcome<Any?>) {
         binding.detailLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
             val result = block()
@@ -867,7 +868,16 @@ class DayJobDetailActivity : AppCompatActivity() {
                         load()
                     }
                 }
-                is DayJobOutcome.Fail -> DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                is DayJobOutcome.Fail -> if (failAsDialog) {
+                    AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
+                        .setTitle("काम नहीं ले सके")
+                        .setMessage(result.message)
+                        .setPositiveButton("ठीक है", null)
+                        .show()
+                    com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this@DayJobDetailActivity, result.message)
+                } else {
+                    DayJobUi.toast(this@DayJobDetailActivity, result.message)
+                }
             }
         }
     }
