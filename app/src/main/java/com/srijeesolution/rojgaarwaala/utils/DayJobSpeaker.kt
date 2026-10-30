@@ -40,7 +40,11 @@ object DayJobSpeaker {
         if (text.isNullOrBlank() || (!always && !isOn(context))) return
         val app = context.applicationContext
         var tts: TextToSpeech? = null
-        tts = TextToSpeech(app) { status ->
+        // Many Samsung phones default to Samsung's engine, which has no Hindi; Google's does.
+        val engineName = GOOGLE_TTS.takeIf { name ->
+            runCatching { app.packageManager.getPackageInfo(name, 0) }.isSuccess
+        }
+        tts = TextToSpeech(app, { status ->
             val engine = tts ?: return@TextToSpeech
             if (status != TextToSpeech.SUCCESS) {
                 engine.shutdown()
@@ -48,7 +52,19 @@ object DayJobSpeaker {
             }
             val hindi = Locale("hi", "IN")
             val ok = engine.setLanguage(hindi)
-            if (ok == TextToSpeech.LANG_MISSING_DATA || ok == TextToSpeech.LANG_NOT_SUPPORTED) engine.language = Locale("en", "IN")
+            if (ok == TextToSpeech.LANG_MISSING_DATA || ok == TextToSpeech.LANG_NOT_SUPPORTED) {
+                // The phone has no Hindi voice on it: use a Hindi voice that speaks over the internet if
+                // there is one, and ask once to download the Hindi voice. Never fall back to an
+                // English voice, which reads Hindi words wrongly.
+                val online = runCatching { engine.voices.orEmpty().firstOrNull { it.locale.language == "hi" } }.getOrNull()
+                if (online != null) {
+                    engine.voice = online
+                } else {
+                    askForHindiVoice(app)
+                    engine.shutdown()
+                    return@TextToSpeech
+                }
+            }
             engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) = Unit
                 override fun onDone(utteranceId: String?) = engine.shutdown()
@@ -56,6 +72,23 @@ object DayJobSpeaker {
                 override fun onError(utteranceId: String?) = engine.shutdown()
             })
             engine.speak(hindiWords(text), TextToSpeech.QUEUE_ADD, null, "day_job_alert")
+        }, engineName)
+    }
+
+    private const val GOOGLE_TTS = "com.google.android.tts"
+    private const val KEY_ASKED_VOICE = "asked_hindi_voice"
+
+    /** Opens the phone's "download voice" screen, once, so the app can speak Hindi. */
+    private fun askForHindiVoice(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_ASKED_VOICE, false)) return
+        prefs.edit().putBoolean(KEY_ASKED_VOICE, true).apply()
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(context, "हिंदी में सुनने के लिए फ़ोन में हिंदी आवाज़ डाउनलोड करें", android.widget.Toast.LENGTH_LONG).show()
+            runCatching {
+                context.startActivity(android.content.Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
         }
     }
 }

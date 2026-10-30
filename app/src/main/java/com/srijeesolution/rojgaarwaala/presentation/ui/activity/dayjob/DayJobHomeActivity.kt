@@ -14,7 +14,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -43,6 +42,8 @@ class DayJobHomeActivity : AppCompatActivity() {
         const val MODE_WORK = "work"
         const val MODE_HIRE = "hire"
         private const val PREFS = "day_job"
+        /** The worker's own pin and name on the map. */
+        private const val ME_COLOUR = 0xFF4FA3FF.toInt()
 
         fun intent(context: Context, mode: String) =
             Intent(context, DayJobHomeActivity::class.java).putExtra(EXTRA_MODE, mode)
@@ -493,7 +494,8 @@ class DayJobHomeActivity : AppCompatActivity() {
             googleMap.addCircle(CircleOptions().center(me).radius(10_000.0).strokeWidth(2f)
                 .strokeColor(0x66FFBB02).fillColor(0x14FFBB02))
             googleMap.addMarker(MarkerOptions().position(me).title("आप")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)))
+                .anchor(0.5f, DayJobPins.pinAnchorY(this, 36, "आप")).zIndex(2f)
+                .icon(DayJobPins.mapPin(this, ME_COLOUR, R.drawable.ic_day_job_person, 36, "आप")))
         }
         val bounds = LatLngBounds.Builder()
         var any = false
@@ -503,7 +505,8 @@ class DayJobHomeActivity : AppCompatActivity() {
                 MarkerOptions().position(point)
                     .title("${DayJobFormat.wageText(job.wagePerDay)} · ${job.title}")
                     .snippet(DayJobFormat.whenText(job.workDate, job.startTime) + " · खोलने के लिए छुएँ")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)),
+                    .anchor(0.5f, 0.5f)
+                    .icon(DayJobPins.mapPin(this, ContextCompat.getColor(this, R.color.brand_color_yellow), R.drawable.ic_day_job_site, 40)),
             )?.tag = job
             bounds.include(point)
             any = true

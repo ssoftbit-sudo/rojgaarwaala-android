@@ -17,7 +17,6 @@ import com.bumptech.glide.Glide
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
@@ -205,7 +204,8 @@ class DayJobDetailActivity : AppCompatActivity() {
             map.clear()
             val point = LatLng(job.latitude, job.longitude)
             map.addMarker(MarkerOptions().position(point).title(job.place.ifBlank { job.title })
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+                .anchor(0.5f, 0.5f)
+                .icon(DayJobPins.mapPin(this, ContextCompat.getColor(this, R.color.brand_color_yellow), R.drawable.ic_day_job_site, 44)))
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 14f))
             map.uiSettings.isMapToolbarEnabled = false
         }

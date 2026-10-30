@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
@@ -58,30 +57,8 @@ class DayJobTrackActivity : AppCompatActivity() {
         0xFFEC407A.toInt(), 0xFF26A69A.toInt(), 0xFF8D6E63.toInt(), 0xFF7E57C2.toInt(), 0xFF26C6DA.toInt(),
     )
     private fun colourOf(w: DayJobTrackWorker) = palette[Math.floorMod(w.bookingId, palette.size)]
-    private val pins = mutableMapOf<Int, com.google.android.gms.maps.model.BitmapDescriptor>()
-
-    /** A round pin in the worker's colour with a white person inside and a dark ring. */
-    private fun personPin(colour: Int) = roundPin(colour, R.drawable.ic_day_job_person, 40)
-
-    /** The work site: a bigger orange pin with a building, so it stands apart from people. */
-    private val sitePin by lazy { roundPin(ContextCompat.getColor(this, R.color.brand_color_yellow), R.drawable.ic_day_job_site, 48) }
-
-    private fun roundPin(colour: Int, icon: Int, sizeDp: Int): com.google.android.gms.maps.model.BitmapDescriptor = pins.getOrPut(colour * 31 + icon) {
-        val size = dp(sizeDp)
-        val bmp = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bmp)
-        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-        paint.color = 0xFF111111.toInt()
-        canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
-        paint.color = colour
-        canvas.drawCircle(size / 2f, size / 2f, size / 2f - dp(3), paint)
-        ContextCompat.getDrawable(this, icon)!!.mutate().apply {
-            val pad = size / 5
-            setBounds(pad, pad, size - pad, size - pad)
-            draw(canvas)
-        }
-        BitmapDescriptorFactory.fromBitmap(bmp)
-    }
+    /** The work site: a bigger yellow pin with a building, so it stands apart from people. */
+    private val sitePin by lazy { DayJobPins.mapPin(this, ContextCompat.getColor(this, R.color.brand_color_yellow), R.drawable.ic_day_job_site, 48) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -157,10 +134,10 @@ class DayJobTrackActivity : AppCompatActivity() {
                 m.addMarker(MarkerOptions().position(at)
                     .title(w.name ?: "मज़दूर")
                     .snippet(listOfNotNull(w.distanceKm?.let { "$it km" }, w.etaMinutes?.let { "~$it मिनट" }).joinToString(" · "))
-                    .anchor(0.5f, 0.5f)
+                    .anchor(0.5f, DayJobPins.pinAnchorY(this, 40, w.name ?: "मज़दूर"))
                     // A worker who stopped sharing is shown faded at their last place.
                     .alpha(if (w.state == "on_way") 1f else 0.55f)
-                    .icon(personPin(colourOf(w))))
+                    .icon(DayJobPins.mapPin(this, colourOf(w), R.drawable.ic_day_job_person, 40, w.name ?: "मज़दूर")))
             }
             // Fit everyone once; after that leave the map where the company moved it.
             if (!framed) {
