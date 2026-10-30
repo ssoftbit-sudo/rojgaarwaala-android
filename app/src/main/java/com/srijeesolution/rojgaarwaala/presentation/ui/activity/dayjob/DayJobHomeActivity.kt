@@ -95,6 +95,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobModeWork.setOnClickListener { setMode(MODE_WORK) }
         binding.dayJobModeHire.setOnClickListener { setMode(MODE_HIRE) }
         binding.dayJobRefresh.setOnRefreshListener { refresh() }
+        binding.dayJobHelp.setOnClickListener { tutorial = DayJobTutorial.show(this, forCompany = mode == MODE_HIRE) }
         binding.dayJobSeeAll.setOnClickListener {
             returnRefresh.launch(DayJobNearbyActivity.intent(this, center?.latitude, center?.longitude))
         }
@@ -151,7 +152,11 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobCompanyPanel.visibility = if (work) View.GONE else View.VISIBLE
         styleTabs()
         if (meta == null) loadMeta() else render()
+        // First visit to each side: how it works, end to end.
+        if (tutorial?.isShowing != true) tutorial = DayJobTutorial.showOnce(this, forCompany = !work) ?: tutorial
     }
+
+    private var tutorial: android.app.Dialog? = null
 
     private fun styleToggle(view: android.widget.TextView, on: Boolean) {
         view.setBackgroundResource(if (on) R.drawable.bg_day_job_toggle_on else android.R.color.transparent)
@@ -381,7 +386,7 @@ class DayJobHomeActivity : AppCompatActivity() {
 
     /** New jobs (and team picks) pop up as big cards the worker can swipe through. */
     private fun flashNew(nearby: List<DayJob>) {
-        if (mode != MODE_WORK || flash?.isShowing == true || isFinishing) return
+        if (mode != MODE_WORK || flash?.isShowing == true || tutorial?.isShowing == true || isFinishing) return
         lifecycleScope.launch {
             val mine = (repository.myBookings() as? DayJobOutcome.Ok)?.data.orEmpty()
             val jobs = DayJobFlash.pick(this@DayJobHomeActivity, nearby, mine)
