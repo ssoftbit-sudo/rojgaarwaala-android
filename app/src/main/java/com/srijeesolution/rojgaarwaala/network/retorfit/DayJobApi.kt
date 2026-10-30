@@ -135,6 +135,9 @@ interface DayJobApi {
     @POST("day-jobs/bookings/{id}/done")
     suspend fun workerDone(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobDoneRequest): Response<DayJobEnvelope<Any>>
 
+    @POST("day-jobs/bookings/{id}/start")
+    suspend fun startWork(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobStartRequest): Response<DayJobEnvelope<Any>>
+
     @POST("day-jobs/bookings/{id}/company-done")
     suspend fun companyDone(@Path("id") id: Int, @Body body: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest): Response<DayJobEnvelope<Any>>
 

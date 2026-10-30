@@ -129,6 +129,12 @@ data class DayJobBooking(
     @SerializedName("can_share_location") val canShareLocation: Boolean = false,
     @SerializedName("sharing_location") val sharingLocation: Boolean = false,
     @SerializedName("arrived") val arrived: Boolean = false,
+    /** The supervisor typed this worker's start code: attendance is in. */
+    @SerializedName("started") val started: Boolean = false,
+    /** Company side: the worker's code can be typed now. */
+    @SerializedName("can_start") val canStart: Boolean = false,
+    /** Worker side, on the day: the 4 digits to tell the supervisor. */
+    @SerializedName("start_code") val startCode: String? = null,
     // Job Done: the worker's own (my_booking) and the company's, per worker (owner list).
     @SerializedName("can_mark_done") val canMarkDone: Boolean = false,
     @SerializedName("done_by_me") val doneByMe: Boolean = false,
@@ -402,3 +408,5 @@ data class DayJobTrackData(
     @SerializedName("site") val site: DayJobTrackSite = DayJobTrackSite(),
     @SerializedName("workers") val workers: List<DayJobTrackWorker> = emptyList(),
 )
+
+data class DayJobStartRequest(@SerializedName("code") val code: String)

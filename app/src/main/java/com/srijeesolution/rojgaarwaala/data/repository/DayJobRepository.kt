@@ -91,6 +91,9 @@ class DayJobRepository @Inject constructor() {
     suspend fun workerDone(bookingId: Int, paid: Boolean, rating: Int?): DayJobOutcome<Any?> =
         call { api.workerDone(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobDoneRequest(paid, rating)) }
 
+    suspend fun startWork(bookingId: Int, code: String): DayJobOutcome<Any?> =
+        call { api.startWork(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobStartRequest(code)) }
+
     suspend fun companyDone(bookingId: Int, rating: Int): DayJobOutcome<Any?> =
         call { api.companyDone(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobRatingRequest(rating)) }
 

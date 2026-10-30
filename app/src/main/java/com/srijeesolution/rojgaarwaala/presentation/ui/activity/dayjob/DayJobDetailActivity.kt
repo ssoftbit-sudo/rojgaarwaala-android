@@ -339,6 +339,33 @@ class DayJobDetailActivity : AppCompatActivity() {
                 R.color.day_job_green,
             ))
         }
+        // On site: the worker tells this code to the supervisor, who types it to start the work.
+        if (booking.started) {
+            actions.addView(note("✅ काम शुरू हो गया। आपकी हाज़िरी लग गई।", R.color.day_job_green).apply { textSize = 18f })
+        } else booking.startCode?.let { code ->
+            actions.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setBackgroundResource(R.drawable.bg_day_job_highlight)
+                setPadding(DayJobUi.dp(context, 16), DayJobUi.dp(context, 14), DayJobUi.dp(context, 16), DayJobUi.dp(context, 14))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { topMargin = DayJobUi.dp(context, 10) }
+                addView(note("काम शुरू कोड", R.color.white).apply { gravity = Gravity.CENTER; textSize = 16f })
+                addView(TextView(context).apply {
+                    text = code.toCharArray().joinToString("  ")
+                    textSize = 44f
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.1f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
+                })
+                addView(note("काम की जगह पहुँचकर यह कोड सुपरवाइज़र को बताएँ। वह डालेगा तो हाज़िरी लगेगी।", R.color.white).apply { gravity = Gravity.CENTER })
+            })
+            actions.addView(button("🔊  कोड सुनें", 1) {
+                com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this,
+                    "आपका काम शुरू कोड है: ${code.toCharArray().joinToString(", ")}। यह कोड सुपरवाइज़र को बताएँ।", always = true)
+            })
+        }
         // On the way: nothing is shared until the worker taps this.
         val sharingHere = com.srijeesolution.rojgaarwaala.utils.DayJobTrackingService.activeBooking(this) == booking.id
         when {
@@ -544,6 +571,19 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
                     setOnClickListener { askRebook(b.id, b.name ?: "मज़दूर") }
                 })
+                if (b.started) extraRow.addView(TextView(context).apply {
+                    text = "✅ काम शुरू"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.day_job_green))
+                    setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
+                }) else if (b.canStart) extraRow.addView(TextView(context).apply {
+                    text = "▶ काम शुरू (कोड डालें)"
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.day_job_on_green))
+                    setBackgroundResource(R.drawable.bg_day_job_green_button)
+                    setPadding(DayJobUi.dp(context, 14), DayJobUi.dp(context, 8), DayJobUi.dp(context, 14), DayJobUi.dp(context, 8))
+                    setOnClickListener { askStartCode(b.id, b.name ?: "मज़दूर") }
+                })
                 if (b.canMarkDone) actionsRow.addView(TextView(context).apply {
                     text = "Job Done"
                     setTypeface(typeface, android.graphics.Typeface.BOLD)
@@ -589,6 +629,28 @@ class DayJobDetailActivity : AppCompatActivity() {
 
     /** "हाँ" holds the seat for 4 minutes; the Booking Summary then asks for "अभी Book करें". */
     @Suppress("UNUSED_PARAMETER")
+    /** The supervisor asks the worker for their 4-digit code and types it here. */
+    private fun askStartCode(bookingId: Int, name: String) {
+        val input = android.widget.EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            filters = arrayOf(android.text.InputFilter.LengthFilter(4))
+            hint = "4 अंक का कोड"
+            textSize = 28f
+            gravity = Gravity.CENTER
+            letterSpacing = 0.3f
+        }
+        AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("$name का काम शुरू करें")
+            .setMessage("$name से उनके फ़ोन पर दिख रहा कोड पूछें और यहाँ डालें।")
+            .setView(android.widget.FrameLayout(this).apply {
+                setPadding(DayJobUi.dp(context, 24), 0, DayJobUi.dp(context, 24), 0)
+                addView(input)
+            })
+            .setPositiveButton("काम शुरू ✓") { _, _ -> act(failAsDialog = true) { repository.startWork(bookingId, input.text.toString().trim()) } }
+            .setNegativeButton("रहने दें", null)
+            .show()
+    }
+
     private fun confirmAccept(job: DayJob, trade: String, label: String) {
         act(failAsDialog = true) { repository.accept(job.id, trade) }
     }
