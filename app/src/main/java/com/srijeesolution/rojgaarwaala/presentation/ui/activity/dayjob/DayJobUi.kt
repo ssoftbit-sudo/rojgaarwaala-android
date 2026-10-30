@@ -159,6 +159,8 @@ internal object DayJobUi {
 /** Cards for jobs: a worker sees wage, distance and seats; a company sees how many are coming. */
 internal class DayJobAdapter(
     private val forCompany: Boolean,
+    /** Home's short list: one line "काम · ₹मज़दूरी" and when/how far; the full cards are on their own page. */
+    private val compact: Boolean = false,
     private val onClick: (DayJob) -> Unit,
 ) : RecyclerView.Adapter<DayJobAdapter.Holder>() {
 
@@ -207,6 +209,14 @@ internal class DayJobAdapter(
         holder.facts.visibility = if (forCompany) View.GONE else View.VISIBLE
         listOf(holder.wage, holder.slots, holder.meta).forEach { it.visibility = if (forCompany) View.VISIBLE else View.GONE }
         if (!forCompany) holder.facts.text = DayJobUi.factsText(DayJobFormat.cardFacts(job))
+        if (compact) {
+            holder.title.text = "${job.title} · ${DayJobFormat.wageText(job.wagePerDay)}"
+            holder.facts.visibility = View.GONE
+            holder.meta.visibility = View.VISIBLE
+            holder.meta.text = listOf(DayJobFormat.whenText(job.workDate, job.startTime), DayJobFormat.distanceText(job.distanceKm))
+                .filter { it.isNotBlank() }.joinToString(" · ")
+            holder.seats.text = ""
+        }
         holder.itemView.setOnClickListener { onClick(job) }
     }
 

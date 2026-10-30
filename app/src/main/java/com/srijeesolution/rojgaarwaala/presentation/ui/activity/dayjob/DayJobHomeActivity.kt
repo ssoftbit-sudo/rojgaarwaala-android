@@ -43,6 +43,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         const val MODE_HIRE = "hire"
         private const val PREFS = "day_job"
         /** The worker's own pin and name on the map. */
+        private const val HOME_JOBS = 3
         private const val ME_COLOUR = 0xFF4FA3FF.toInt()
 
         fun intent(context: Context, mode: String) =
@@ -59,7 +60,7 @@ class DayJobHomeActivity : AppCompatActivity() {
     private var pendingMapJobs: List<DayJob> = emptyList()
     private var center: LatLng? = null
 
-    private val workerAdapter = DayJobAdapter(forCompany = false) { openJob(it) }
+    private val workerAdapter = DayJobAdapter(forCompany = false, compact = true) { openJob(it) }
     private val companyAdapter = DayJobAdapter(forCompany = true) { openJob(it) }
 
     /** The rules dialog shows once per visit to this screen. */
@@ -357,7 +358,8 @@ class DayJobHomeActivity : AppCompatActivity() {
                     val from = result.data
                     center = if (from.latitude != null && from.longitude != null) LatLng(from.latitude, from.longitude) else null
                     val jobs = from.jobs
-                    workerAdapter.submit(jobs)
+                    // Home shows a few; "सब काम देखें" opens them all as swipe cards.
+                    workerAdapter.submit(jobs.take(HOME_JOBS))
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
                     binding.dayJobSeeAll.visibility = if (jobs.isEmpty()) View.GONE else View.VISIBLE
                     binding.dayJobSeeAll.text = "सब काम देखें (${jobs.size}) ›"
