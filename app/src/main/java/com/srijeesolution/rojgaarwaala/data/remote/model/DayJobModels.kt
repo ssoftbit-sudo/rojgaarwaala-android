@@ -181,6 +181,8 @@ data class DayJobCompanyRef(
 data class DayJob(
     @SerializedName("id") val id: Int = 0,
     @SerializedName("title") val title: String = "",
+    /** English words of the job written in Devanagari, so the Hindi voice says them right. */
+    @SerializedName("speech_hi") val speechHi: Map<String, String>? = null,
     @SerializedName("description") val description: String? = null,
     @SerializedName("wage_per_day") val wagePerDay: Int = 0,
     @SerializedName("work_date") val workDate: String = "",

@@ -93,6 +93,9 @@ class DayJobHomeActivity : AppCompatActivity() {
         binding.dayJobModeWork.setOnClickListener { setMode(MODE_WORK) }
         binding.dayJobModeHire.setOnClickListener { setMode(MODE_HIRE) }
         binding.dayJobRefresh.setOnRefreshListener { refresh() }
+        binding.dayJobSeeAll.setOnClickListener {
+            returnRefresh.launch(DayJobNearbyActivity.intent(this, center?.latitude, center?.longitude))
+        }
         binding.dayJobRefresh.setColorSchemeColors(ContextCompat.getColor(this, R.color.brand_color_yellow))
 
         binding.dayJobWorkerList.layoutManager = LinearLayoutManager(this)
@@ -355,6 +358,8 @@ class DayJobHomeActivity : AppCompatActivity() {
                     val jobs = from.jobs
                     workerAdapter.submit(jobs)
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
+                    binding.dayJobSeeAll.visibility = if (jobs.isEmpty()) View.GONE else View.VISIBLE
+                    binding.dayJobSeeAll.text = "सब काम देखें (${jobs.size}) ›"
                     binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● 10 km में ${jobs.size} काम"
                     showOnMap(jobs)
                     flashNew(jobs)

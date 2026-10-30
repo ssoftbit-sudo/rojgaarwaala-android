@@ -280,6 +280,19 @@
                         android:nestedScrollingEnabled="false" />
 
                     <TextView
+                        android:id="@+id/dayJobSeeAll"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_free_job_map_button"
+                        android:gravity="center"
+                        android:text="सब काम देखें ›"
+                        android:textColor="@color/brand_color_yellow"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <TextView
                         android:id="@+id/dayJobWorkerEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

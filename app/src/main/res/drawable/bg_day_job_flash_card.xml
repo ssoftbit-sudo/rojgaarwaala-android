@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The swipe Job Card: lifted off the dimmed screen by a bright border. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#3A3020" />
+    <stroke android:width="2dp" android:color="@color/brand_color_yellow" />
+    <corners android:radius="22dp" />
+</shape>

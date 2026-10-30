@@ -64,29 +64,37 @@ object DayJobFlash {
 
     private fun key(job: DayJob) = if (job.myBooking?.teamAsk == true) "t${job.id}" else "n${job.id}"
 
-    fun show(context: Context, jobs: List<DayJob>, actions: Actions): Dialog? {
+    /**
+     * [title] "नया काम" for fresh alerts; the nearby page passes its own title and
+     * [remember] false, so browsing does not stop a job flashing later.
+     */
+    fun show(context: Context, jobs: List<DayJob>, actions: Actions, title: String = "🔔 नया काम", remember: Boolean = true): Dialog? {
         if (jobs.isEmpty()) return null
-        val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        // A floating card over the dimmed screen, so the list behind still shows.
+        val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         val dp = { v: Int -> DayJobUi.dp(context, v) }
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0xEE000000.toInt())
-            setPadding(0, dp(24), 0, dp(16))
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundColor(0xCC000000.toInt())
+            setPadding(0, dp(32), 0, dp(32))
+            setOnClickListener { }
         }
         val counter = text(context, "", 15f, R.color.brand_color_yellow, bold = true).apply {
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(8))
+            setPadding(0, dp(6), 0, dp(10))
         }
         root.addView(LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), 0, dp(8), 0)
-            addView(text(context, "🔔 नया काम", 20f, R.color.white, bold = true).apply {
+            setPadding(dp(20), 0, dp(16), 0)
+            addView(text(context, title, 20f, R.color.white, bold = true).apply {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
-            addView(text(context, "✕ बंद करें", 16f, R.color.search_hint, bold = true).apply {
-                setPadding(dp(12), dp(12), dp(12), dp(12))
+            addView(text(context, "✕  बंद करें", 16f, R.color.white, bold = true).apply {
+                setBackgroundResource(R.drawable.bg_day_job_flash_close)
+                setPadding(dp(16), dp(10), dp(16), dp(10))
                 setOnClickListener { dialog.dismiss() }
             })
         })
@@ -95,11 +103,11 @@ object DayJobFlash {
         val list = jobs.toMutableList()
         val pager = RecyclerView(context).apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         fun updateCounter(at: Int) {
             counter.text = if (list.size > 1) "${at + 1} / ${list.size}  ·  अगला काम देखने के लिए स्वाइप करें ›" else ""
-            list.getOrNull(at)?.let { markSeen(context, it) }
+            if (remember) list.getOrNull(at)?.let { markSeen(context, it) }
         }
         lateinit var adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>
         fun answered(job: DayJob, then: (DayJob) -> Unit) {
@@ -115,7 +123,7 @@ object DayJobFlash {
             override fun getItemCount() = list.size
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 object : RecyclerView.ViewHolder(ScrollView(parent.context).apply {
-                    layoutParams = RecyclerView.LayoutParams(parent.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    layoutParams = RecyclerView.LayoutParams(parent.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 }) {}
 
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -142,15 +150,16 @@ object DayJobFlash {
         root.addView(pager)
         dialog.setContentView(root)
         dialog.show()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         updateCounter(0)
         // Read the first card aloud, like the alert does.
-        DayJobSpeaker.speak(context, spokenIntro(list[0]))
+        if (remember) DayJobSpeaker.speak(context, spokenIntro(list[0]))
         return dialog
     }
 
-    private fun spokenIntro(job: DayJob): String =
+    private fun spokenIntro(job: DayJob): String = DayJobFormat.forSpeech(job,
         if (job.myBooking?.teamAsk == true) "${job.myBooking.leaderName ?: "लीडर"} ने आपको काम के लिए चुना है। ${job.title}। जाऊँगा या नहीं जाऊँगा दबाइए।"
-        else "आपके लिए नया काम आया है। ${job.title}, ${job.wagePerDay} रुपये रोज़।"
+        else "आपके लिए नया काम आया है। ${job.title}, ${job.wagePerDay} रुपये रोज़।")
 
     private fun page(context: Context, job: DayJob, actions: Actions): View {
         val dp = { v: Int -> DayJobUi.dp(context, v) }
@@ -158,7 +167,7 @@ object DayJobFlash {
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(4), dp(16), dp(16))
-            setBackgroundResource(R.drawable.bg_day_job_card)
+            setBackgroundResource(R.drawable.bg_day_job_flash_card)
             layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             job.photos.firstOrNull()?.let { url ->
                 addView(ImageView(context).apply {
@@ -183,6 +192,13 @@ object DayJobFlash {
             if (teamAsk) {
                 addView(button(context, "✅  जाऊँगा", 2) { actions.onTeamYes(job) })
                 addView(button(context, "❌  नहीं जाऊँगा", 3) { actions.onTeamNo(job) })
+            } else if (job.myBooking != null) {
+                addView(text(context, "✅ यह काम आपका बुक है", 18f, R.color.day_job_green, bold = true).apply { gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(4)) })
+            } else if (!job.isAccepting || job.canTakeFrom != null) {
+                addView(text(context, if (job.isAccepting) "यह काम अभी नहीं ले सकते। पूरी जानकारी देखें।" else "इस काम के लिए अब मज़दूर नहीं लिए जा रहे।", 16f, R.color.search_hint).apply { gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(4)) })
+            } else if (job.rejectedByMe) {
+                addView(text(context, "आपने इसे मना किया था, जगह अब भी खाली है", 15f, R.color.search_hint).apply { gravity = Gravity.CENTER; setPadding(0, dp(12), 0, 0) })
+                addView(button(context, "✅  हाँ, अब लूँगा", 2) { actions.onYes(job) })
             } else if (job.teamTurn != null) {
                 addView(button(context, "👥  टीम की बारी: खोलें", 2) { actions.onOpen(job) })
             } else {

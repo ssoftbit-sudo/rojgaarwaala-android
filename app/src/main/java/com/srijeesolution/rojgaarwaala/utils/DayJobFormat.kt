@@ -82,10 +82,15 @@ object DayJobFormat {
     ).filter { it.second.isNotBlank() }
 
     /** What the "सुनें" button says: the card as plain sentences, without the icons. */
-    fun spokenCard(job: DayJob, facts: List<Pair<String, String>>): String =
+    fun spokenCard(job: DayJob, facts: List<Pair<String, String>>): String = forSpeech(job,
         facts.joinToString("। ") { (label, value) ->
-            label.substringAfter(' ') + ": " + value.replace("km", "किलोमीटर").replace("₹", "").replace("/दिन", " रुपये रोज़")
-        } + "।" + (job.description?.takeIf { it.isNotBlank() }?.let { " काम के बारे में: $it।" } ?: "")
+            label.substringAfter(' ') + ": " + value.replace("₹", "").replace("/दिन", " रुपये रोज़")
+        } + "।" + (job.description?.takeIf { it.isNotBlank() }?.let { " काम के बारे में: $it।" } ?: ""))
+
+    /** Swaps the job's English words for the Devanagari the server wrote, longest first. */
+    fun forSpeech(job: DayJob, text: String): String =
+        job.speechHi.orEmpty().entries.sortedByDescending { it.key.length }
+            .fold(text) { acc, (en, hi) -> acc.replace(en, hi) }
 
     fun comingText(job: DayJob): String = "${job.filledTotal}/${job.neededTotal} आ रहे हैं"
 

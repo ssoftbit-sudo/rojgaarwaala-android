@@ -21,6 +21,17 @@ object DayJobSpeaker {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY, on).apply()
     }
 
+    /** The app's own English words, as a Hindi voice should say them. */
+    private val words = listOf(
+        "Job Done" to "जॉब डन", "Booking Summary" to "बुकिंग समरी", "Book" to "बुक", "Call" to "कॉल",
+        "km" to "किलोमीटर", "OT" to "ओवरटाइम", "rating" to "रेटिंग", "OTP" to "ओ टी पी",
+    )
+
+    /** [text] with known English words in Devanagari; whole words only, so "Booking" stays whole. */
+    fun hindiWords(text: String): String = words.fold(text) { acc, (en, hi) ->
+        acc.replace(Regex("(?<![A-Za-z])" + Regex.escape(en) + "(?![A-Za-z])"), hi)
+    }
+
     /**
      * Speaks [text] once, then lets the engine go. Silent if the phone has no Hindi voice.
      * [always] is for a "सुनें" button the worker pressed, which plays even with alerts muted.
@@ -44,7 +55,7 @@ object DayJobSpeaker {
                 @Deprecated("Deprecated in Java")
                 override fun onError(utteranceId: String?) = engine.shutdown()
             })
-            engine.speak(text, TextToSpeech.QUEUE_ADD, null, "day_job_alert")
+            engine.speak(hindiWords(text), TextToSpeech.QUEUE_ADD, null, "day_job_alert")
         }
     }
 }
