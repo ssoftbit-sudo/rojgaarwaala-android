@@ -20,6 +20,55 @@ import com.srijeesolution.rojgaarwaala.utils.DayJobFormat
 /** Small shared pieces for the 1 Day Job screens. */
 internal object DayJobUi {
 
+    /** Opens a site photo full screen; pinch to zoom, drag to move, tap ✕ to close. */
+    fun showPhoto(context: android.content.Context, url: String) {
+        val dialog = android.app.Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val image = android.widget.ImageView(context).apply { scaleType = android.widget.ImageView.ScaleType.FIT_CENTER }
+        var scale = 1f
+        var lastX = 0f
+        var lastY = 0f
+        val pinch = android.view.ScaleGestureDetector(context, object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
+                scale = (scale * detector.scaleFactor).coerceIn(1f, 5f)
+                image.scaleX = scale
+                image.scaleY = scale
+                if (scale == 1f) { image.translationX = 0f; image.translationY = 0f }
+                return true
+            }
+        })
+        image.setOnTouchListener { _, event ->
+            pinch.onTouchEvent(event)
+            when (event.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> { lastX = event.rawX; lastY = event.rawY }
+                android.view.MotionEvent.ACTION_MOVE -> if (scale > 1f && !pinch.isInProgress) {
+                    image.translationX += event.rawX - lastX
+                    image.translationY += event.rawY - lastY
+                    lastX = event.rawX
+                    lastY = event.rawY
+                }
+            }
+            true
+        }
+        com.bumptech.glide.Glide.with(context).load(url).into(image)
+        val root = android.widget.FrameLayout(context).apply {
+            setBackgroundColor(android.graphics.Color.BLACK)
+            addView(image, android.widget.FrameLayout.LayoutParams(-1, -1))
+            addView(android.widget.TextView(context).apply {
+                text = "✕  बंद करें"
+                textSize = 16f
+                setTextColor(android.graphics.Color.WHITE)
+                setBackgroundResource(com.srijeesolution.rojgaarwaala.R.drawable.bg_day_job_flash_close)
+                setPadding(dp(context, 16), dp(context, 10), dp(context, 16), dp(context, 10))
+                setOnClickListener { dialog.dismiss() }
+            }, android.widget.FrameLayout.LayoutParams(-2, -2, android.view.Gravity.TOP or android.view.Gravity.END).apply {
+                setMargins(0, dp(context, 40), dp(context, 16), 0)
+            })
+        }
+        dialog.setContentView(root)
+        dialog.show()
+    }
+
+
     fun dp(context: Context, value: Int) = (value * context.resources.displayMetrics.density).toInt()
 
     /** Amber when chosen, dark otherwise; same look as the resume builder chips. */

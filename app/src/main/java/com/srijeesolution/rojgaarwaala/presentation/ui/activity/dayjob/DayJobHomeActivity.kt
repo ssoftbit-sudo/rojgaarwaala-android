@@ -89,6 +89,7 @@ class DayJobHomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDayJobHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.warmUp(this)
 
         mode = intent.getStringExtra(EXTRA_MODE) ?: prefs.getString("mode", MODE_WORK) ?: MODE_WORK
         binding.dayJobBack.setOnClickListener { finish() }

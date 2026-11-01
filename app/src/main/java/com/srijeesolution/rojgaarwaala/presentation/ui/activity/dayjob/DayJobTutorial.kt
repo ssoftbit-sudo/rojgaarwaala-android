@@ -58,6 +58,7 @@ object DayJobTutorial {
         val dp = { v: Int -> DayJobUi.dp(context, v) }
         val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setOnDismissListener { DayJobSpeaker.stop() }
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL

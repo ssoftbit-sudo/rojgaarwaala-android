@@ -155,9 +155,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         }
         if (isOwner) return
         binding.detailFactsCard.text = DayJobUi.factsText(facts)
-        binding.detailListen.setOnClickListener {
-            com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.speak(this, DayJobFormat.spokenCard(job, facts), always = true)
-        }
+        com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.bindPlayPause(this, binding.detailListen) { DayJobFormat.spokenCard(job, facts) }
     }
 
     private fun renderSlots(job: DayJob) {
@@ -194,8 +192,14 @@ class DayJobDetailActivity : AppCompatActivity() {
                 clipToOutline = true
                 setBackgroundResource(R.drawable.bg_day_job_card)
                 Glide.with(this).load(url).into(this)
+                setOnClickListener { DayJobUi.showPhoto(context, url) }
             })
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        com.srijeesolution.rojgaarwaala.utils.DayJobSpeaker.stop()
     }
 
     private fun renderMap(job: DayJob) {

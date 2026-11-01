@@ -142,6 +142,7 @@ object DayJobFlash {
         PagerSnapHelper().attachToRecyclerView(pager)
         pager.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(rv: RecyclerView, state: Int) {
+                if (state == RecyclerView.SCROLL_STATE_DRAGGING) DayJobSpeaker.stop()
                 if (state == RecyclerView.SCROLL_STATE_IDLE) {
                     (rv.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition().takeIf { it >= 0 }?.let { updateCounter(it) }
                 }
@@ -149,6 +150,7 @@ object DayJobFlash {
         })
         root.addView(pager)
         dialog.setContentView(root)
+        dialog.setOnDismissListener { DayJobSpeaker.stop() }
         dialog.show()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         updateCounter(0)
@@ -174,6 +176,7 @@ object DayJobFlash {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(170)).apply { topMargin = dp(12) }
                     Glide.with(context).load(url).into(this)
+                    setOnClickListener { DayJobUi.showPhoto(context, url) }
                 })
             }
             if (teamAsk) {
@@ -188,7 +191,9 @@ object DayJobFlash {
                 setBackgroundResource(R.drawable.bg_day_job_highlight)
                 setPadding(dp(14), dp(12), dp(14), dp(12))
             })
-            addView(button(context, "🔊  सुनें", 1) { DayJobSpeaker.speak(context, DayJobFormat.spokenCard(job, DayJobFormat.jobCardFacts(job)), always = true) })
+            addView(button(context, "🔊  सुनें", 1) { }.also { listen ->
+                DayJobSpeaker.bindPlayPause(context, listen) { DayJobFormat.spokenCard(job, DayJobFormat.jobCardFacts(job)) }
+            })
             if (teamAsk) {
                 addView(button(context, "✅  जाऊँगा", 2) { actions.onTeamYes(job) })
                 addView(button(context, "❌  नहीं जाऊँगा", 3) { actions.onTeamNo(job) })

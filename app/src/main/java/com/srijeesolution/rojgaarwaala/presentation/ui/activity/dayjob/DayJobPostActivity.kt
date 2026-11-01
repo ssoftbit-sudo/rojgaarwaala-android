@@ -117,6 +117,12 @@ class DayJobPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDayJobPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Newer Android no longer resizes the screen for the keyboard, so make room for it here.
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val keyboard = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, keyboard)
+            insets
+        }
         binding.postBack.setOnClickListener { finish() }
         binding.postSite.setOnClickListener {
             val intent = Intent(this, MapPinActivity::class.java)
