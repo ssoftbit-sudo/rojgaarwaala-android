@@ -117,11 +117,20 @@ class DayJobPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDayJobPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // Newer Android no longer resizes the screen for the keyboard, so make room for it here.
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val keyboard = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, keyboard)
-            insets
+        // Newer Android does not always resize the screen for the keyboard: measure what it
+        // covers, make that much room, and keep the field being typed in above it.
+        binding.root.viewTreeObserver.addOnGlobalLayoutListener {
+            val visible = android.graphics.Rect()
+            binding.root.getWindowVisibleDisplayFrame(visible)
+            val at = IntArray(2)
+            binding.root.getLocationOnScreen(at)
+            val covered = (at[1] + binding.root.height - visible.bottom).coerceAtLeast(0)
+            if (covered != binding.root.paddingBottom) {
+                binding.root.setPadding(binding.root.paddingLeft, binding.root.paddingTop, binding.root.paddingRight, covered)
+                binding.root.post {
+                    currentFocus?.let { it.requestRectangleOnScreen(android.graphics.Rect(0, 0, it.width, it.height), true) }
+                }
+            }
         }
         binding.postBack.setOnClickListener { finish() }
         binding.postSite.setOnClickListener {

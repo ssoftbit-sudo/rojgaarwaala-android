@@ -92,10 +92,12 @@ object DayJobSpeaker {
 
     /** Puts a pressed "सुनें" button back once the voice has ended. */
     private fun finished() {
-        main.post {
-            playing?.text = playingLabel
-            playing = null
-        }
+        main.post { resetButton() }
+    }
+
+    private fun resetButton() {
+        playing?.text = playingLabel
+        playing = null
     }
 
     /**
@@ -104,7 +106,7 @@ object DayJobSpeaker {
      */
     fun speak(context: Context, text: String?, always: Boolean = false) {
         if (text.isNullOrBlank() || (!always && !isOn(context))) return
-        finished()
+        resetButton()
         val tts = engine
         if (tts != null && ready) say(tts, text) else {
             pending = text
@@ -116,7 +118,7 @@ object DayJobSpeaker {
     fun stop() {
         pending = null
         engine?.takeIf { ready }?.stop()
-        finished()
+        resetButton()
     }
 
     /** Makes [button] play [text], and pause it when pressed again. */

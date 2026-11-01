@@ -313,7 +313,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                     (booking.companyRating?.let { "\nकंपनी ने आपको $it ★ दिए।" } ?: ""),
                 R.color.day_job_green,
             ))
-            booking.canMarkDone && (booking.doneByCompany || !booking.started) -> {
+            booking.canMarkDone -> {
                 actions.addView(note("काम पूरा हुआ? पूरा पैसा मिलने पर Job Done दबाएँ। तभी अगला काम ले पाएँगे।", R.color.white))
                 actions.addView(button("✅  पैसा मिल गया, Job Done", 2) {
                     DayJobUi.askStars(this, "Job Done", "${job.company.name} को कितने स्टार देंगे?") { stars ->
@@ -338,6 +338,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                 actions.addView(button("हाँ, मैं आ रहा हूँ", 2) { act { repository.confirm(booking.id, true) } })
                 actions.addView(button("नहीं आ पाऊँगा, कंपनी को बताएँ", 1) { act { repository.confirm(booking.id, false) } })
             }
+            booking.started -> Unit
             else -> actions.addView(note(
                 (if (booking.confirmed) "✓ आपने पक्का किया। " else "") +
                     "आप $trade बनकर जा रहे हैं। समय पर पहुँचें, कुछ बदले तो कंपनी को Call करें।",
@@ -447,7 +448,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         if (job.canTrack && job.filledTotal > 0) {
             actions.addView(button("🗺  नक्शे पर देखें, कौन कहाँ है", 2) { startActivity(DayJobTrackActivity.intent(this, job.id)) })
         }
-        if (job.canAskOvertime) {
+        if (job.canAskOvertime && job.bookings.orEmpty().any { it.started && !it.companyDone }) {
             actions.addView(button("⏱  OT माँगें (ज़्यादा देर रुकें)", 0) { askOvertime(job) })
         }
         val waitingDone = job.bookings.orEmpty().filter { it.canPlainDone }
@@ -461,7 +462,7 @@ class DayJobDetailActivity : AppCompatActivity() {
         }
         // Someone is coming: another post would only double the booking.
         val stillComing = job.bookings.orEmpty().any { it.status == "accepted" && !it.companyDone }
-        if (!stillComing) {
+        if (!stillComing && job.reservedUntil == null) {
             val callBack = job.bookings.orEmpty().filter { it.canRebook }
             if (callBack.isNotEmpty()) actions.addView(button("🔁  कल वाले लेबर बुलाएँ (${callBack.size})", 2) { askRebookAll(callBack) })
             actions.addView(button(if (callBack.isEmpty()) "🔁  दोबारा बुक करें" else "➕  नए लेबर बुलाएँ", 0) { askRepost(job) })
@@ -551,18 +552,19 @@ class DayJobDetailActivity : AppCompatActivity() {
                     val state = when {
                         b.status == "no_show" -> " · नहीं आया"
                         b.onHold -> " · बुक कर रहा है (4 मिनट)"
+                        b.companyDone -> " · Job Done, आपने ${b.companyRating ?: ""}★ दिए"
                         b.otStatus == "requested" -> " · OT माँगा: ${otHoursText(b.otHours)}, ₹${b.otAmount ?: 0}"
                         b.otStatus == "asked" -> " · OT पूछा, जवाब बाक़ी"
                         b.otStatus == "accepted" -> " · OT हाँ: ${otHoursText(b.otHours)}, ₹${b.otAmount ?: 0}"
                         b.otStatus == "declined" -> " · OT नहीं"
-                        b.companyDone -> " · Job Done, आपने ${b.companyRating ?: ""}★ दिए"
                         b.confirmed -> " · ✓ पक्का आएगा"
                         else -> ""
                     }
                     val rating = DayJobUi.ratingText(b.workerRatingAvg, b.workerRatingCount)
                     val who = "${b.name ?: "मज़दूर"} · ${b.tradeLabel.orEmpty()}"
                     val arrival = if (b.arrived && !b.started) " · ✓ पहुँच गया" else ""
-                    text = android.text.SpannableString("$who${if (rating.isBlank()) "" else "  $rating"}\n$state$arrival".removeSuffix("\n") +
+                    val detail = (state + arrival).removePrefix(" · ")
+                    text = android.text.SpannableString("$who${if (rating.isBlank()) "" else "  $rating"}" + (if (detail.isEmpty()) "" else "\n$detail") +
                         if (b.notPaid) "\nमज़दूर ने कहा: पूरा पैसा नहीं मिला" else "").apply {
                         setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, who.length, 0)
                         setSpan(android.text.style.RelativeSizeSpan(1.2f), 0, who.length, 0)
@@ -609,7 +611,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                     setPadding(DayJobUi.dp(context, 10), DayJobUi.dp(context, 8), DayJobUi.dp(context, 10), DayJobUi.dp(context, 8))
                     setOnClickListener { decideOvertime(b) }
                 })
-                if (b.canRebook) extraRow.addView(TextView(context).apply {
+                if (b.canRebook && b.companyDone) extraRow.addView(TextView(context).apply {
                     text = if (b.companyDone) "फिर बुलाएँ" else "कल फिर बुलाएँ"
                     setTypeface(typeface, android.graphics.Typeface.BOLD)
                     setTextColor(ContextCompat.getColor(context, R.color.day_job_green))
@@ -656,7 +658,12 @@ class DayJobDetailActivity : AppCompatActivity() {
                 if (b.started && !b.companyDone) addView(workTimeline(b.startedAt, b.workEndsAt), childCount - 1)
                 if (b.canAskDoneCode) {
                     val sent = b.doneCodeSent
-                    extraRow.addView(TextView(context).apply {
+                    val finishRow = LinearLayout(context).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                    }
+                    addView(finishRow, childCount - 1)
+                    finishRow.addView(TextView(context).apply {
                         text = if (sent) "✅ कोड डालें" else "✅ काम पूरा (कोड बनाएँ)"
                         setTypeface(typeface, android.graphics.Typeface.BOLD)
                         setTextColor(ContextCompat.getColor(context, R.color.day_job_on_green))
@@ -666,7 +673,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                             if (sent) askDoneCode(b.id, b.name ?: "मज़दूर") else act(failAsDialog = true) { repository.askDoneCode(b.id) }
                         }
                     })
-                    if (b.otStatus != "accepted") extraRow.addView(TextView(context).apply {
+                    if (b.otStatus != "accepted") finishRow.addView(TextView(context).apply {
                         text = "⏱ ओवरटाइम"
                         setTypeface(typeface, android.graphics.Typeface.BOLD)
                         setTextColor(ContextCompat.getColor(context, R.color.brand_color_yellow))
@@ -1068,7 +1075,7 @@ class DayJobDetailActivity : AppCompatActivity() {
                 }
                 is DayJobOutcome.Fail -> if (failAsDialog) {
                     AlertDialog.Builder(this@DayJobDetailActivity, R.style.Theme_Rojgaarwaala_AlertDialog)
-                        .setTitle("काम नहीं ले सके")
+                        .setTitle("यह नहीं हो सका")
                         .setMessage(result.message)
                         .setPositiveButton("ठीक है", null)
                         .show()
