@@ -97,7 +97,7 @@ class DayJobHomeActivity : AppCompatActivity() {
             parent.addView(this, parent.indexOfChild(zone) + 1)
             profileLine = this
         }
-        line.text = if (worker.profilePercent >= 100) "👤 प्रोफ़ाइल पूरी है ›" else "👤 प्रोफ़ाइल पूरी करें (${worker.profilePercent}%) ›"
+        line.text = if (worker.profileReady) "👤 मेरी प्रोफ़ाइल (${worker.profilePercent}%) ›" else "⚠️ काम लेने के लिए प्रोफ़ाइल पूरी करें ›"
         line.setOnClickListener {
             returnRefresh.launch(Intent(this, com.srijeesolution.rojgaarwaala.presentation.ui.activity.ProfileActivity::class.java)
                 .putExtra(com.srijeesolution.rojgaarwaala.presentation.ui.activity.ProfileFragment.EXTRA_SHOW_WORK_DETAILS, true))

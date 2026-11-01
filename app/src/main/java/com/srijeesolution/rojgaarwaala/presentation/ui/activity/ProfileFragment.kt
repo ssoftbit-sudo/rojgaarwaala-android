@@ -136,7 +136,7 @@ class ProfileFragment : Fragment() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
         section.addView(android.widget.TextView(context).apply {
-            text = "${worker.profilePercent}% पूरी है। नीचे की 5 चीज़ें भरें। ✅ मतलब भरा हुआ है, ⬜ मतलब बाक़ी है। ये जानकारी भरोसे के लिए है, इसके बिना भी काम ले सकते हैं।"
+            text = "${worker.profilePercent}% पूरी है। ✅ मतलब भरा हुआ है, ⬜ मतलब बाक़ी है। काम लेने के लिए उम्र, अनुभव, पता और घर वालों का नंबर ज़रूरी है। फ़ोटो ज़रूरी नहीं।"
             textSize = 14f
             setTextColor(white)
             setPadding(0, dp(6), 0, 0)
@@ -145,7 +145,7 @@ class ProfileFragment : Fragment() {
         val experience = field("कितने साल का अनुभव है", "जैसे: 5", worker.experienceYears?.toString(), true, 2)
         val address = field("आपका पता", "जैसे: पंडरी, रायपुर", worker.address, false, 255)
         val emergency = field("घर वालों का मोबाइल नंबर", "10 अंक का नंबर", worker.emergencyMobile, true, 10)
-        section.addView(heading("आपकी फ़ोटो", worker.hasPhoto))
+        section.addView(heading("आपकी फ़ोटो (ज़रूरी नहीं)", worker.hasPhoto))
         workPhotoLabel = android.widget.TextView(context).apply {
             text = if (worker.hasPhoto) "📷 फ़ोटो बदलें" else "📷 फ़ोटो चुनने के लिए यहाँ दबाएँ"
             textSize = 16f
