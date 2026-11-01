@@ -367,6 +367,7 @@ class DayJobHomeActivity : AppCompatActivity() {
                     // Home shows a few; "सब काम देखें" opens them all as swipe cards.
                     workerAdapter.submit(jobs.take(HOME_JOBS))
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
+                    if (result.data.busy) binding.dayJobWorkerEmpty.text = "✅ आपका एक काम बुक है। अभी उसी पर ध्यान दें। वह पूरा होने पर नए काम दिखेंगे।"
                     binding.dayJobSeeAll.visibility = if (jobs.isEmpty()) View.GONE else View.VISIBLE
                     binding.dayJobSeeAll.text = "सब काम देखें (${jobs.size}) ›"
                     binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● 10 km में ${jobs.size} काम"

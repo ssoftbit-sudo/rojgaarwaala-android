@@ -56,6 +56,7 @@ data class DayJobMeta(
     @SerializedName("needs_worker_terms") val needsWorkerTerms: Boolean = false,
     @SerializedName("needs_company_terms") val needsCompanyTerms: Boolean = false,
     @SerializedName("cancel_reasons") val cancelReasons: List<String> = emptyList(),
+    @SerializedName("company_cancel_reasons") val companyCancelReasons: List<String> = emptyList(),
     /** Jobs where this user still has to press Job Done, as worker and as company. */
     @SerializedName("pending_done") val pendingDone: List<Int> = emptyList(),
     @SerializedName("pending_done_company") val pendingDoneCompany: List<Int> = emptyList(),
@@ -135,6 +136,15 @@ data class DayJobBooking(
     @SerializedName("can_start") val canStart: Boolean = false,
     /** Worker side, on the day: the 4 digits to tell the supervisor. */
     @SerializedName("start_code") val startCode: String? = null,
+    @SerializedName("started_at") val startedAt: String? = null,
+    @SerializedName("work_ends_at") val workEndsAt: String? = null,
+    /** Worker side: the 4 digits to tell the supervisor when the work is over. */
+    @SerializedName("done_code") val doneCode: String? = null,
+    @SerializedName("can_ask_done_code") val canAskDoneCode: Boolean = false,
+    @SerializedName("done_code_sent") val doneCodeSent: Boolean = false,
+    @SerializedName("can_cancel") val canCancel: Boolean = false,
+    /** Work time over and never started by code: the company closes it without one. */
+    @SerializedName("can_plain_done") val canPlainDone: Boolean = false,
     // Job Done: the worker's own (my_booking) and the company's, per worker (owner list).
     @SerializedName("can_mark_done") val canMarkDone: Boolean = false,
     @SerializedName("done_by_me") val doneByMe: Boolean = false,
@@ -234,6 +244,7 @@ data class DayJob(
 }
 
 data class DayJobListData(
+    @SerializedName("busy") val busy: Boolean = false,
     @SerializedName("jobs") val jobs: List<DayJob> = emptyList(),
     /** For nearby: the point the search was made from (the worker). */
     @SerializedName("latitude") val latitude: Double? = null,
@@ -410,3 +421,7 @@ data class DayJobTrackData(
 )
 
 data class DayJobStartRequest(@SerializedName("code") val code: String)
+
+data class DayJobFinishRequest(@SerializedName("code") val code: String, @SerializedName("rating") val rating: Int)
+
+data class DayJobCompanyCancelRequest(@SerializedName("reason") val reason: String)

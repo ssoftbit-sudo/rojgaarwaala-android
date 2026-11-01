@@ -147,8 +147,16 @@ class DayJobRepository @Inject constructor() {
         call { api.askZone(body) }
 
     /** The company calls the same worker back for [workDate]. */
-    suspend fun rebook(bookingId: Int, workDate: String): DayJobOutcome<DayJob?> =
-        call { api.rebook(bookingId, DayJobRepostRequest(workDate, null, null)) }.mapData { it.job }
+    suspend fun askDoneCode(bookingId: Int): DayJobOutcome<Any?> = call { api.askDoneCode(bookingId) }
+
+    suspend fun finishWork(bookingId: Int, code: String, stars: Int): DayJobOutcome<Any?> =
+        call { api.finishWork(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobFinishRequest(code, stars)) }
+
+    suspend fun companyCancel(bookingId: Int, reason: String): DayJobOutcome<Any?> =
+        call { api.companyCancel(bookingId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobCompanyCancelRequest(reason)) }
+
+    suspend fun rebook(bookingId: Int, workDate: String, startTime: String? = null, wage: Int? = null): DayJobOutcome<DayJob?> =
+        call { api.rebook(bookingId, DayJobRepostRequest(workDate, startTime, wage)) }.mapData { it.job }
 
     suspend fun cancelJob(id: Int): DayJobOutcome<DayJob?> = call { api.cancel(id) }.mapData { it.job }
 
