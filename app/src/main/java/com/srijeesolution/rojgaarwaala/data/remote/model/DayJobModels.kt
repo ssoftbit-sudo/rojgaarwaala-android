@@ -47,6 +47,7 @@ data class DayJobWorker(
     @SerializedName("address") val address: String? = null,
     @SerializedName("emergency_mobile") val emergencyMobile: String? = null,
     @SerializedName("profile_percent") val profilePercent: Int = 0,
+    @SerializedName("has_photo") val hasPhoto: Boolean = false,
 )
 
 data class DayJobMeta(

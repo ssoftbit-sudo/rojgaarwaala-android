@@ -94,61 +94,98 @@ class ProfileFragment : Fragment() {
 
     private fun showWorkDetails(worker: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWorker) {
         val context = requireContext()
+        val only = activity?.intent?.getBooleanExtra(EXTRA_SHOW_WORK_DETAILS, false) == true
         val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
         val white = androidx.core.content.ContextCompat.getColor(context, R.color.white)
         val yellow = androidx.core.content.ContextCompat.getColor(context, R.color.brand_color_yellow)
-        fun field(hintText: String, value: Int?, max: Int) = android.widget.EditText(context).apply {
-            hint = hintText
-            setText(value?.toString().orEmpty())
-            setTextColor(white)
-            setHintTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.search_hint))
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-            filters = arrayOf(android.text.InputFilter.LengthFilter(max))
-        }
-        val age = field("उम्र", worker.age, 2)
-        val experience = field("कितने साल का अनुभव", worker.experienceYears, 2)
-        val emergency = field("घर वालों का मोबाइल नंबर", null, 10).apply { setText(worker.emergencyMobile.orEmpty()) }
+        val green = androidx.core.content.ContextCompat.getColor(context, R.color.day_job_green)
         val section = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(0, dp(16), 0, dp(16))
-            addView(android.widget.TextView(context).apply {
-                text = "1 दिन के काम की जानकारी (${worker.profilePercent}%)"
-                textSize = 17f
-                setTextColor(white)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            listOf(age, experience, emergency).forEach { addView(it) }
-            workPhotoLabel = android.widget.TextView(context).apply {
-                text = "📷 अपनी फ़ोटो चुनें"
-                textSize = 16f
-                setTextColor(yellow)
-                setPadding(0, dp(14), 0, dp(14))
-                setOnClickListener { workPhotoLauncher.launch("image/*") }
-            }
-            addView(workPhotoLabel)
-            addView(android.widget.TextView(context).apply {
-                text = "जानकारी सेव करें"
-                textSize = 16f
-                gravity = android.view.Gravity.CENTER
-                setTextColor(yellow)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setPadding(0, dp(12), 0, dp(12))
-                setBackgroundResource(R.drawable.bg_day_job_flash_close)
-                setOnClickListener {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        val result = dayJobRepository.saveWorkerProfile(age.text.toString().trim(), experience.text.toString().trim(),
-                            "", emergency.text.toString().trim(), workPhoto)
-                        val failed = result as? com.srijeesolution.rojgaarwaala.data.repository.DayJobOutcome.Fail
-                        Toast.makeText(context, failed?.message ?: "जानकारी सेव हो गई", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            })
+            setPadding(dp(if (only) 20 else 0), dp(16), dp(if (only) 20 else 0), dp(16))
         }
+        fun heading(label: String, filled: Boolean) = android.widget.TextView(context).apply {
+            text = (if (filled) "✅ " else "⬜ ") + label
+            textSize = 16f
+            setTextColor(if (filled) green else white)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, dp(16), 0, dp(2))
+        }
+        fun field(label: String, example: String, value: String?, number: Boolean, max: Int): android.widget.EditText {
+            section.addView(heading(label, !value.isNullOrBlank()))
+            return android.widget.EditText(context).apply {
+                hint = example
+                setText(value.orEmpty())
+                setTextColor(white)
+                setHintTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.search_hint))
+                inputType = if (number) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+                filters = arrayOf(android.text.InputFilter.LengthFilter(max))
+                section.addView(this)
+            }
+        }
+        if (only) section.addView(android.widget.TextView(context).apply {
+            text = "‹  वापस"
+            textSize = 16f
+            setTextColor(yellow)
+            setPadding(0, dp(24), 0, dp(12))
+            setOnClickListener { requireActivity().finish() }
+        })
+        section.addView(android.widget.TextView(context).apply {
+            text = "1 दिन के काम की प्रोफ़ाइल"
+            textSize = 20f
+            setTextColor(white)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        section.addView(android.widget.TextView(context).apply {
+            text = "${worker.profilePercent}% पूरी है। नीचे की 5 चीज़ें भरें। ✅ मतलब भरा हुआ है, ⬜ मतलब बाक़ी है। ये जानकारी भरोसे के लिए है, इसके बिना भी काम ले सकते हैं।"
+            textSize = 14f
+            setTextColor(white)
+            setPadding(0, dp(6), 0, 0)
+        })
+        val age = field("आपकी उम्र", "जैसे: 30", worker.age?.toString(), true, 2)
+        val experience = field("कितने साल का अनुभव है", "जैसे: 5", worker.experienceYears?.toString(), true, 2)
+        val address = field("आपका पता", "जैसे: पंडरी, रायपुर", worker.address, false, 255)
+        val emergency = field("घर वालों का मोबाइल नंबर", "10 अंक का नंबर", worker.emergencyMobile, true, 10)
+        section.addView(heading("आपकी फ़ोटो", worker.hasPhoto))
+        workPhotoLabel = android.widget.TextView(context).apply {
+            text = if (worker.hasPhoto) "📷 फ़ोटो बदलें" else "📷 फ़ोटो चुनने के लिए यहाँ दबाएँ"
+            textSize = 16f
+            setTextColor(yellow)
+            setPadding(0, dp(8), 0, dp(20))
+            setOnClickListener { workPhotoLauncher.launch("image/*") }
+        }
+        section.addView(workPhotoLabel)
+        section.addView(android.widget.TextView(context).apply {
+            text = "सेव करें"
+            textSize = 17f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.day_job_on_green))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, dp(14), 0, dp(14))
+            setBackgroundResource(R.drawable.bg_day_job_green_button)
+            setOnClickListener {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = dayJobRepository.saveWorkerProfile(age.text.toString().trim(), experience.text.toString().trim(),
+                        address.text.toString().trim(), emergency.text.toString().trim(), workPhoto)
+                    val failed = result as? com.srijeesolution.rojgaarwaala.data.repository.DayJobOutcome.Fail
+                    Toast.makeText(context, failed?.message ?: "जानकारी सेव हो गई", Toast.LENGTH_SHORT).show()
+                    if (failed == null && only) requireActivity().finish()
+                }
+            }
+        })
         val save = binding.updateProfileButton
         val parent = save.parent as ViewGroup
         parent.addView(section, parent.indexOfChild(save))
-        if (activity?.intent?.getBooleanExtra(EXTRA_SHOW_WORK_DETAILS, false) == true) {
-            section.post { section.requestRectangleOnScreen(android.graphics.Rect(0, 0, section.width, section.height), true) }
+        if (only) {
+            // Came for these details alone: nothing else on the page, so it is clear what to fill.
+            var child: View = section
+            while (child !== binding.root) {
+                val up = child.parent as ViewGroup
+                for (i in 0 until up.childCount) up.getChildAt(i).let { if (it !== child) it.visibility = View.GONE }
+                up.background = null
+                up.setPadding(0, 0, 0, 0)
+                child = up
+            }
+            binding.root.setBackgroundColor(androidx.core.content.ContextCompat.getColor(context, R.color.app_background))
         }
     }
 
