@@ -42,6 +42,11 @@ data class DayJobWorker(
     @SerializedName("booking_block_message") val bookingBlockMessage: String? = null,
     @SerializedName("rating_avg") val ratingAvg: Double? = null,
     @SerializedName("rating_count") val ratingCount: Int = 0,
+    @SerializedName("age") val age: Int? = null,
+    @SerializedName("experience_years") val experienceYears: Int? = null,
+    @SerializedName("address") val address: String? = null,
+    @SerializedName("emergency_mobile") val emergencyMobile: String? = null,
+    @SerializedName("profile_percent") val profilePercent: Int = 0,
 )
 
 data class DayJobMeta(

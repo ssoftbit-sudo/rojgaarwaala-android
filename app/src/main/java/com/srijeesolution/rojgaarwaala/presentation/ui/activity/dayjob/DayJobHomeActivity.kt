@@ -83,6 +83,75 @@ class DayJobHomeActivity : AppCompatActivity() {
         loadNearby()
     }
 
+    private var profilePhoto: java.io.File? = null
+    private var profilePhotoLabel: android.widget.TextView? = null
+    private val pickProfilePhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val file = java.io.File(cacheDir, "worker_photo.jpg")
+        runCatching {
+            contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } }
+            profilePhoto = file
+            profilePhotoLabel?.text = "✓ फ़ोटो चुनी गई"
+        }
+    }
+    private var profileLine: android.widget.TextView? = null
+
+    /** A reminder only: an unfinished profile never stops the worker from taking work. */
+    private fun showProfileLine(worker: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWorker) {
+        val line = profileLine ?: android.widget.TextView(this).apply {
+            textSize = 14f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.brand_color_yellow))
+            setPadding(0, DayJobUi.dp(context, 8), 0, 0)
+            val zone = binding.dayJobMyZone
+            val parent = zone.parent as android.view.ViewGroup
+            parent.addView(this, parent.indexOfChild(zone) + 1)
+            profileLine = this
+        }
+        line.text = if (worker.profilePercent >= 100) "👤 प्रोफ़ाइल पूरी है ›" else "👤 प्रोफ़ाइल पूरी करें (${worker.profilePercent}%) ›"
+        line.setOnClickListener { editProfile(worker) }
+    }
+
+    private fun editProfile(worker: com.srijeesolution.rojgaarwaala.data.remote.model.DayJobWorker) {
+        profilePhoto = null
+        fun field(hintText: String, value: String?, number: Boolean) = android.widget.EditText(this).apply {
+            hint = hintText
+            setText(value.orEmpty())
+            inputType = if (number) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+        }
+        val age = field("उम्र", worker.age?.toString(), true)
+        val experience = field("कितने साल का अनुभव", worker.experienceYears?.toString(), true)
+        val address = field("आपका पता", worker.address, false)
+        val emergency = field("घर वालों का मोबाइल नंबर", worker.emergencyMobile, true)
+        val photo = android.widget.TextView(this).apply {
+            text = "📷 अपनी फ़ोटो चुनें"
+            textSize = 16f
+            setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.brand_color_yellow))
+            setPadding(0, DayJobUi.dp(context, 14), 0, DayJobUi.dp(context, 6))
+            setOnClickListener { pickProfilePhoto.launch("image/*") }
+        }
+        profilePhotoLabel = photo
+        androidx.appcompat.app.AlertDialog.Builder(this, R.style.Theme_Rojgaarwaala_AlertDialog)
+            .setTitle("मेरी प्रोफ़ाइल")
+            .setView(android.widget.ScrollView(this).apply {
+                addView(android.widget.LinearLayout(context).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    setPadding(DayJobUi.dp(context, 24), 0, DayJobUi.dp(context, 24), 0)
+                    listOf(age, experience, address, emergency, photo).forEach { addView(it) }
+                })
+            })
+            .setPositiveButton("सेव करें") { _, _ ->
+                lifecycleScope.launch {
+                    val result = repository.saveWorkerProfile(age.text.toString().trim(), experience.text.toString().trim(),
+                        address.text.toString().trim(), emergency.text.toString().trim(), profilePhoto)
+                    if (result is DayJobOutcome.Fail) DayJobUi.toast(this@DayJobHomeActivity, result.message)
+                    refresh()
+                }
+            }
+            .setNegativeButton("रहने दें", null)
+            .show()
+    }
+
     private val returnRefresh = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -200,6 +269,7 @@ class DayJobHomeActivity : AppCompatActivity() {
             binding.dayJobAlertHours.text = "ख़बर कब: " + DayJobFormat.alertHoursText(meta.worker.alertFrom, meta.worker.alertTo) + " ›"
             binding.dayJobMyZone.text = if (meta.myZones.isEmpty()) "📍 अपना चौक (ज़ोन) चुनें ›"
             else "📍 ज़ोन: " + meta.myZones.joinToString(", ") { it.name } + " ›"
+            showProfileLine(meta.worker)
             val heldUntil = meta.worker.heldBackUntil
             val rating = DayJobUi.ratingText(meta.worker.ratingAvg, meta.worker.ratingCount)
             if (rating.isNotBlank()) binding.dayJobMyTrades.append("  ·  $rating")
@@ -367,7 +437,7 @@ class DayJobHomeActivity : AppCompatActivity() {
                     // Home shows a few; "सब काम देखें" opens them all as swipe cards.
                     workerAdapter.submit(jobs.take(HOME_JOBS))
                     binding.dayJobWorkerEmpty.visibility = if (jobs.isEmpty()) View.VISIBLE else View.GONE
-                    if (result.data.busy) binding.dayJobWorkerEmpty.text = "✅ आपका एक काम बुक है। अभी उसी पर ध्यान दें। वह पूरा होने पर नए काम दिखेंगे।"
+                    if (result.data.busy) binding.dayJobWorkerEmpty.text = "✅ इस दिन आपका एक काम बुक है। अभी उसी पर ध्यान दें। दूसरे दिन का काम आने पर यहाँ दिखेगा।"
                     binding.dayJobSeeAll.visibility = if (jobs.isEmpty()) View.GONE else View.VISIBLE
                     binding.dayJobSeeAll.text = "सब काम देखें (${jobs.size}) ›"
                     binding.dayJobMapNote.text = if (jobs.isEmpty()) "" else "● 10 km में ${jobs.size} काम"

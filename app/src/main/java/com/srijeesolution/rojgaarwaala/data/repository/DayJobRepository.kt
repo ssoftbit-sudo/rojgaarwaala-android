@@ -201,6 +201,16 @@ class DayJobRepository @Inject constructor() {
     suspend fun acceptForTeam(jobId: Int, picks: List<com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamPick>): DayJobOutcome<DayJob?> =
         call { api.acceptForTeam(jobId, com.srijeesolution.rojgaarwaala.data.remote.model.DayJobTeamAcceptRequest(picks)) }.mapData { it.job }
 
+    suspend fun saveWorkerProfile(age: String, experience: String, address: String, emergency: String, photo: java.io.File?): DayJobOutcome<*> {
+        val text = "text/plain".toMediaType()
+        val fields = linkedMapOf<String, RequestBody>()
+        listOf("age" to age, "experience_years" to experience, "address" to address, "emergency_mobile" to emergency)
+            .filter { it.second.isNotBlank() }
+            .forEach { (key, value) -> fields[key] = value.toRequestBody(text) }
+        val part = photo?.let { MultipartBody.Part.createFormData("photo", it.name, it.asRequestBody("image/jpeg".toMediaType())) }
+        return call { api.saveWorkerProfile(fields, part) }
+    }
+
     suspend fun create(draft: DayJobDraft): DayJobOutcome<DayJob?> {
         val text = "text/plain".toMediaType()
         val fields = linkedMapOf<String, RequestBody>()

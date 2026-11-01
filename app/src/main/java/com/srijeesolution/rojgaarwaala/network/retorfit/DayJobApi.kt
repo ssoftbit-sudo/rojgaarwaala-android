@@ -36,6 +36,13 @@ interface DayJobApi {
     suspend fun saveWorker(@Body body: DayJobWorkerRequest): Response<DayJobEnvelope<DayJobWorkerData>>
 
     @Multipart
+    @POST("day-jobs/worker/profile")
+    suspend fun saveWorkerProfile(
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part photo: MultipartBody.Part?,
+    ): Response<DayJobEnvelope<DayJobWorkerData>>
+
+    @Multipart
     @POST("day-jobs")
     suspend fun create(
         @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
